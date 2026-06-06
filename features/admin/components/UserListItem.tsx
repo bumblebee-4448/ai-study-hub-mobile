@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { UserAdmin } from '../types';
 import { MoreHorizontal, Edit2, Trash2, Eye } from 'lucide-react-native';
+import { theme } from '@/constants/theme';
 
 interface UserListItemProps {
   user: UserAdmin;
@@ -11,10 +12,10 @@ interface UserListItemProps {
 export const UserListItem: React.FC<UserListItemProps> = ({ user, onPress }) => {
   const getStatusStyles = (status: string) => {
     switch (status) {
-      case 'active': return { color: '#10b981', backgroundColor: '#ecfdf5' };
-      case 'blocked': return { color: '#f43f5e', backgroundColor: '#fff1f2' };
-      case 'pending': return { color: '#f59e0b', backgroundColor: '#fffbe6' };
-      default: return { color: '#64748b', backgroundColor: '#f8fafc' };
+      case 'active': return { color: theme.colors.success, backgroundColor: theme.colors.successBg };
+      case 'blocked': return { color: theme.colors.danger, backgroundColor: theme.colors.dangerBg };
+      case 'pending': return { color: theme.colors.warning, backgroundColor: theme.colors.warningBg };
+      default: return { color: theme.colors.textSecondaryLight, backgroundColor: theme.colors.backgroundLight };
     }
   };
 
@@ -72,18 +73,19 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'white',
+    backgroundColor: theme.colors.cardLight,
     padding: 16,
     marginBottom: 12,
-    borderRadius: 20,
+    borderRadius: theme.borderRadius.lg,
+    ...theme.shadows.soft,
     borderWidth: 1,
-    borderColor: '#f1f5f9',
+    borderColor: theme.colors.borderLight,
   },
   avatarContainer: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#f1f5f9',
+    backgroundColor: theme.colors.backgroundLight,
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
@@ -94,7 +96,7 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   avatarText: {
-    color: '#64748b',
+    color: theme.colors.textSecondaryLight,
     fontWeight: 'bold',
     fontSize: 18,
   },
@@ -102,12 +104,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   name: {
-    color: '#0f172a',
+    color: theme.colors.textPrimaryLight,
     fontWeight: 'bold',
     fontSize: 16,
   },
   email: {
-    color: '#94a3b8',
+    color: theme.colors.textSecondaryLight,
     fontSize: 12,
   },
   actionsBox: {
@@ -116,7 +118,7 @@ const styles = StyleSheet.create({
   statusBadge: {
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 999,
+    borderRadius: theme.borderRadius.round,
     marginBottom: 4,
   },
   statusText: {
