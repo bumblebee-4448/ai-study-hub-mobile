@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { theme } from '@/constants/theme';
 
 interface StatsCardProps {
   title: string;
@@ -41,39 +42,35 @@ export const StatsCard: React.FC<StatsCardProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: 'white',
+    backgroundColor: theme.colors.cardLight,
     padding: 16,
-    borderRadius: 20,
+    borderRadius: theme.borderRadius.xl,
     width: '48%',
     marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.03,
-    shadowRadius: 10,
-    elevation: 2,
+    ...theme.shadows.soft,
     borderWidth: 1,
-    borderColor: '#f1f5f9',
+    borderColor: theme.colors.borderLight,
   },
   darkContainer: {
-    backgroundColor: '#121212',
-    borderColor: '#121212',
+    backgroundColor: theme.colors.cardDark,
+    borderColor: theme.colors.cardDark,
   },
   value: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#0f172a',
+    color: theme.colors.textPrimaryLight,
     marginBottom: 4,
   },
   title: {
     fontSize: 12,
-    color: '#64748b',
+    color: theme.colors.textSecondaryLight,
     marginBottom: 20,
   },
   darkText: {
-    color: 'white',
+    color: theme.colors.textPrimaryDark,
   },
   darkTitle: {
-    color: '#94a3b8',
+    color: theme.colors.textSecondaryDark,
   },
   footer: {
     marginTop: 'auto',
@@ -95,9 +92,9 @@ const styles = StyleSheet.create({
   },
   percentLabel: {
     fontSize: 10,
-    color: '#94a3b8',
+    color: theme.colors.textSecondaryLight,
   },
   darkPercent: {
-    color: '#64748b',
+    color: theme.colors.textSecondaryDark,
   }
 });
