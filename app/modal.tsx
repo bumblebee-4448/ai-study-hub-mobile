@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { StyleSheet, View, Text, TouchableOpacity, Alert, ScrollView } from 'react-native';
 import { theme } from '@/constants/theme';
-import { User, Mail, Shield, Calendar, Ban, CheckCircle, ArrowLeft } from 'lucide-react-native';
+import { User, Shield, Calendar, Ban, CheckCircle, ArrowLeft } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 
