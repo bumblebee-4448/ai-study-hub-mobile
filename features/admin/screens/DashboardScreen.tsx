@@ -49,24 +49,28 @@ export const DashboardScreen = () => {
             value="1,284" 
             progress={0.4} 
             isDark={true}
+            onPress={() => router.push('/users')}
           />
           <StatsCard 
             title="Tài liệu mới" 
             value="4,562" 
             progress={0.6} 
             color="#3b82f6"
+            onPress={() => router.push('/analytics')}
           />
           <StatsCard 
             title="Bài thảo luận" 
             value="892" 
             progress={0.25} 
             color="#94a3b8"
+            onPress={() => router.push('/analytics')}
           />
           <StatsCard 
             title="Lượt xem" 
             value="12.5k" 
             progress={0.88} 
             color="#f43f5e"
+            onPress={() => router.push('/analytics')}
           />
         </View>
         
