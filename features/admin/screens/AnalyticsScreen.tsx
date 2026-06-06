@@ -1,9 +1,36 @@
-import React from 'react';
-import { ScrollView, View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import React, { useState } from 'react';
+import { ScrollView, View, Text, StyleSheet, Image, TouchableOpacity, LayoutAnimation, Platform, UIManager } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Filter } from 'lucide-react-native';
+import { theme } from '@/constants/theme';
+
+if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
+
+const FILTER_DATA = {
+  'Ngày': {
+    values: [30, 45, 20, 60, 25, 50, 40],
+    labels: ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN']
+  },
+  'Tuần': {
+    values: [45, 20, 50, 35, 75, 40, 60],
+    labels: ['W1', 'W2', 'W3', 'W4', 'W5', 'W6', 'W7']
+  },
+  'Tháng': {
+    values: [20, 55, 30, 65, 40, 80, 50],
+    labels: ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7']
+  }
+};
 
 export const AnalyticsScreen = () => {
+  const [activeFilter, setActiveFilter] = useState<'Tháng' | 'Tuần' | 'Ngày'>('Tuần');
+
+  const changeFilter = (newFilter: 'Tháng' | 'Tuần' | 'Ngày') => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setActiveFilter(newFilter);
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -42,25 +69,30 @@ export const AnalyticsScreen = () => {
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Biểu đồ học tập</Text>
             <View style={styles.tabSelector}>
-              <Text style={styles.tabItem}>Tháng</Text>
-              <View style={styles.tabItemActive}>
-                <Text style={styles.tabItemTextActive}>Tuần</Text>
-              </View>
-              <Text style={styles.tabItem}>Ngày</Text>
+              {(['Tháng', 'Tuần', 'Ngày'] as const).map((filter) => {
+                const isActive = activeFilter === filter;
+                return (
+                  <TouchableOpacity
+                    key={filter}
+                    style={isActive ? styles.tabItemActive : styles.tabItem}
+                    onPress={() => changeFilter(filter)}
+                  >
+                    <Text style={isActive ? styles.tabItemTextActive : styles.tabItemText}>
+                      {filter}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
             </View>
           </View>
           
           <View style={styles.areaChartPlaceholder}>
-            <View style={styles.areaFill} />
-            <View style={styles.lineOverlay} />
-            <View style={styles.chartLabelsLeft}>
-              {[60, 50, 40, 30, 20, 10].map(v => (
-                <Text key={v} style={styles.axisText}>{v}k</Text>
-              ))}
-            </View>
-            <View style={styles.chartLabelsBottom}>
-              {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((l, idx) => (
-                <Text key={`${l}-${idx}`} style={styles.axisText}>{l}</Text>
+            <View style={styles.chartBarsRow}>
+              {FILTER_DATA[activeFilter].values.map((val, idx) => (
+                <View key={idx} style={styles.chartBarColumn}>
+                  <View style={[styles.chartBarValue, { height: `${(val / 80) * 100}%` }]} />
+                  <Text style={styles.chartBarLabel}>{FILTER_DATA[activeFilter].labels[idx]}</Text>
+                </View>
               ))}
             </View>
           </View>
@@ -202,9 +234,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   tabItem: {
-    fontSize: 10,
     paddingHorizontal: 10,
-    color: '#94a3b8',
+    paddingVertical: 4,
   },
   tabItemActive: {
     backgroundColor: 'black',
@@ -212,55 +243,44 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 4,
   },
+  tabItemText: {
+    fontSize: 10,
+    color: '#94a3b8',
+    fontWeight: '500',
+  },
   tabItemTextActive: {
     fontSize: 10,
     color: 'white',
     fontWeight: 'bold',
   },
   areaChartPlaceholder: {
-    height: 220,
-    paddingLeft: 30,
-    paddingBottom: 30,
+    height: 180,
+    paddingTop: 10,
     backgroundColor: 'white',
   },
-  areaFill: {
-    position: 'absolute',
-    bottom: 30,
-    left: 30,
-    right: 0,
-    height: 100,
-    backgroundColor: '#000',
-    opacity: 0.1,
-    borderTopLeftRadius: 50,
-    borderTopRightRadius: 100,
-  },
-  lineOverlay: {
-    position: 'absolute',
-    bottom: 130,
-    left: 30,
-    right: 0,
-    height: 2,
-    backgroundColor: '#000',
-    opacity: 0.8,
-  },
-  chartLabelsLeft: {
-    position: 'absolute',
-    left: 0,
-    top: 0,
-    bottom: 30,
-    justifyContent: 'space-between',
-  },
-  chartLabelsBottom: {
-    position: 'absolute',
-    bottom: 0,
-    left: 30,
-    right: 0,
+  chartBarsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'flex-end',
+    height: '100%',
+    paddingBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
   },
-  axisText: {
+  chartBarColumn: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  chartBarValue: {
+    width: 14,
+    backgroundColor: theme.colors.primary,
+    borderRadius: 6,
+    opacity: 0.85,
+  },
+  chartBarLabel: {
     fontSize: 10,
-    color: '#94a3b8',
+    color: theme.colors.textSecondaryLight,
+    marginTop: 8,
   },
   trendingSection: {
     marginBottom: 20,
