@@ -103,7 +103,21 @@ export const DashboardScreen = () => {
           
           <View style={styles.userList}>
             {RECENT_USERS.map(user => (
-              <UserListItem key={user.id} user={user} />
+              <UserListItem 
+                key={user.id} 
+                user={user} 
+                onPress={() => router.push({
+                  pathname: '/modal',
+                  params: {
+                    id: user.id,
+                    fullName: user.fullName,
+                    email: user.email,
+                    role: user.role,
+                    status: user.status,
+                    joinedDate: user.joinedDate
+                  }
+                })}
+              />
             ))}
           </View>
         </View>
