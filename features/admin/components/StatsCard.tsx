@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { theme } from '@/constants/theme';
 
 interface StatsCardProps {
@@ -8,6 +8,7 @@ interface StatsCardProps {
   progress: number; // 0 to 1
   color?: string;
   isDark?: boolean;
+  onPress?: () => void;
 }
 
 export const StatsCard: React.FC<StatsCardProps> = ({ 
@@ -15,10 +16,16 @@ export const StatsCard: React.FC<StatsCardProps> = ({
   value, 
   progress, 
   color = '#3b82f6',
-  isDark = false 
+  isDark = false,
+  onPress
 }) => {
   return (
-    <View style={[styles.container, isDark && styles.darkContainer]}>
+    <TouchableOpacity 
+      onPress={onPress}
+      disabled={!onPress}
+      activeOpacity={0.7}
+      style={[styles.container, isDark && styles.darkContainer]}
+    >
       <Text style={[styles.value, isDark && styles.darkText]}>{value}</Text>
       <Text style={[styles.title, isDark && styles.darkTitle]}>{title}</Text>
       
@@ -36,7 +43,7 @@ export const StatsCard: React.FC<StatsCardProps> = ({
           <Text style={[styles.percentLabel, isDark && styles.darkPercent]}>{Math.round(progress * 100)}%</Text>
         </View>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 };
 
