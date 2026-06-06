@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Filter, Search, MoreVertical } from 'lucide-react-native';
+import { useRouter } from 'expo-router';
 
 const MOCK_USERS = [
   { id: '1', name: 'Nguyễn Văn Anh', email: 'nguyenvan@example.com', role: 'Member', date: '21 Th05, 2024', status: 'Hoạt động', initial: 'NA' },
@@ -18,6 +19,7 @@ const MOCK_USERS = [
 ];
 
 export const UsersScreen = () => {
+  const router = useRouter();
   const [activeRange, setActiveRange] = useState('Tuần');
   const ranges = ['Năm', 'Tháng', 'Tuần', 'Ngày'];
 
@@ -72,7 +74,21 @@ export const UsersScreen = () => {
           </View>
 
           {MOCK_USERS.map((user) => (
-            <TouchableOpacity key={user.id} style={styles.userCard}>
+            <TouchableOpacity 
+              key={user.id} 
+              style={styles.userCard}
+              onPress={() => router.push({
+                pathname: '/modal',
+                params: {
+                  id: user.id,
+                  fullName: user.name,
+                  email: user.email,
+                  role: user.role.toLowerCase(),
+                  status: user.status === 'Khóa' ? 'blocked' : 'active',
+                  joinedDate: user.date
+                }
+              })}
+            >
               <View style={styles.userInfoRow}>
                 <View style={styles.avatar}>
                   <Text style={styles.avatarText}>{user.initial}</Text>
