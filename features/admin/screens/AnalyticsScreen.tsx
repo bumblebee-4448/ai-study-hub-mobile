@@ -23,12 +23,33 @@ const FILTER_DATA = {
   }
 };
 
+const DOCS_DATA = {
+  'Ngày': [
+    { name: 'Giải tích 1', category: 'Toán học', value: '320', trend: 'Tải về +8%', color: '#10b981', image: 'https://images.unsplash.com/photo-1509228468518-180dd482195b?w=100' },
+    { name: 'Nhập môn Triết học', category: 'Triết học', value: '150', trend: 'Tải về +2%', color: '#10b981', image: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=100' }
+  ],
+  'Tuần': [
+    { name: 'Toán cao cấp 1', category: 'Toán học', value: '1.2k', trend: 'Tải về +15%', color: '#10b981', image: 'https://images.unsplash.com/photo-1509228468518-180dd482195b?w=100' },
+    { name: 'Lập trình Python', category: 'Công nghệ', value: '950', trend: 'Tải về -5%', color: '#f43f5e', image: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=100' }
+  ],
+  'Tháng': [
+    { name: 'Lập trình C++', category: 'Công nghệ', value: '4.8k', trend: 'Tải về +22%', color: '#10b981', image: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=100' },
+    { name: 'Kinh tế vĩ mô', category: 'Kinh tế', value: '3.1k', trend: 'Tải về +12%', color: '#10b981', image: 'https://images.unsplash.com/photo-1509228468518-180dd482195b?w=100' }
+  ]
+};
+
 export const AnalyticsScreen = () => {
   const [activeFilter, setActiveFilter] = useState<'Tháng' | 'Tuần' | 'Ngày'>('Tuần');
+  const [activeDocFilter, setActiveDocFilter] = useState<'Tháng' | 'Tuần' | 'Ngày'>('Tuần');
 
   const changeFilter = (newFilter: 'Tháng' | 'Tuần' | 'Ngày') => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setActiveFilter(newFilter);
+  };
+
+  const changeDocFilter = (newFilter: 'Tháng' | 'Tuần' | 'Ngày') => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setActiveDocFilter(newFilter);
   };
 
   return (
@@ -102,18 +123,24 @@ export const AnalyticsScreen = () => {
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Tài liệu nổi bật</Text>
             <View style={styles.tabSelector}>
-              <Text style={styles.tabItem}>Tháng</Text>
-              <View style={styles.tabItemActive}>
-                <Text style={styles.tabItemTextActive}>Tuần</Text>
-              </View>
-              <Text style={styles.tabItem}>Ngày</Text>
+              {(['Tháng', 'Tuần', 'Ngày'] as const).map((filter) => {
+                const isActive = activeDocFilter === filter;
+                return (
+                  <TouchableOpacity
+                    key={filter}
+                    style={isActive ? styles.tabItemActive : styles.tabItem}
+                    onPress={() => changeDocFilter(filter)}
+                  >
+                    <Text style={isActive ? styles.tabItemTextActive : styles.tabItemText}>
+                      {filter}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
             </View>
           </View>
 
-          {[
-            { name: 'Toán cao cấp 1', category: 'Toán học', value: '1.2k', trend: 'Tải về +15%', color: '#10b981', image: 'https://images.unsplash.com/photo-1509228468518-180dd482195b?w=100' },
-            { name: 'Lập trình Python', category: 'Công nghệ', value: '950', trend: 'Tải về -5%', color: '#f43f5e', image: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=100' }
-          ].map((item, idx) => (
+          {DOCS_DATA[activeDocFilter].map((item, idx) => (
             <View key={idx} style={styles.trendingItem}>
               <Image source={{ uri: item.image }} style={styles.itemImage} />
               <View style={styles.itemInfo}>
