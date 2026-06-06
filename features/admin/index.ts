@@ -6,3 +6,5 @@ export * from './components/AdminHeader';
 export * from './screens/DashboardScreen';
 export * from './screens/UsersScreen';
 export * from './screens/SettingsScreen';
+export * from './screens/AnalyticsScreen';
+

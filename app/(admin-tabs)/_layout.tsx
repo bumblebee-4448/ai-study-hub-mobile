@@ -1,6 +1,5 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
-import { IconSymbol } from '@/components/ui/icon-symbol';
 import { LayoutDashboard, BarChart2, Users, Settings } from 'lucide-react-native';
 
 export default function TabLayout() {

@@ -3,12 +3,12 @@ import {
   View, 
   Text, 
   StyleSheet, 
-  SafeAreaView, 
   ScrollView, 
   TextInput, 
   TouchableOpacity,
   Platform
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { ChevronLeft, Save, Globe, Mail, Shield, Brain, Settings as SettingsIcon } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 

@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
-import { ScrollView, View, Text, StyleSheet, SafeAreaView, Image, TouchableOpacity } from 'react-native';
-import { StatsCard, UserListItem, UserAdmin } from '../index';
+import { ScrollView, View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { StatsCard } from '../components/StatsCard';
+import { UserListItem } from '../components/UserListItem';
+import { UserAdmin } from '../types';
 import { useRouter } from 'expo-router';
 
 const RECENT_USERS: UserAdmin[] = [

@@ -4,10 +4,10 @@ import {
   View, 
   Text, 
   StyleSheet, 
-  SafeAreaView, 
   TouchableOpacity,
   TextInput
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Filter, Search, MoreVertical } from 'lucide-react-native';
 
 const MOCK_USERS = [

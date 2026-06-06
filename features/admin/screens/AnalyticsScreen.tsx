@@ -1,5 +1,6 @@
 import React from 'react';
-import { ScrollView, View, Text, StyleSheet, SafeAreaView, Image, TouchableOpacity } from 'react-native';
+import { ScrollView, View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Filter } from 'lucide-react-native';
 
 export const AnalyticsScreen = () => {
@@ -58,8 +59,8 @@ export const AnalyticsScreen = () => {
               ))}
             </View>
             <View style={styles.chartLabelsBottom}>
-              {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(l => (
-                <Text key={l} style={styles.axisText}>{l}</Text>
+              {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((l, idx) => (
+                <Text key={`${l}-${idx}`} style={styles.axisText}>{l}</Text>
               ))}
             </View>
           </View>
