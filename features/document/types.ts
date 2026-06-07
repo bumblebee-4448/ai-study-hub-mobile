@@ -1,7 +1,12 @@
+/**
+ * Document Feature - Type Definitions
+ */
+
 export interface Document {
   id: string;
   title: string;
-  format: "pdf" | "docx" | "pptx" | "zip";
+  format?: "pdf" | "docx" | "pptx" | "zip";
+  icon?: "picture_as_pdf" | "description" | "folder_zip";
   downloads: number;
   category?: string;
 }
@@ -66,4 +71,12 @@ export interface EditDocumentParams {
   tags?: string;
   fileName?: string;
   fileSize?: number;
+}
+
+export interface DocumentState {
+  trendingDocuments: Document[];
+  recommendedCourses: Course[];
+  quickPrompts: QuickPrompt[];
+  searchQuery: string;
+  setSearchQuery: (query: string) => void;
 }

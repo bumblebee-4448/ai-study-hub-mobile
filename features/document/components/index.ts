@@ -1,2 +1,11 @@
-// Shared UI components for the document feature.
-// Add exports here as components are extracted from screens.
+/**
+ * Document Feature - Components Index
+ * Centralized export for all components
+ */
+
+export { AISearchInput } from "./AISearchInput";
+export { CarouselSection } from "./CarouselSection";
+export { CourseCard } from "./CourseCard";
+export { DocumentCard } from "./DocumentCard";
+export { Header } from "./Header";
+export { QuickChips } from "./QuickChips";
