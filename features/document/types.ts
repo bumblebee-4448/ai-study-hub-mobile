@@ -1,0 +1,33 @@
+/**
+ * Document Feature - Type Definitions
+ */
+
+export interface Document {
+  id: string;
+  title: string;
+  icon: "picture_as_pdf" | "description" | "folder_zip";
+  downloads: number;
+  category?: string;
+}
+
+export interface Course {
+  id: string;
+  title: string;
+  instructor: string;
+  category: string;
+  categoryColor: "primary" | "secondary";
+  imageUrl: string;
+}
+
+export interface QuickPrompt {
+  id: string;
+  label: string;
+}
+
+export interface DocumentState {
+  trendingDocuments: Document[];
+  recommendedCourses: Course[];
+  quickPrompts: QuickPrompt[];
+  searchQuery: string;
+  setSearchQuery: (query: string) => void;
+}
