@@ -57,3 +57,57 @@ export interface UploadFormData {
 }
 
 export type UploadStatus = "idle" | "uploading" | "success" | "error";
+
+// ── Edit ─────────────────────────────────────────────────────────────────
+
+/** Parameters passed to EditDocumentScreen (via navigation / route props) */
+export interface EditDocumentParams {
+  /** The document ID being edited */
+  documentId: string;
+  /** Pre-filled title shown in the form */
+  title: string;
+  /** Pre-filled category value */
+  category: string;
+  /** Pre-filled description */
+  description?: string;
+  /** Pre-filled comma-separated tags string */
+  tags?: string;
+  /** Display name of the attached file */
+  fileName?: string;
+  /** File size in bytes */
+  fileSize?: number;
+}
+
+// ── Document Detail ────────────────────────────────────────────────────────
+
+/** A related document shown in the sidebar / related section */
+export interface RelatedDocument {
+  id: string;
+  title: string;
+  author: string;
+  thumbnailUrl: string;
+  downloads: number;
+}
+
+/** Full detail data for DocumentDetailScreen */
+export interface DocumentDetail {
+  id: string;
+  title: string;
+  /** File format badge, e.g. "PDF" */
+  format: string;
+  /** File size display string, e.g. "2.4 MB" */
+  fileSize: string;
+  thumbnailUrl: string;
+  author: string;
+  authorAvatarUrl: string;
+  /** Display date string */
+  publishedAt: string;
+  views: number;
+  downloads: number;
+  /** Long-form description shown below the divider */
+  description: string;
+  /** Tag labels shown as chips */
+  tags: string[];
+  /** Shown in the "Tài liệu liên quan" section */
+  relatedDocuments: RelatedDocument[];
+}

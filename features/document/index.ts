@@ -16,7 +16,7 @@ export {
 } from "./components";
 
 // Screens
-export { DocumentHomeScreen, UploadScreen } from "./screens";
+export { DocumentDetailScreen, DocumentHomeScreen, EditDocumentScreen, UploadScreen } from "./screens";
 
 
 // Hooks
@@ -30,9 +30,12 @@ export { useDocumentStore } from "./store/documentStore";
 export type {
   Course,
   Document,
+  DocumentDetail,
   DocumentState,
+  EditDocumentParams,
   PickedFile,
   QuickPrompt,
+  RelatedDocument,
   UploadCategory,
   UploadFormData,
   UploadStatus,
@@ -43,7 +46,9 @@ export type {
 export {
   CourseSchema,
   DocumentSchema,
+  EditDocumentFormSchema,
   QuickPromptSchema,
   UploadFormSchema,
 } from "./schemas/documentSchema";
+export type { EditDocumentFormType } from "./schemas/documentSchema";
 
