@@ -1,27 +1,4 @@
-/**
- * Library Tab — placeholder screen
- */
-import { COLORS, TYPOGRAPHY } from "@/constants/theme";
-import React from "react";
-import { SafeAreaView, StyleSheet, Text } from "react-native";
-
-export default function LibraryScreen() {
-  return (
-    <SafeAreaView style={styles.container}>
-      <Text style={styles.text}>Thư viện</Text>
-    </SafeAreaView>
-  );
+import { View, Text } from 'react-native';
+export default function LibraryTab() {
+  return <View><Text>Thư viện</Text></View>;
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.surface,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  text: {
-    ...TYPOGRAPHY["headline-md"],
-    color: COLORS["on-surface"],
-  },
-});
