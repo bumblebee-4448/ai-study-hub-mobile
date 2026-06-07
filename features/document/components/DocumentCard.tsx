@@ -1,6 +1,6 @@
 /**
  * Document Feature - Document Card Component
- * Card for displaying trending documents in the carousel (180px wide)
+ * Card for displaying trending documents in carousel
  */
 
 import { COLORS, TYPOGRAPHY } from "@/constants/theme";

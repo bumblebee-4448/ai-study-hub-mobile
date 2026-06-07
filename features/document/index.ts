@@ -45,6 +45,7 @@ export type {
   QuickPrompt,
   RelatedDocument,
   UploadCategory,
+  UploadFormData,
   UploadStatus,
 } from "./types";
 

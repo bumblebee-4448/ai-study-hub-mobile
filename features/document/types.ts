@@ -80,3 +80,29 @@ export interface DocumentState {
   searchQuery: string;
   setSearchQuery: (query: string) => void;
 }
+
+// ── Upload ──────────────────────────────────────────────────────────────
+
+export interface UploadCategory {
+  value: string;
+  label: string;
+}
+
+export interface PickedFile {
+  /** Display name shown in the UI */
+  name: string;
+  /** URI returned by expo-document-picker */
+  uri: string;
+  /** MIME type, e.g. application/pdf */
+  mimeType: string | undefined;
+  /** File size in bytes */
+  size: number | undefined;
+}
+
+export interface UploadFormData {
+  title: string;
+  category: string;
+  description?: string;
+}
+
+export type UploadStatus = "idle" | "uploading" | "success" | "error";
