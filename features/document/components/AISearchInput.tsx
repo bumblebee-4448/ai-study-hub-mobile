@@ -1,6 +1,6 @@
 /**
  * Document Feature - AI Search Input Component
- * Sticky search bar with AI sparkle icon
+ * Sticky search bar with AI icon
  */
 
 import { COLORS, SPACING, TYPOGRAPHY } from "@/constants/theme";
@@ -25,9 +25,8 @@ export const AISearchInput: React.FC<AISearchInputProps> = ({
 
   return (
     <View style={[styles.container, isFocused && styles.containerFocused]}>
-      {/* Search icon */}
       <Ionicons
-        name="search"
+        name="search-outline"
         size={20}
         color={COLORS.outline}
         style={styles.searchIcon}
@@ -43,11 +42,10 @@ export const AISearchInput: React.FC<AISearchInputProps> = ({
         onBlur={() => setIsFocused(false)}
       />
 
-      {/* AI sparkle icon */}
       <TouchableOpacity onPress={onAIIconPress} style={styles.aiIconContainer}>
         <MaterialCommunityIcons
-          name="creation"
-          size={22}
+          name="auto-fix"
+          size={20}
           color={COLORS.primary}
         />
       </TouchableOpacity>
@@ -73,7 +71,7 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     shadowColor: COLORS.primary,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.12,
+    shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
   },

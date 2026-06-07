@@ -29,3 +29,17 @@ export const QuickPromptSchema = z.object({
 export type DocumentType = z.infer<typeof DocumentSchema>;
 export type CourseType = z.infer<typeof CourseSchema>;
 export type QuickPromptType = z.infer<typeof QuickPromptSchema>;
+
+// ── Upload form ────────────────────────────────────────────────────
+
+export const UploadFormSchema = z.object({
+  title: z
+    .string()
+    .min(1, "Vui lòng nhập tiêu đề tài liệu")
+    .max(120, "Tiêu đề không quá 120 ký tự"),
+  category: z.string().min(1, "Vui lòng chọn danh mục"),
+  description: z.string().max(500, "Mô tả không quá 500 ký tự").optional(),
+});
+
+export type UploadFormType = z.infer<typeof UploadFormSchema>;
+

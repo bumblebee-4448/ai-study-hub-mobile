@@ -1,27 +1,7 @@
 /**
- * Upload Tab — placeholder screen
+ * Upload Tab — delegates entirely to the Document feature's upload screen.
+ * Business logic lives in features/document/, not here.
  */
-import { COLORS, TYPOGRAPHY } from "@/constants/theme";
-import React from "react";
-import { SafeAreaView, StyleSheet, Text } from "react-native";
+import { UploadScreen } from "@/features/document";
 
-export default function UploadScreen() {
-  return (
-    <SafeAreaView style={styles.container}>
-      <Text style={styles.text}>Tải lên</Text>
-    </SafeAreaView>
-  );
-}
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.surface,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  text: {
-    ...TYPOGRAPHY["headline-md"],
-    color: COLORS["on-surface"],
-  },
-});
+export default UploadScreen;

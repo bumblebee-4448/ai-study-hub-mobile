@@ -16,20 +16,34 @@ export {
 } from "./components";
 
 // Screens
-export { DocumentHomeScreen } from "./screens";
+export { DocumentHomeScreen, UploadScreen } from "./screens";
+
 
 // Hooks
-export { useDocument, useDocumentSearch, useQuickPrompts } from "./hooks";
+export { useDocument, useDocumentSearch, useQuickPrompts, useUploadDocument } from "./hooks";
+
 
 // Store
 export { useDocumentStore } from "./store/documentStore";
 
 // Types
-export type { Course, Document, DocumentState, QuickPrompt } from "./types";
+export type {
+  Course,
+  Document,
+  DocumentState,
+  PickedFile,
+  QuickPrompt,
+  UploadCategory,
+  UploadFormData,
+  UploadStatus,
+} from "./types";
+
 
 // Schemas
 export {
   CourseSchema,
   DocumentSchema,
   QuickPromptSchema,
+  UploadFormSchema,
 } from "./schemas/documentSchema";
+
