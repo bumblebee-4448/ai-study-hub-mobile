@@ -15,7 +15,7 @@ export default function DocumentDetailRoute() {
         // Placeholder for download logic
       }}
       onRelatedPress={(relId) => {
-        router.push({ pathname: "/document/[id]", params: { id: relId } });
+        router.push({ pathname: "/document/[id]" as any, params: { id: relId } });
       }}
     />
   );

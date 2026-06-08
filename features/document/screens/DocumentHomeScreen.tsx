@@ -19,44 +19,61 @@ import { useDocument, useDocumentSearch, useQuickPrompts } from "../hooks";
 interface DocumentHomeScreenProps {
   onDocumentPress?: (id: string) => void;
   onCoursePress?: (id: string) => void;
+  onAIIconPress?: () => void;
+  onViewAllDocuments?: () => void;
+  onViewAllCourses?: () => void;
 }
 
 export const DocumentHomeScreen: React.FC<DocumentHomeScreenProps> = ({
   onDocumentPress,
   onCoursePress,
+  onAIIconPress,
+  onViewAllDocuments,
+  onViewAllCourses,
 }) => {
   const { searchQuery, handleSearch, clearSearch } = useDocumentSearch();
   const { quickPrompts, handlePromptPress } = useQuickPrompts();
   const { trendingDocuments, recommendedCourses } = useDocument();
 
   const handleAIIconPress = useCallback(() => {
-    console.log("AI icon pressed");
-    // Implement AI search flow
-  }, []);
+    if (onAIIconPress) {
+      onAIIconPress();
+    } else {
+      console.log("AI icon pressed");
+    }
+  }, [onAIIconPress]);
 
   const handleDocumentPress = useCallback((documentId: string) => {
-    console.log(`Document pressed: ${documentId}`);
     if (onDocumentPress) {
       onDocumentPress(documentId);
+    } else {
+      console.log(`Document pressed: ${documentId}`);
     }
   }, [onDocumentPress]);
 
   const handleCoursePress = useCallback((courseId: string) => {
-    console.log(`Course pressed: ${courseId}`);
     if (onCoursePress) {
       onCoursePress(courseId);
+    } else {
+      console.log(`Course pressed: ${courseId}`);
     }
   }, [onCoursePress]);
 
   const handleViewAllDocuments = useCallback(() => {
-    console.log("View all documents");
-    // Navigate to documents list
-  }, []);
+    if (onViewAllDocuments) {
+      onViewAllDocuments();
+    } else {
+      console.log("View all documents");
+    }
+  }, [onViewAllDocuments]);
 
   const handleViewAllCourses = useCallback(() => {
-    console.log("View all courses");
-    // Navigate to courses list
-  }, []);
+    if (onViewAllCourses) {
+      onViewAllCourses();
+    } else {
+      console.log("View all courses");
+    }
+  }, [onViewAllCourses]);
 
   return (
     <SafeAreaView style={styles.safeArea}>

@@ -58,7 +58,7 @@ interface UploadScreenProps {
 }
 
 export const UploadScreen: React.FC<UploadScreenProps> = ({
-  onCancel,
+  onCancel: customCancel,
   onSuccess,
 }) => {
   const [categoryModalVisible, setCategoryModalVisible] = useState(false);
@@ -81,10 +81,8 @@ export const UploadScreen: React.FC<UploadScreenProps> = ({
   const handleCancel = useCallback(() => {
     clearFile();
     reset();
-    if (onCancel) {
-      onCancel();
-    }
-  }, [clearFile, reset, onCancel]);
+    customCancel?.();
+  }, [clearFile, reset, customCancel]);
 
   const onSubmit = useCallback(
     async (data: UploadFormType) => {
@@ -96,11 +94,8 @@ export const UploadScreen: React.FC<UploadScreenProps> = ({
           {
             text: "OK",
             onPress: () => {
-              if (onSuccess) {
-                onSuccess();
-              } else {
-                handleCancel();
-              }
+              handleCancel();
+              onSuccess?.();
             },
           },
         ]);
