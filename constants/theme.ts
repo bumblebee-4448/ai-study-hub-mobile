@@ -1,53 +1,148 @@
-/**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
- */
+import { Platform } from "react-native";
 
-import { Platform } from 'react-native';
+export const COLORS = {
+  primary: "#004ac6",
+  "on-primary": "#ffffff",
+  "primary-container": "#2563eb",
+  "on-primary-container": "#eeefff",
+  "primary-fixed": "#dbe1ff",
+  "primary-fixed-dim": "#b4c5ff",
+  "on-primary-fixed": "#00174b",
+  "on-primary-fixed-variant": "#003ea8",
 
-const tintColorLight = '#0a7ea4';
-const tintColorDark = '#fff';
+  secondary: "#2b6193",
+  "on-secondary": "#ffffff",
+  "secondary-container": "#93c5fd",
+  "on-secondary-container": "#145283",
+  "secondary-fixed": "#d0e4ff",
+  "secondary-fixed-dim": "#9ccaff",
+  "on-secondary-fixed": "#001d35",
+  "on-secondary-fixed-variant": "#03497a",
+
+  tertiary: "#943700",
+  "on-tertiary": "#ffffff",
+  "tertiary-container": "#bc4800",
+  "on-tertiary-container": "#ffede6",
+  "tertiary-fixed": "#ffdbcd",
+  "tertiary-fixed-dim": "#ffb596",
+  "on-tertiary-fixed": "#360f00",
+  "on-tertiary-fixed-variant": "#7d2d00",
+
+  error: "#ba1a1a",
+  "on-error": "#ffffff",
+  "error-container": "#ffdad6",
+  "on-error-container": "#93000a",
+
+  surface: "#faf8ff",
+  "surface-dim": "#d9d9e5",
+  "surface-bright": "#faf8ff",
+  "surface-container-lowest": "#ffffff",
+  "surface-container-low": "#f3f3fe",
+  "surface-container": "#ededf9",
+  "surface-container-high": "#e7e7f3",
+  "surface-container-highest": "#e1e2ed",
+  "surface-variant": "#e1e2ed",
+  "surface-tint": "#0053db",
+
+  background: "#faf8ff",
+  "on-background": "#191b23",
+  "on-surface": "#191b23",
+  "on-surface-variant": "#434655",
+
+  outline: "#737686",
+  "outline-variant": "#c3c6d7",
+
+  "inverse-surface": "#2e3039",
+  "inverse-on-surface": "#f0f0fb",
+  "inverse-primary": "#b4c5ff",
+} as const;
+
+export const TYPOGRAPHY = {
+  display: {
+    fontSize: 48,
+    lineHeight: 53,
+    letterSpacing: -0.96,
+    fontWeight: "700" as const,
+  },
+  "headline-lg": {
+    fontSize: 32,
+    lineHeight: 38,
+    letterSpacing: -0.32,
+    fontWeight: "700" as const,
+  },
+  "headline-lg-mobile": {
+    fontSize: 24,
+    lineHeight: 29,
+    fontWeight: "700" as const,
+  },
+  "headline-md": {
+    fontSize: 24,
+    lineHeight: 31,
+    fontWeight: "600" as const,
+  },
+  "body-lg": {
+    fontSize: 18,
+    lineHeight: 29,
+    fontWeight: "400" as const,
+  },
+  "body-md": {
+    fontSize: 16,
+    lineHeight: 26,
+    fontWeight: "400" as const,
+  },
+  "label-md": {
+    fontSize: 14,
+    lineHeight: 20,
+    letterSpacing: 0.14,
+    fontWeight: "600" as const,
+  },
+  "label-sm": {
+    fontSize: 12,
+    lineHeight: 17,
+    fontWeight: "500" as const,
+  },
+} as const;
+
+export const SPACING = {
+  sm: 4,
+  base: 8,
+  md: 12,
+  lg: 16,
+  xl: 24,
+  "2xl": 32,
+  "margin-mobile": 16,
+  "margin-desktop": 40,
+  gutter: 24,
+} as const;
+
+export const BORDER_RADIUS = {
+  sm: 2,
+  lg: 4,
+  xl: 8,
+  full: 12,
+} as const;
+
+export const FONT_FAMILY = Platform.select({
+  ios: { sans: "System" },
+  android: { sans: "Roboto" },
+  default: { sans: "System" },
+});
 
 export const Colors = {
   light: {
-    text: '#11181C',
-    background: '#fff',
-    tint: tintColorLight,
-    icon: '#687076',
-    tabIconDefault: '#687076',
-    tabIconSelected: tintColorLight,
+    text: COLORS["on-surface"],
+    background: COLORS.background,
+    tint: COLORS.primary,
+    icon: COLORS["on-surface-variant"],
+    tabIconDefault: COLORS["on-surface-variant"],
+    tabIconSelected: COLORS.primary,
   },
   dark: {
-    text: '#ECEDEE',
-    background: '#151718',
-    tint: tintColorDark,
-    icon: '#9BA1A6',
-    tabIconDefault: '#9BA1A6',
-    tabIconSelected: tintColorDark,
+    text: "#ECEDEE",
+    background: "#151718",
+    tint: "#fff",
+    icon: "#9BA1A6",
+    tabIconDefault: "#9BA1A6",
+    tabIconSelected: "#fff",
   },
 };
-
-export const Fonts = Platform.select({
-  ios: {
-    /** iOS `UIFontDescriptorSystemDesignDefault` */
-    sans: 'system-ui',
-    /** iOS `UIFontDescriptorSystemDesignSerif` */
-    serif: 'ui-serif',
-    /** iOS `UIFontDescriptorSystemDesignRounded` */
-    rounded: 'ui-rounded',
-    /** iOS `UIFontDescriptorSystemDesignMonospaced` */
-    mono: 'ui-monospace',
-  },
-  default: {
-    sans: 'normal',
-    serif: 'serif',
-    rounded: 'normal',
-    mono: 'monospace',
-  },
-  web: {
-    sans: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
-    serif: "Georgia, 'Times New Roman', serif",
-    rounded: "'SF Pro Rounded', 'Hiragino Maru Gothic ProN', Meiryo, 'MS PGothic', sans-serif",
-    mono: "SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
-  },
-});
