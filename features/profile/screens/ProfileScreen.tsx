@@ -56,9 +56,13 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
         ]);
         return;
       }
+      if (key === "my-documents") {
+        router.push("/my-documents");
+        return;
+      }
       onMenuPress?.(key);
     },
-    [handleLogout, onMenuPress]
+    [handleLogout, onMenuPress, router]
   );
 
   if (!profile) return null;

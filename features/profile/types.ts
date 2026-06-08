@@ -9,6 +9,7 @@ export interface UserProfile {
   /** e.g. "Năm 3 - Công nghệ thông tin" */
   yearMajor: string;
   avatarUrl: string;
+  bio?: string;
   documentCount: number;
   savedCount: number;
   points: number;
@@ -28,3 +29,15 @@ export type ProfileMenuItem =
   | "contribute"
   | "settings"
   | "logout";
+
+export type DocumentStatus = "public" | "pending";
+
+export interface MyDocument {
+  id: string;
+  title: string;
+  subject: string;
+  size: string;
+  uploadedAt: string;
+  status: DocumentStatus;
+  format: "pdf" | "docx" | "zip" | "pptx";
+}
