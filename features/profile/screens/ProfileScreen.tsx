@@ -1,4 +1,5 @@
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import React, { useCallback } from "react";
 import {
   Alert,
@@ -43,6 +44,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
   onLanguagePress,
   onDarkModePress,
 }) => {
+  const router = useRouter();
   const { profile, handleLogout } = useProfile();
 
   const handleMenuPress = useCallback(
@@ -71,6 +73,13 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
           </TouchableOpacity>
           <TouchableOpacity style={styles.iconBtn} onPress={onDarkModePress} accessibilityLabel="Chế độ tối">
             <Ionicons name="moon-outline" size={22} color={COLORS.primary} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.iconBtn}
+            onPress={() => router.push("/profile-edit")}
+            accessibilityLabel="Chỉnh sửa hồ sơ"
+          >
+            <Ionicons name="pencil-outline" size={22} color={COLORS.primary} />
           </TouchableOpacity>
         </View>
       </View>
