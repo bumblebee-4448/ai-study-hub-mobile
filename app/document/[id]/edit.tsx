@@ -3,7 +3,7 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 
 export default function EditDocumentRoute() {
   const router = useRouter();
-  const { id } = useLocalSearchParams<{ id: string }>();
+  useLocalSearchParams<{ id: string }>();
 
   return (
     <EditDocumentScreen
