@@ -1,3 +1,19 @@
+/**
+ * Document Feature — EditDocumentScreen
+ *
+ * Màn hình chỉnh sửa tài liệu đã tải lên.
+ *
+ * UI layout (theo HTML mẫu):
+ *  - Sticky header: nút back + tiêu đề "Chỉnh sửa tài liệu"
+ *  - File preview card: icon description + tên file + dung lượng
+ *  - Form: Tiêu đề, Danh mục (modal picker), Mô tả (textarea 4 dòng), Tags
+ *  - Nút "Cập nhật thay đổi" (filled primary)
+ *  - Nút "Xóa tài liệu này" (outlined error)
+ *
+ * Nhận dữ liệu ban đầu qua prop `initialData: EditDocumentParams`.
+ * Khi dùng với Expo Router, truyền từ router.push({ params }).
+ */
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import React, { useState, useCallback } from "react";
@@ -16,9 +32,11 @@ import {
   View,
 } from "react-native";
 
-import { BORDER_RADIUS, COLORS, SPACING, TYPOGRAPHY } from "@/constants/theme";
+import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS } from "@/constants/theme";
 import { EditDocumentFormSchema, EditDocumentFormType } from "../schemas/documentSchema";
 import { EditDocumentParams } from "../types";
+
+// ── Categories ────────────────────────────────────────────────────────────────
 
 const CATEGORIES: { value: string; label: string }[] = [
   { value: "khmt", label: "Khoa học Máy tính" },
@@ -29,21 +47,15 @@ const CATEGORIES: { value: string; label: string }[] = [
   { value: "vl", label: "Vật lý đại cương" },
 ];
 
-const formatFileSize = (bytes?: number): string => {
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function formatFileSize(bytes?: number): string {
   if (!bytes) return "";
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
-};
+}
 
-const DEMO_DATA: EditDocumentParams = {
-  documentId: "doc-demo-001",
-  title: "Báo cáo Nghiên cứu Trí tuệ Nhân tạo Toàn diện 2024",
-  category: "ai",
-  description: "Tài liệu tổng hợp các xu hướng mới nhất về Học máy và ứng dụng của AI trong công nghiệp.",
-  tags: "AI, Machine Learning, Công nghiệp 4.0",
-  fileName: "Baocao_NghienCuu_AI_v2.pdf",
-  fileSize: 4_404_428,
-};
+// ── Props ─────────────────────────────────────────────────────────────────────
 
 interface EditDocumentScreenProps {
   initialData?: EditDocumentParams;
@@ -51,6 +63,8 @@ interface EditDocumentScreenProps {
   onSave?: (data: EditDocumentFormType & { documentId: string }) => void;
   onDelete?: (documentId: string) => void;
 }
+
+// ── Component ─────────────────────────────────────────────────────────────────
 
 export const EditDocumentScreen: React.FC<EditDocumentScreenProps> = ({
   initialData,
@@ -62,24 +76,41 @@ export const EditDocumentScreen: React.FC<EditDocumentScreenProps> = ({
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const data = initialData ?? DEMO_DATA;
+  // Default demo data so the screen renders meaningfully in isolation
+  const defaults: EditDocumentParams = initialData ?? {
+    documentId: "doc-demo-001",
+    title: "Báo cáo Nghiên cứu Trí tuệ Nhân tạo Toàn diện 2024",
+    category: "ai",
+    description:
+      "Tài liệu tổng hợp các xu hướng mới nhất về Học máy và ứng dụng của AI trong công nghiệp. Bao gồm phân tích dữ liệu từ 500 doanh nghiệp hàng đầu.",
+    tags: "AI, Machine Learning, Công nghiệp 4.0",
+    fileName: "Baocao_NghienCuu_AI_v2.pdf",
+    fileSize: 4_404_428, // 4.2 MB
+  };
 
-  const { control, handleSubmit, formState: { errors } } = useForm<EditDocumentFormType>({
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<EditDocumentFormType>({
     resolver: zodResolver(EditDocumentFormSchema),
     defaultValues: {
-      title: data.title,
-      category: data.category,
-      description: data.description ?? "",
-      tags: data.tags ?? "",
+      title: defaults.title,
+      category: defaults.category,
+      description: defaults.description ?? "",
+      tags: defaults.tags ?? "",
     },
   });
 
+  // ── Handlers ────────────────────────────────────────────────────────────────
+
   const onSubmit = useCallback(
-    async (formData: EditDocumentFormType) => {
+    async (data: EditDocumentFormType) => {
       setIsSaving(true);
       try {
+        // TODO: replace with real API call
         await new Promise<void>((resolve) => setTimeout(resolve, 1200));
-        onSave?.({ ...formData, documentId: data.documentId });
+        onSave?.({ ...data, documentId: defaults.documentId });
         Alert.alert("Thành công", "Tài liệu đã được cập nhật!", [
           { text: "OK", onPress: onBack },
         ]);
@@ -89,7 +120,7 @@ export const EditDocumentScreen: React.FC<EditDocumentScreenProps> = ({
         setIsSaving(false);
       }
     },
-    [data.documentId, onBack, onSave]
+    [defaults.documentId, onBack, onSave]
   );
 
   const handleDelete = useCallback(() => {
@@ -104,8 +135,9 @@ export const EditDocumentScreen: React.FC<EditDocumentScreenProps> = ({
           onPress: async () => {
             setIsDeleting(true);
             try {
+              // TODO: replace with real API call
               await new Promise<void>((resolve) => setTimeout(resolve, 800));
-              onDelete?.(data.documentId);
+              onDelete?.(defaults.documentId);
               Alert.alert("Đã xóa", "Tài liệu đã được xóa thành công.", [
                 { text: "OK", onPress: onBack },
               ]);
@@ -118,30 +150,39 @@ export const EditDocumentScreen: React.FC<EditDocumentScreenProps> = ({
         },
       ]
     );
-  }, [data.documentId, onBack, onDelete]);
+  }, [defaults.documentId, onBack, onDelete]);
 
   const busy = isSaving || isDeleting;
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.safeArea}>
+      {/* ── Sticky Header ──────────────────────────────────────────────── */}
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.backBtn}
           onPress={onBack}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          accessibilityLabel="Quay lại"
         >
           <Ionicons name="arrow-back" size={24} color={COLORS["on-surface-variant"]} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle} numberOfLines={1}>Chỉnh sửa tài liệu</Text>
-        <View style={styles.backBtn} />
+
+        <Text style={styles.headerTitle} numberOfLines={1}>
+          Chỉnh sửa tài liệu
+        </Text>
+
+        {/* Spacer to center-align title */}
+        <View style={styles.headerSpacer} />
       </View>
 
+      {/* ── Scrollable body ────────────────────────────────────────────── */}
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
+        {/* ── File Preview Card ──────────────────────────────────────── */}
         <View style={styles.previewCard}>
           <View style={styles.previewIconBox}>
             <MaterialCommunityIcons
@@ -152,15 +193,19 @@ export const EditDocumentScreen: React.FC<EditDocumentScreenProps> = ({
           </View>
           <View style={styles.previewInfo}>
             <Text style={styles.previewName} numberOfLines={1}>
-              {data.fileName ?? "Tài liệu chưa đặt tên"}
+              {defaults.fileName ?? "Tài liệu chưa đặt tên"}
             </Text>
             <Text style={styles.previewMeta}>
-              {formatFileSize(data.fileSize)}{data.fileSize ? " • " : ""}Tải lên 2 ngày trước
+              {formatFileSize(defaults.fileSize)}
+              {defaults.fileSize ? " • " : ""}
+              Tải lên 2 ngày trước
             </Text>
           </View>
         </View>
 
+        {/* ── Form ────────────────────────────────────────────────────── */}
         <View style={styles.form}>
+          {/* Field: Tiêu đề */}
           <View style={styles.fieldBlock}>
             <Text style={styles.label}>Tiêu đề tài liệu</Text>
             <Controller
@@ -179,9 +224,12 @@ export const EditDocumentScreen: React.FC<EditDocumentScreenProps> = ({
                 />
               )}
             />
-            {errors.title && <Text style={styles.fieldError}>{errors.title.message}</Text>}
+            {errors.title ? (
+              <Text style={styles.fieldError}>{errors.title.message}</Text>
+            ) : null}
           </View>
 
+          {/* Field: Danh mục */}
           <View style={styles.fieldBlock}>
             <Text style={styles.label}>Danh mục</Text>
             <Controller
@@ -190,16 +238,33 @@ export const EditDocumentScreen: React.FC<EditDocumentScreenProps> = ({
               render={({ field: { onChange, value } }) => (
                 <>
                   <TouchableOpacity
-                    style={[styles.input, styles.selectRow, errors.category && styles.inputError]}
+                    style={[
+                      styles.input,
+                      styles.selectRow,
+                      errors.category && styles.inputError,
+                    ]}
                     onPress={() => setCategoryModalVisible(true)}
                     activeOpacity={0.8}
+                    accessibilityLabel="Chọn danh mục"
                   >
-                    <Text style={[styles.selectText, !value && { color: COLORS.outline }]}>
-                      {value ? CATEGORIES.find((c) => c.value === value)?.label : "Chọn danh mục"}
+                    <Text
+                      style={[
+                        styles.selectText,
+                        !value && { color: COLORS.outline },
+                      ]}
+                    >
+                      {value
+                        ? CATEGORIES.find((c) => c.value === value)?.label
+                        : "Chọn danh mục"}
                     </Text>
-                    <Ionicons name="chevron-down" size={18} color={COLORS.outline} />
+                    <Ionicons
+                      name="chevron-down"
+                      size={18}
+                      color={COLORS.outline}
+                    />
                   </TouchableOpacity>
 
+                  {/* Modal Picker */}
                   <Modal
                     visible={categoryModalVisible}
                     transparent
@@ -218,14 +283,31 @@ export const EditDocumentScreen: React.FC<EditDocumentScreenProps> = ({
                           keyExtractor={(item) => item.value}
                           renderItem={({ item }) => (
                             <TouchableOpacity
-                              style={[styles.modalOption, item.value === value && styles.modalOptionActive]}
-                              onPress={() => { onChange(item.value); setCategoryModalVisible(false); }}
+                              style={[
+                                styles.modalOption,
+                                item.value === value &&
+                                  styles.modalOptionActive,
+                              ]}
+                              onPress={() => {
+                                onChange(item.value);
+                                setCategoryModalVisible(false);
+                              }}
                             >
-                              <Text style={[styles.modalOptionText, item.value === value && styles.modalOptionTextActive]}>
+                              <Text
+                                style={[
+                                  styles.modalOptionText,
+                                  item.value === value &&
+                                    styles.modalOptionTextActive,
+                                ]}
+                              >
                                 {item.label}
                               </Text>
                               {item.value === value && (
-                                <Ionicons name="checkmark" size={18} color={COLORS.primary} />
+                                <Ionicons
+                                  name="checkmark"
+                                  size={18}
+                                  color={COLORS.primary}
+                                />
                               )}
                             </TouchableOpacity>
                           )}
@@ -236,9 +318,12 @@ export const EditDocumentScreen: React.FC<EditDocumentScreenProps> = ({
                 </>
               )}
             />
-            {errors.category && <Text style={styles.fieldError}>{errors.category.message}</Text>}
+            {errors.category ? (
+              <Text style={styles.fieldError}>{errors.category.message}</Text>
+            ) : null}
           </View>
 
+          {/* Field: Mô tả */}
           <View style={styles.fieldBlock}>
             <Text style={styles.label}>Mô tả tóm tắt</Text>
             <Controller
@@ -259,8 +344,12 @@ export const EditDocumentScreen: React.FC<EditDocumentScreenProps> = ({
                 />
               )}
             />
+            {errors.description ? (
+              <Text style={styles.fieldError}>{errors.description.message}</Text>
+            ) : null}
           </View>
 
+          {/* Field: Tags */}
           <View style={styles.fieldBlock}>
             <Text style={styles.label}>Thẻ (Tags)</Text>
             <Controller
@@ -269,7 +358,7 @@ export const EditDocumentScreen: React.FC<EditDocumentScreenProps> = ({
               render={({ field: { onChange, onBlur, value } }) => (
                 <TextInput
                   style={[styles.input, errors.tags && styles.inputError]}
-                  placeholder="AI, Machine Learning, ..."
+                  placeholder="AI, Machine Learning, Công nghiệp 4.0"
                   placeholderTextColor={COLORS.outline}
                   value={value}
                   onChangeText={onChange}
@@ -279,56 +368,76 @@ export const EditDocumentScreen: React.FC<EditDocumentScreenProps> = ({
                 />
               )}
             />
+            {errors.tags ? (
+              <Text style={styles.fieldError}>{errors.tags.message}</Text>
+            ) : null}
             <Text style={styles.hint}>Phân cách các thẻ bằng dấu phẩy.</Text>
           </View>
         </View>
 
+        {/* ── Action Buttons ───────────────────────────────────────────── */}
         <View style={styles.actions}>
+          {/* Primary — Update */}
           <TouchableOpacity
             style={[styles.btnSave, busy && styles.btnDisabled]}
             onPress={handleSubmit(onSubmit)}
             activeOpacity={0.8}
             disabled={busy}
+            accessibilityLabel="Cập nhật thay đổi"
           >
             {isSaving ? (
               <ActivityIndicator color={COLORS["on-primary"]} size="small" />
             ) : (
               <>
-                <MaterialCommunityIcons name="content-save" size={20} color={COLORS["on-primary"]} />
+                <MaterialCommunityIcons
+                  name="content-save"
+                  size={20}
+                  color={COLORS["on-primary"]}
+                />
                 <Text style={styles.btnSaveText}>Cập nhật thay đổi</Text>
               </>
             )}
           </TouchableOpacity>
 
+          {/* Destructive — Delete */}
           <TouchableOpacity
             style={[styles.btnDelete, busy && styles.btnDisabled]}
             onPress={handleDelete}
             activeOpacity={0.8}
             disabled={busy}
+            accessibilityLabel="Xóa tài liệu này"
           >
             {isDeleting ? (
               <ActivityIndicator color={COLORS.error} size="small" />
             ) : (
               <>
-                <MaterialCommunityIcons name="delete-outline" size={20} color={COLORS.error} />
+                <MaterialCommunityIcons
+                  name="delete-outline"
+                  size={20}
+                  color={COLORS.error}
+                />
                 <Text style={styles.btnDeleteText}>Xóa tài liệu này</Text>
               </>
             )}
           </TouchableOpacity>
         </View>
 
-        <View style={{ height: SPACING.xl }} />
+        {/* Bottom padding for tab bar */}
+        <View style={{ height: 32 }} />
       </ScrollView>
     </SafeAreaView>
   );
 };
 
+// ── Styles ────────────────────────────────────────────────────────────────────
+
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
     backgroundColor: COLORS.surface,
   },
 
+  // ── Header ──
   header: {
     height: 64,
     flexDirection: "row",
@@ -352,7 +461,11 @@ const styles = StyleSheet.create({
     color: COLORS["on-surface"],
     textAlign: "center",
   },
+  headerSpacer: {
+    width: 40,
+  },
 
+  // ── Scroll ──
   scroll: { flex: 1 },
   scrollContent: {
     paddingHorizontal: SPACING["margin-mobile"],
@@ -360,11 +473,12 @@ const styles = StyleSheet.create({
     gap: SPACING.lg,
   },
 
+  // ── File Preview Card ──
   previewCard: {
     flexDirection: "row",
     alignItems: "center",
-    gap: SPACING.lg,
-    padding: SPACING.lg,
+    gap: 16,
+    padding: 16,
     backgroundColor: COLORS["surface-container-low"],
     borderRadius: BORDER_RADIUS.xl,
     borderWidth: 1,
@@ -378,7 +492,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  previewInfo: { flex: 1, minWidth: 0 },
+  previewInfo: {
+    flex: 1,
+    minWidth: 0,
+  },
   previewName: {
     ...TYPOGRAPHY["label-md"],
     color: COLORS["on-surface"],
@@ -389,11 +506,17 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
 
-  form: { gap: SPACING.lg },
-  fieldBlock: { gap: SPACING.sm },
+  // ── Form ──
+  form: {
+    gap: SPACING.lg,
+  },
+  fieldBlock: {
+    gap: SPACING.sm / 2,
+  },
   label: {
     ...TYPOGRAPHY["label-md"],
     color: COLORS["on-surface"],
+    marginBottom: 2,
   },
   input: {
     ...TYPOGRAPHY["body-md"],
@@ -402,8 +525,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS["outline-variant"],
     borderRadius: BORDER_RADIUS.lg,
-    paddingHorizontal: SPACING.lg,
-    paddingVertical: SPACING.md,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
   },
   inputError: {
     borderColor: COLORS.error,
@@ -411,17 +534,20 @@ const styles = StyleSheet.create({
   },
   textarea: {
     height: 100,
-    paddingTop: SPACING.md,
+    paddingTop: 12,
   },
   fieldError: {
     ...TYPOGRAPHY["label-sm"],
     color: COLORS.error,
+    marginTop: 2,
   },
   hint: {
     ...TYPOGRAPHY["label-sm"],
     color: COLORS["on-surface-variant"],
+    marginTop: 2,
   },
 
+  // ── Category selector ──
   selectRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -433,18 +559,19 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 
+  // ── Modal Picker ──
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.35)",
     justifyContent: "center",
     alignItems: "center",
-    padding: SPACING.xl,
+    padding: 24,
   },
   modalSheet: {
     width: "100%",
     backgroundColor: COLORS["surface-container-lowest"],
     borderRadius: BORDER_RADIUS.xl,
-    paddingVertical: SPACING.base,
+    paddingVertical: 8,
     elevation: 8,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
@@ -454,8 +581,8 @@ const styles = StyleSheet.create({
   modalTitle: {
     ...TYPOGRAPHY["label-md"],
     color: COLORS["on-surface-variant"],
-    paddingHorizontal: SPACING.lg,
-    paddingVertical: SPACING.md,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: COLORS["outline-variant"],
   },
@@ -463,7 +590,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: SPACING.lg,
+    paddingHorizontal: 16,
     paddingVertical: 14,
   },
   modalOptionActive: {
@@ -479,15 +606,19 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
 
-  actions: { gap: SPACING.md },
+  // ── Action Buttons ──
+  actions: {
+    gap: 12,
+    marginTop: 8,
+  },
   btnSave: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: SPACING.base,
+    gap: 8,
     backgroundColor: COLORS.primary,
     borderRadius: BORDER_RADIUS.xl,
-    paddingVertical: SPACING.lg,
+    paddingVertical: 16,
   },
   btnSaveText: {
     ...TYPOGRAPHY["label-md"],
@@ -497,16 +628,18 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: SPACING.base,
+    gap: 8,
     backgroundColor: "transparent",
     borderRadius: BORDER_RADIUS.xl,
     borderWidth: 1.5,
     borderColor: COLORS.error,
-    paddingVertical: SPACING.lg,
+    paddingVertical: 16,
   },
   btnDeleteText: {
     ...TYPOGRAPHY["label-md"],
     color: COLORS.error,
   },
-  btnDisabled: { opacity: 0.55 },
+  btnDisabled: {
+    opacity: 0.55,
+  },
 });

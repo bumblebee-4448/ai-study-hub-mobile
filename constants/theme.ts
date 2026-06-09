@@ -1,3 +1,8 @@
+/**
+ * Design System - Color Palette, Typography, Spacing
+ * Material Design 3 inspired theme for AcademiShare
+ */
+
 import { Platform } from "react-native";
 
 export const COLORS = {
@@ -112,11 +117,15 @@ export const SPACING = {
   "2xl": 32,
   "margin-mobile": 16,
   "margin-desktop": 40,
+  "container-max": 1280,
   gutter: 24,
 } as const;
 
 export const BORDER_RADIUS = {
+  none: 0,
+  xs: 2,
   sm: 2,
+  md: 8,
   lg: 4,
   xl: 8,
   full: 12,
@@ -126,6 +135,27 @@ export const FONT_FAMILY = Platform.select({
   ios: { sans: "System" },
   android: { sans: "Roboto" },
   default: { sans: "System" },
+});
+
+export const Fonts = Platform.select({
+  ios: {
+    sans: 'system-ui',
+    serif: 'ui-serif',
+    rounded: 'ui-rounded',
+    mono: 'ui-monospace',
+  },
+  default: {
+    sans: 'normal',
+    serif: 'serif',
+    rounded: 'normal',
+    mono: 'monospace',
+  },
+  web: {
+    sans: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+    serif: "Georgia, 'Times New Roman', serif",
+    rounded: "'SF Pro Rounded', 'Hiragino Maru Gothic ProN', Meiryo, 'MS PGothic', sans-serif",
+    mono: "SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
+  },
 });
 
 export const Colors = {

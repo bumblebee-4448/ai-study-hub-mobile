@@ -3,14 +3,14 @@ import { useRouter } from "expo-router";
 
 export default function UploadRoute() {
   const router = useRouter();
-  
+
   return (
     <UploadScreen
       onCancel={() => {
-        router.push("/(tabs)");
+        router.push("/");
       }}
       onSuccess={() => {
-        router.push("/(tabs)");
+        router.push("/");
       }}
     />
   );

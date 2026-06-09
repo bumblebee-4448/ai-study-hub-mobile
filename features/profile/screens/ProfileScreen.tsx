@@ -11,7 +11,7 @@ import {
   View,
 } from "react-native";
 
-import { COLORS, SPACING, TYPOGRAPHY } from "@/constants/theme";
+import { BORDER_RADIUS, COLORS, SPACING, TYPOGRAPHY } from "@/constants/theme";
 import { MenuItem, MenuItemData, ProfileHeader, StatsRow } from "../components";
 import { useProfile } from "../hooks/useProfile";
 
@@ -57,7 +57,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
         return;
       }
       if (key === "my-documents") {
-        router.push("/my-documents");
+        router.push("/my-documents" as any);
         return;
       }
       onMenuPress?.(key);
@@ -80,7 +80,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.iconBtn}
-            onPress={() => router.push("/profile-edit")}
+            onPress={() => router.push("/profile-edit" as any)}
             accessibilityLabel="Chỉnh sửa hồ sơ"
           >
             <Ionicons name="pencil-outline" size={22} color={COLORS.primary} />
@@ -165,7 +165,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS["surface-container-low"],
     borderWidth: 1,
     borderColor: COLORS["outline-variant"],
-    borderRadius: 8,
+    borderRadius: BORDER_RADIUS.md,
     padding: SPACING.xl,
     alignItems: "center",
     gap: SPACING.md,

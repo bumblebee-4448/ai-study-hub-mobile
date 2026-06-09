@@ -1,11 +1,25 @@
+/**
+ * Document Feature — UploadScreen
+ * Converts HTML upload page to React Native.
+ *
+ * UI:
+ *  - Sticky header: AcademiShare logo + avatar
+ *  - Upload zone: dashed border, cloud-upload icon, format/size hint
+ *  - File error banner (format mismatch or > 50 MB)
+ *  - Form: Title (TextInput), Category (inline picker), Description (TextArea)
+ *  - Buttons: Hủy (outline) | Tải lên (filled)
+ *  - Category dropdown implemented as a native Modal (no extra deps)
+ */
+
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { MaterialCommunityIcons, Ionicons } from "@expo/vector-icons";
 import React, { useState, useCallback } from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
   ActivityIndicator,
   Alert,
   FlatList,
+  Image,
   Modal,
   SafeAreaView,
   ScrollView,
@@ -16,10 +30,12 @@ import {
   View,
 } from "react-native";
 
-import { BORDER_RADIUS, COLORS, SPACING, TYPOGRAPHY } from "@/constants/theme";
+import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS } from "@/constants/theme";
 import { UploadFormSchema, UploadFormType } from "../schemas/documentSchema";
 import { useUploadDocument } from "../hooks/useUploadDocument";
 import { UploadCategory } from "../types";
+
+// ── Categories ───────────────────────────────────────────────────────────────
 
 const CATEGORIES: UploadCategory[] = [
   { value: "khmt", label: "Khoa học Máy tính" },
@@ -28,12 +44,13 @@ const CATEGORIES: UploadCategory[] = [
   { value: "hh", label: "Hóa học" },
   { value: "toan", label: "Toán học ứng dụng" },
   { value: "vl", label: "Vật lý đại cương" },
+  { value: "cs", label: "Khoa học máy tính" },
+  { value: "math", label: "Toán học ứng dụng" },
+  { value: "phys", label: "Vật lý đại cương" },
+  { value: "eco", label: "Kinh tế học" },
 ];
 
-const formatFileSize = (bytes: number): string => {
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
-  return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
-};
+// ── Component ────────────────────────────────────────────────────────────────
 
 interface UploadScreenProps {
   onCancel?: () => void;
@@ -41,10 +58,11 @@ interface UploadScreenProps {
 }
 
 export const UploadScreen: React.FC<UploadScreenProps> = ({
-  onCancel,
+  onCancel: customCancel,
   onSuccess,
 }) => {
   const [categoryModalVisible, setCategoryModalVisible] = useState(false);
+
   const { pickedFile, fileError, uploadStatus, pickFile, clearFile, submitUpload } =
     useUploadDocument();
 
@@ -58,83 +76,142 @@ export const UploadScreen: React.FC<UploadScreenProps> = ({
     defaultValues: { title: "", category: "", description: "" },
   });
 
+  // ── Handlers ──────────────────────────────────────────────────────────────
+
+  const handleCancel = useCallback(() => {
+    clearFile();
+    reset();
+    customCancel?.();
+  }, [clearFile, reset, customCancel]);
+
   const onSubmit = useCallback(
     async (data: UploadFormType) => {
       await submitUpload(data);
       if (uploadStatus !== "error") {
         reset();
         clearFile();
-        Alert.alert("Thành công", "Tài liệu đã được tải lên!", [
-          { text: "OK", onPress: onSuccess },
+        Alert.alert("Thành công", "Tài liệu đã được tải lên thành công!", [
+          {
+            text: "OK",
+            onPress: () => {
+              handleCancel();
+              onSuccess?.();
+            },
+          },
         ]);
       }
     },
-    [submitUpload, uploadStatus, reset, clearFile, onSuccess]
+    [submitUpload, uploadStatus, reset, clearFile, onSuccess, handleCancel]
   );
+
+  // ── Helpers ───────────────────────────────────────────────────────────────
+
+  const formatSize = (bytes: number | undefined): string => {
+    if (!bytes) return "";
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+    return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+  };
 
   const isUploading = uploadStatus === "uploading";
 
+  // ── Render ────────────────────────────────────────────────────────────────
+
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.safeArea}>
+      {/* ── Sticky Header ─────────────────────────────────────────── */}
       <View style={styles.header}>
         <Text style={styles.logo}>AcademiShare</Text>
+        <Image
+          source={{
+            uri: "https://lh3.googleusercontent.com/aida-public/AB6AXuD0WHyA_G4bjXLc_4wiWyt39AIrIQqf-s9q1OJF8Lu6MT2ixy89pL7VcdhP3WEtcHRG0UpAm55ztMsVmDa-slgyf2EWtaC-AJRE5U-Dw7oLRzei3DSkSTv3uNIjyCXP_6xbaMVTyE3UROBawmr5sIrB1sT4aTQaCCAuR6o17MxZhodtsC8ShQqu7MPF87B5brcTul4NqMWx_tmxIf0f5oGhY1OD3WBud7gs-uvYiQ3MifA1r4-Kq1b04e94V-Lu9R5ptFL2C6pCDRs",
+          }}
+          style={styles.avatar}
+        />
       </View>
 
       <ScrollView
         style={styles.scroll}
-        contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
       >
-        <Text style={styles.pageTitle}>Tải tài liệu lên</Text>
+        {/* ── Page Title ──────────────────────────────────────────── */}
+        <View style={styles.pageTitleBlock}>
+          <Text style={styles.pageTitle}>Tải lên tài liệu</Text>
+          <Text style={styles.pageSubtitle}>
+            Chia sẻ kiến thức với cộng đồng học thuật.
+          </Text>
+        </View>
 
+        {/* ── Upload Zone ─────────────────────────────────────────── */}
         <TouchableOpacity
-          style={[styles.dropZone, pickedFile && styles.dropZoneActive]}
+          style={[
+            styles.dropZone,
+            pickedFile && styles.dropZoneSelected,
+            !!fileError && styles.dropZoneError,
+          ]}
           onPress={pickFile}
-          activeOpacity={0.8}
+          activeOpacity={0.75}
+          accessibilityLabel="Chọn tệp để tải lên"
         >
           {pickedFile ? (
-            <>
+            /* ── File picked state ── */
+            <View style={styles.filePickedRow}>
               <MaterialCommunityIcons
-                name="file-check"
-                size={40}
+                name="file-check-outline"
+                size={36}
                 color={COLORS.primary}
               />
-              <Text style={styles.fileName} numberOfLines={1}>
-                {pickedFile.name}
-              </Text>
-              <Text style={styles.fileMeta}>
-                {pickedFile.size ? formatFileSize(pickedFile.size) : ""}
-              </Text>
-              <TouchableOpacity onPress={clearFile} style={styles.clearBtn}>
-                <Text style={styles.clearBtnText}>Chọn lại</Text>
+              <View style={styles.fileInfo}>
+                <Text style={styles.fileName} numberOfLines={1}>
+                  {pickedFile.name}
+                </Text>
+                <Text style={styles.fileSize}>{formatSize(pickedFile.size)}</Text>
+              </View>
+              <TouchableOpacity
+                onPress={(e) => {
+                  e.stopPropagation?.();
+                  clearFile();
+                }}
+                style={styles.removeBtn}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <Ionicons name="close-circle" size={22} color={COLORS.outline} />
               </TouchableOpacity>
-            </>
+            </View>
           ) : (
+            /* ── Empty state ── */
             <>
               <MaterialCommunityIcons
                 name="cloud-upload-outline"
-                size={40}
-                color={COLORS["on-surface-variant"]}
+                size={48}
+                color={COLORS.primary}
+                style={styles.uploadIcon}
               />
+              <Text style={styles.dropZoneTitle}>Nhấn để chọn tệp</Text>
               <Text style={styles.dropZoneHint}>
-                Nhấn để chọn tài liệu
-              </Text>
-              <Text style={styles.dropZoneMeta}>
-                PDF, DOCX, PPTX — Tối đa 50 MB
+                Hỗ trợ PDF, DOCX, PPTX (Tối đa 50 MB)
               </Text>
             </>
           )}
         </TouchableOpacity>
 
-        {fileError && (
+        {/* ── File error banner ───────────────────────────────────── */}
+        {fileError ? (
           <View style={styles.errorBanner}>
-            <Ionicons name="warning-outline" size={18} color={COLORS.error} />
-            <Text style={styles.errorText}>{fileError}</Text>
+            <Ionicons
+              name="warning-outline"
+              size={16}
+              color={COLORS.error}
+              style={{ marginRight: 6 }}
+            />
+            <Text style={styles.errorBannerText}>{fileError}</Text>
           </View>
-        )}
+        ) : null}
 
+        {/* ── Form ────────────────────────────────────────────────── */}
         <View style={styles.form}>
+          {/* Title */}
           <View style={styles.fieldBlock}>
             <Text style={styles.label}>Tiêu đề tài liệu</Text>
             <Controller
@@ -153,20 +230,25 @@ export const UploadScreen: React.FC<UploadScreenProps> = ({
                 />
               )}
             />
-            {errors.title && (
+            {errors.title ? (
               <Text style={styles.fieldError}>{errors.title.message}</Text>
-            )}
+            ) : null}
           </View>
 
+          {/* Category — inline modal picker */}
           <View style={styles.fieldBlock}>
-            <Text style={styles.label}>Danh mục</Text>
+            <Text style={styles.label}>Danh mục / Môn học</Text>
             <Controller
               control={control}
               name="category"
               render={({ field: { onChange, value } }) => (
                 <>
                   <TouchableOpacity
-                    style={[styles.input, styles.selectRow, errors.category && styles.inputError]}
+                    style={[
+                      styles.input,
+                      styles.selectRow,
+                      errors.category && styles.inputError,
+                    ]}
                     onPress={() => setCategoryModalVisible(true)}
                     activeOpacity={0.8}
                   >
@@ -180,9 +262,14 @@ export const UploadScreen: React.FC<UploadScreenProps> = ({
                         ? CATEGORIES.find((c) => c.value === value)?.label
                         : "Chọn danh mục"}
                     </Text>
-                    <Ionicons name="chevron-down" size={18} color={COLORS.outline} />
+                    <Ionicons
+                      name="chevron-down"
+                      size={18}
+                      color={COLORS.outline}
+                    />
                   </TouchableOpacity>
 
+                  {/* Modal picker */}
                   <Modal
                     visible={categoryModalVisible}
                     transparent
@@ -203,7 +290,8 @@ export const UploadScreen: React.FC<UploadScreenProps> = ({
                             <TouchableOpacity
                               style={[
                                 styles.modalOption,
-                                item.value === value && styles.modalOptionActive,
+                                item.value === value &&
+                                  styles.modalOptionActive,
                               ]}
                               onPress={() => {
                                 onChange(item.value);
@@ -213,7 +301,8 @@ export const UploadScreen: React.FC<UploadScreenProps> = ({
                               <Text
                                 style={[
                                   styles.modalOptionText,
-                                  item.value === value && styles.modalOptionTextActive,
+                                  item.value === value &&
+                                    styles.modalOptionTextActive,
                                 ]}
                               >
                                 {item.label}
@@ -234,13 +323,14 @@ export const UploadScreen: React.FC<UploadScreenProps> = ({
                 </>
               )}
             />
-            {errors.category && (
+            {errors.category ? (
               <Text style={styles.fieldError}>{errors.category.message}</Text>
-            )}
+            ) : null}
           </View>
 
+          {/* Description */}
           <View style={styles.fieldBlock}>
-            <Text style={styles.label}>Mô tả tóm tắt</Text>
+            <Text style={styles.label}>Mô tả (Không bắt buộc)</Text>
             <Controller
               control={control}
               name="description"
@@ -253,60 +343,67 @@ export const UploadScreen: React.FC<UploadScreenProps> = ({
                   onChangeText={onChange}
                   onBlur={onBlur}
                   multiline
-                  numberOfLines={4}
+                  numberOfLines={3}
                   textAlignVertical="top"
                   maxLength={500}
                 />
               )}
             />
+            {errors.description ? (
+              <Text style={styles.fieldError}>{errors.description.message}</Text>
+            ) : null}
           </View>
         </View>
 
-        <View style={styles.actions}>
+        {/* ── Action Buttons ──────────────────────────────────────── */}
+        <View style={styles.actionRow}>
           <TouchableOpacity
             style={styles.btnCancel}
-            onPress={onCancel}
+            onPress={handleCancel}
+            activeOpacity={0.75}
             disabled={isUploading}
           >
             <Text style={styles.btnCancelText}>Hủy</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.btnUpload, isUploading && styles.btnDisabled]}
+            style={[
+              styles.btnSubmit,
+              isUploading && styles.btnSubmitDisabled,
+            ]}
             onPress={handleSubmit(onSubmit)}
-            disabled={isUploading}
             activeOpacity={0.8}
+            disabled={isUploading}
           >
             {isUploading ? (
               <ActivityIndicator color={COLORS["on-primary"]} size="small" />
             ) : (
-              <>
-                <MaterialCommunityIcons
-                  name="cloud-upload"
-                  size={18}
-                  color={COLORS["on-primary"]}
-                />
-                <Text style={styles.btnUploadText}>Tải lên</Text>
-              </>
+              <Text style={styles.btnSubmitText}>Tải lên</Text>
             )}
           </TouchableOpacity>
         </View>
 
-        <View style={{ height: SPACING.xl }} />
+        {/* bottom padding so content clears the tab bar */}
+        <View style={{ height: 32 }} />
       </ScrollView>
     </SafeAreaView>
   );
 };
 
+// ── Styles ───────────────────────────────────────────────────────────────────
+
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
-    backgroundColor: COLORS.surface,
+    backgroundColor: COLORS.background,
   },
 
+  // Header
   header: {
     height: 64,
-    justifyContent: "center",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: SPACING["margin-mobile"],
     backgroundColor: COLORS.surface,
     borderBottomWidth: 1,
@@ -314,105 +411,142 @@ const styles = StyleSheet.create({
   },
   logo: {
     ...TYPOGRAPHY["headline-md"],
-    fontWeight: "700",
     color: COLORS.primary,
+    fontWeight: "700",
+  },
+  avatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: COLORS["outline-variant"],
   },
 
+  // Scroll
   scroll: { flex: 1 },
   scrollContent: {
     paddingHorizontal: SPACING["margin-mobile"],
-    paddingTop: SPACING.xl,
-    gap: SPACING.lg,
+    paddingTop: 24,
+    gap: 24,
   },
 
+  // Page title
+  pageTitleBlock: { gap: 4 },
   pageTitle: {
     ...TYPOGRAPHY["headline-lg-mobile"],
     color: COLORS["on-surface"],
   },
+  pageSubtitle: {
+    ...TYPOGRAPHY["body-md"],
+    color: COLORS["on-surface-variant"],
+  },
 
+  // Drop zone
   dropZone: {
     borderWidth: 2,
-    borderColor: COLORS["outline-variant"],
     borderStyle: "dashed",
-    borderRadius: BORDER_RADIUS.xl,
-    paddingVertical: SPACING.xl,
+    borderColor: COLORS.secondary,
+    borderRadius: BORDER_RADIUS.md,
+    paddingVertical: 32,
+    paddingHorizontal: 24,
     alignItems: "center",
-    gap: SPACING.base,
-    backgroundColor: COLORS["surface-container-low"],
+    justifyContent: "center",
+    backgroundColor: COLORS["surface-container-lowest"],
+    minHeight: 140,
   },
-  dropZoneActive: {
+  dropZoneSelected: {
     borderColor: COLORS.primary,
     borderStyle: "solid",
+    backgroundColor: COLORS["surface-container-low"],
+  },
+  dropZoneError: {
+    borderColor: COLORS.error,
+  },
+  uploadIcon: {
+    marginBottom: 8,
+    opacity: 0.9,
+  },
+  dropZoneTitle: {
+    ...TYPOGRAPHY["body-lg"],
+    color: COLORS["on-surface"],
+    marginBottom: 4,
   },
   dropZoneHint: {
-    ...TYPOGRAPHY["label-md"],
-    color: COLORS["on-surface"],
-  },
-  dropZoneMeta: {
     ...TYPOGRAPHY["label-sm"],
     color: COLORS["on-surface-variant"],
-  },
-  fileName: {
-    ...TYPOGRAPHY["label-md"],
-    color: COLORS.primary,
-    paddingHorizontal: SPACING.lg,
-  },
-  fileMeta: {
-    ...TYPOGRAPHY["label-sm"],
-    color: COLORS["on-surface-variant"],
-  },
-  clearBtn: {
-    marginTop: SPACING.sm,
-  },
-  clearBtnText: {
-    ...TYPOGRAPHY["label-sm"],
-    color: COLORS["on-surface-variant"],
-    textDecorationLine: "underline",
+    textAlign: "center",
   },
 
+  // File picked state inside drop zone
+  filePickedRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    width: "100%",
+  },
+  fileInfo: { flex: 1 },
+  fileName: {
+    ...TYPOGRAPHY["label-md"],
+    color: COLORS["on-surface"],
+    flexShrink: 1,
+  },
+  fileSize: {
+    ...TYPOGRAPHY["label-sm"],
+    color: COLORS["on-surface-variant"],
+    marginTop: 2,
+  },
+  removeBtn: {
+    padding: 4,
+  },
+
+  // Error banner below drop zone
   errorBanner: {
     flexDirection: "row",
     alignItems: "center",
-    gap: SPACING.base,
-    padding: SPACING.md,
     backgroundColor: COLORS["error-container"],
-    borderRadius: BORDER_RADIUS.lg,
+    borderRadius: BORDER_RADIUS.sm,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
   },
-  errorText: {
+  errorBannerText: {
     ...TYPOGRAPHY["label-sm"],
     color: COLORS.error,
     flex: 1,
   },
 
-  form: { gap: SPACING.lg },
-  fieldBlock: { gap: SPACING.sm },
+  // Form
+  form: { gap: 16 },
+  fieldBlock: { gap: 4 },
   label: {
     ...TYPOGRAPHY["label-md"],
     color: COLORS["on-surface"],
+    marginBottom: 2,
   },
   input: {
     ...TYPOGRAPHY["body-md"],
     color: COLORS["on-surface"],
-    backgroundColor: COLORS.surface,
+    backgroundColor: COLORS["surface-container-lowest"],
     borderWidth: 1,
     borderColor: COLORS["outline-variant"],
-    borderRadius: BORDER_RADIUS.lg,
-    paddingHorizontal: SPACING.lg,
-    paddingVertical: SPACING.md,
+    borderRadius: BORDER_RADIUS.sm,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
   },
   inputError: {
     borderColor: COLORS.error,
     borderWidth: 1.5,
   },
   textarea: {
-    height: 100,
-    paddingTop: SPACING.md,
+    height: 88,
+    paddingTop: 12,
   },
   fieldError: {
     ...TYPOGRAPHY["label-sm"],
     color: COLORS.error,
+    marginTop: 2,
   },
 
+  // Category selector
   selectRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -424,18 +558,19 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 
+  // Modal picker
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.35)",
     justifyContent: "center",
     alignItems: "center",
-    padding: SPACING.xl,
+    padding: 24,
   },
   modalSheet: {
     width: "100%",
     backgroundColor: COLORS["surface-container-lowest"],
-    borderRadius: BORDER_RADIUS.xl,
-    paddingVertical: SPACING.base,
+    borderRadius: BORDER_RADIUS.lg,
+    paddingVertical: 8,
     elevation: 8,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
@@ -445,8 +580,8 @@ const styles = StyleSheet.create({
   modalTitle: {
     ...TYPOGRAPHY["label-md"],
     color: COLORS["on-surface-variant"],
-    paddingHorizontal: SPACING.lg,
-    paddingVertical: SPACING.md,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: COLORS["outline-variant"],
   },
@@ -454,7 +589,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: SPACING.lg,
+    paddingHorizontal: 16,
     paddingVertical: 14,
   },
   modalOptionActive: {
@@ -463,45 +598,45 @@ const styles = StyleSheet.create({
   modalOptionText: {
     ...TYPOGRAPHY["body-md"],
     color: COLORS["on-surface"],
-    flex: 1,
   },
   modalOptionTextActive: {
     color: COLORS.primary,
     fontWeight: "600",
   },
 
-  actions: {
+  // Action buttons
+  actionRow: {
     flexDirection: "row",
-    gap: SPACING.md,
+    gap: 16,
+    marginTop: 8,
   },
   btnCancel: {
     flex: 1,
-    height: 48,
+    borderWidth: 1.5,
+    borderColor: COLORS.primary,
+    borderRadius: BORDER_RADIUS.sm,
+    paddingVertical: 13,
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: BORDER_RADIUS.xl,
-    borderWidth: 1,
-    borderColor: COLORS["outline-variant"],
+    backgroundColor: "transparent",
   },
   btnCancelText: {
     ...TYPOGRAPHY["label-md"],
-    color: COLORS["on-surface-variant"],
+    color: COLORS.primary,
   },
-  btnUpload: {
-    flex: 2,
-    height: 48,
-    flexDirection: "row",
+  btnSubmit: {
+    flex: 1,
+    backgroundColor: COLORS.primary,
+    borderRadius: BORDER_RADIUS.sm,
+    paddingVertical: 13,
     alignItems: "center",
     justifyContent: "center",
-    gap: SPACING.base,
-    borderRadius: BORDER_RADIUS.xl,
-    backgroundColor: COLORS.primary,
   },
-  btnUploadText: {
+  btnSubmitDisabled: {
+    opacity: 0.65,
+  },
+  btnSubmitText: {
     ...TYPOGRAPHY["label-md"],
     color: COLORS["on-primary"],
-  },
-  btnDisabled: {
-    opacity: 0.55,
   },
 });

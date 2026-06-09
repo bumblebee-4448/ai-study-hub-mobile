@@ -1,7 +1,8 @@
+import { COLORS } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
-
-import { COLORS } from "@/constants/theme";
+import React from "react";
+import { StyleSheet } from "react-native";
 
 type IoniconName = React.ComponentProps<typeof Ionicons>["name"];
 
@@ -28,10 +29,8 @@ export default function TabLayout() {
         headerShown: false,
         tabBarActiveTintColor: COLORS.primary,
         tabBarInactiveTintColor: COLORS["on-surface-variant"],
-        tabBarStyle: {
-          backgroundColor: COLORS["surface-container-lowest"],
-          borderTopColor: COLORS["outline-variant"],
-        },
+        tabBarStyle: styles.tabBar,
+        tabBarLabelStyle: styles.tabBarLabel,
       }}
     >
       {TAB_CONFIG.map(({ name, title, icon, activeIcon }) => (
@@ -53,3 +52,19 @@ export default function TabLayout() {
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  tabBar: {
+    backgroundColor: COLORS["surface-container-lowest"],
+    borderTopColor: COLORS["outline-variant"],
+    borderTopWidth: 1,
+    height: 64,
+    paddingBottom: 8,
+    paddingTop: 6,
+  },
+  tabBarLabel: {
+    fontSize: 10,
+    fontWeight: "600",
+    marginTop: 2,
+  },
+});

@@ -3,7 +3,7 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 
 export default function DocumentDetailRoute() {
   const router = useRouter();
-  const { id } = useLocalSearchParams<{ id: string }>();
+  useLocalSearchParams<{ id: string }>();
 
   return (
     <DocumentDetailScreen
@@ -15,7 +15,7 @@ export default function DocumentDetailRoute() {
         // Placeholder for download logic
       }}
       onRelatedPress={(relId) => {
-        router.push({ pathname: "/document/[id]", params: { id: relId } });
+        router.push({ pathname: "/document/[id]" as any, params: { id: relId } });
       }}
     />
   );

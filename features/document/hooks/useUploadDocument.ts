@@ -1,8 +1,20 @@
+/**
+ * Document Feature — useUploadDocument hook
+ * Encapsulates file picking, validation, and form submission for UploadScreen.
+ *
+ * Rules:
+ *  - Allowed MIME types: PDF, DOCX, PPTX
+ *  - Max size: 50 MB
+ *  - Uses expo-document-picker for native file access
+ */
+
 import * as DocumentPicker from "expo-document-picker";
 import { useCallback, useState } from "react";
 import { PickedFile, UploadStatus } from "../types";
 
-const MAX_FILE_SIZE = 50 * 1024 * 1024;
+// ── Constants ────────────────────────────────────────────────────────────────
+
+const MAX_SIZE_BYTES = 50 * 1024 * 1024; // 50 MB
 
 const ALLOWED_MIMES = [
   "application/pdf",
@@ -14,34 +26,57 @@ const ALLOWED_MIMES = [
 
 const ALLOWED_EXTENSIONS = [".pdf", ".doc", ".docx", ".ppt", ".pptx"];
 
-const validateFile = (
-  asset: DocumentPicker.DocumentPickerAsset
-): string | null => {
-  const mime = asset.mimeType ?? "";
-  const ext = "." + (asset.name ?? "").split(".").pop()?.toLowerCase();
+// ── Hook ─────────────────────────────────────────────────────────────────────
 
-  if (!ALLOWED_MIMES.includes(mime) && !ALLOWED_EXTENSIONS.includes(ext)) {
-    return "Chỉ hỗ trợ PDF, DOCX, PPTX. Vui lòng chọn lại.";
-  }
+interface UseUploadDocumentReturn {
+  pickedFile: PickedFile | null;
+  fileError: string | null;
+  uploadStatus: UploadStatus;
+  pickFile: () => Promise<void>;
+  clearFile: () => void;
+  submitUpload: (formData: {
+    title: string;
+    category: string;
+    description?: string;
+  }) => Promise<void>;
+}
 
-  const size = asset.size ?? 0;
-  if (size > MAX_FILE_SIZE) {
-    return `Tệp ${(size / 1024 / 1024).toFixed(1)} MB vượt quá giới hạn 50 MB.`;
-  }
-
-  return null;
-};
-
-export const useUploadDocument = () => {
+export const useUploadDocument = (): UseUploadDocumentReturn => {
   const [pickedFile, setPickedFile] = useState<PickedFile | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
   const [uploadStatus, setUploadStatus] = useState<UploadStatus>("idle");
+
+  /** Validate MIME / extension & size */
+  const validate = useCallback((asset: DocumentPicker.DocumentPickerAsset): string | null => {
+    const mime = asset.mimeType ?? "";
+    const name = asset.name ?? "";
+    const ext = "." + name.split(".").pop()?.toLowerCase();
+
+    const isMimeOk = ALLOWED_MIMES.includes(mime);
+    const isExtOk = ALLOWED_EXTENSIONS.includes(ext);
+
+    if (!isMimeOk && !isExtOk) {
+      return "Chỉ hỗ trợ PDF, DOCX, PPTX. Vui lòng chọn lại.";
+    }
+
+    const size = asset.size ?? 0;
+    if (size > MAX_SIZE_BYTES) {
+      const mb = (size / 1024 / 1024).toFixed(1);
+      return `Tệp ${mb} MB vượt quá giới hạn 50 MB.`;
+    }
+
+    return null;
+  }, []);
 
   const pickFile = useCallback(async () => {
     setFileError(null);
     try {
       const result = await DocumentPicker.getDocumentAsync({
-        type: [...ALLOWED_MIMES, "*/*"],
+        type: [
+          ...ALLOWED_MIMES,
+          // Android fallback — let the system filter; we re-validate after
+          "*/*",
+        ],
         copyToCacheDirectory: false,
         multiple: false,
       });
@@ -49,8 +84,7 @@ export const useUploadDocument = () => {
       if (result.canceled) return;
 
       const asset = result.assets[0];
-      const error = validateFile(asset);
-
+      const error = validate(asset);
       if (error) {
         setFileError(error);
         setPickedFile(null);
@@ -66,7 +100,7 @@ export const useUploadDocument = () => {
     } catch {
       setFileError("Không thể mở trình chọn tệp. Vui lòng thử lại.");
     }
-  }, []);
+  }, [validate]);
 
   const clearFile = useCallback(() => {
     setPickedFile(null);
@@ -74,15 +108,21 @@ export const useUploadDocument = () => {
   }, []);
 
   const submitUpload = useCallback(
-    async (formData: { title: string; category: string; description?: string }) => {
+    async (formData: {
+      title: string;
+      category: string;
+      description?: string;
+    }) => {
       if (!pickedFile) {
         setFileError("Vui lòng chọn tệp trước khi tải lên.");
         return;
       }
+
       setUploadStatus("uploading");
+
       try {
+        // TODO: replace with real API call via axiosClient
         await new Promise<void>((resolve) => setTimeout(resolve, 1500));
-        void formData;
         setUploadStatus("success");
       } catch {
         setUploadStatus("error");
@@ -91,5 +131,12 @@ export const useUploadDocument = () => {
     [pickedFile]
   );
 
-  return { pickedFile, fileError, uploadStatus, pickFile, clearFile, submitUpload };
+  return {
+    pickedFile,
+    fileError,
+    uploadStatus,
+    pickFile,
+    clearFile,
+    submitUpload,
+  };
 };
