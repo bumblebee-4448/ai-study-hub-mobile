@@ -3,7 +3,7 @@
  * Main screen displaying trending documents and recommended courses
  */
 
-import { COLORS } from "@/constants/theme";
+import { COLORS, SPACING } from "@/constants/theme";
 import React, { useCallback } from "react";
 import { SafeAreaView, ScrollView, StyleSheet, View } from "react-native";
 import {
@@ -31,48 +31,28 @@ export const DocumentHomeScreen: React.FC<DocumentHomeScreenProps> = ({
   onViewAllDocuments,
   onViewAllCourses,
 }) => {
-  const { searchQuery, handleSearch, clearSearch } = useDocumentSearch();
+  const { searchQuery, handleSearch } = useDocumentSearch();
   const { quickPrompts, handlePromptPress } = useQuickPrompts();
   const { trendingDocuments, recommendedCourses } = useDocument();
 
   const handleAIIconPress = useCallback(() => {
-    if (onAIIconPress) {
-      onAIIconPress();
-    } else {
-      console.log("AI icon pressed");
-    }
+    onAIIconPress?.();
   }, [onAIIconPress]);
 
   const handleDocumentPress = useCallback((documentId: string) => {
-    if (onDocumentPress) {
-      onDocumentPress(documentId);
-    } else {
-      console.log(`Document pressed: ${documentId}`);
-    }
+    onDocumentPress?.(documentId);
   }, [onDocumentPress]);
 
   const handleCoursePress = useCallback((courseId: string) => {
-    if (onCoursePress) {
-      onCoursePress(courseId);
-    } else {
-      console.log(`Course pressed: ${courseId}`);
-    }
+    onCoursePress?.(courseId);
   }, [onCoursePress]);
 
   const handleViewAllDocuments = useCallback(() => {
-    if (onViewAllDocuments) {
-      onViewAllDocuments();
-    } else {
-      console.log("View all documents");
-    }
+    onViewAllDocuments?.();
   }, [onViewAllDocuments]);
 
   const handleViewAllCourses = useCallback(() => {
-    if (onViewAllCourses) {
-      onViewAllCourses();
-    } else {
-      console.log("View all courses");
-    }
+    onViewAllCourses?.();
   }, [onViewAllCourses]);
 
   return (
@@ -141,7 +121,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.surface,
   },
   mainContent: {
-    paddingVertical: 24,
+    paddingVertical: SPACING.xl,
     paddingBottom: 80, // Space for bottom navigation
   },
 });

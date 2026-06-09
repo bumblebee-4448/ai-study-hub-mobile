@@ -22,7 +22,6 @@ export const useQuickPrompts = () => {
 
   const handlePromptPress = useCallback((promptLabel: string) => {
     // This would typically trigger AI search
-    console.log(`Quick prompt activated: ${promptLabel}`);
   }, []);
 
   return {
@@ -40,7 +39,6 @@ export const useDocumentSearch = () => {
   const handleSearch = useCallback((query: string) => {
     setSearchQuery(query);
     // Trigger search logic here
-    console.log(`Searching for: ${query}`);
   }, [setSearchQuery]);
 
   const clearSearch = useCallback(() => {

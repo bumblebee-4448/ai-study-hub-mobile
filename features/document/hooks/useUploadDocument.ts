@@ -123,7 +123,6 @@ export const useUploadDocument = (): UseUploadDocumentReturn => {
       try {
         // TODO: replace with real API call via axiosClient
         await new Promise<void>((resolve) => setTimeout(resolve, 1500));
-        console.log("Upload payload:", { ...formData, file: pickedFile });
         setUploadStatus("success");
       } catch {
         setUploadStatus("error");

@@ -26,69 +26,6 @@ export interface QuickPrompt {
 }
 
 export interface PickedFile {
-  name: string;
-  uri: string;
-  mimeType: string | undefined;
-  size: number | undefined;
-}
-
-export interface UploadCategory {
-  value: string;
-  label: string;
-}
-
-export type UploadStatus = "idle" | "uploading" | "success" | "error";
-
-export interface RelatedDocument {
-  id: string;
-  title: string;
-  author: string;
-  thumbnailUrl: string;
-  downloads: number;
-}
-
-export interface DocumentDetail {
-  id: string;
-  title: string;
-  format: string;
-  fileSize: string;
-  thumbnailUrl: string;
-  author: string;
-  authorAvatarUrl: string;
-  publishedAt: string;
-  views: number;
-  downloads: number;
-  description: string;
-  tags: string[];
-  relatedDocuments: RelatedDocument[];
-}
-
-export interface EditDocumentParams {
-  documentId: string;
-  title: string;
-  category: string;
-  description?: string;
-  tags?: string;
-  fileName?: string;
-  fileSize?: number;
-}
-
-export interface DocumentState {
-  trendingDocuments: Document[];
-  recommendedCourses: Course[];
-  quickPrompts: QuickPrompt[];
-  searchQuery: string;
-  setSearchQuery: (query: string) => void;
-}
-
-// ── Upload ──────────────────────────────────────────────────────────────
-
-export interface UploadCategory {
-  value: string;
-  label: string;
-}
-
-export interface PickedFile {
   /** Display name shown in the UI */
   name: string;
   /** URI returned by expo-document-picker */
@@ -99,37 +36,13 @@ export interface PickedFile {
   size: number | undefined;
 }
 
-export interface UploadFormData {
-  title: string;
-  category: string;
-  description?: string;
+export interface UploadCategory {
+  value: string;
+  label: string;
 }
 
 export type UploadStatus = "idle" | "uploading" | "success" | "error";
 
-// ── Edit ─────────────────────────────────────────────────────────────────
-
-/** Parameters passed to EditDocumentScreen (via navigation / route props) */
-export interface EditDocumentParams {
-  /** The document ID being edited */
-  documentId: string;
-  /** Pre-filled title shown in the form */
-  title: string;
-  /** Pre-filled category value */
-  category: string;
-  /** Pre-filled description */
-  description?: string;
-  /** Pre-filled comma-separated tags string */
-  tags?: string;
-  /** Display name of the attached file */
-  fileName?: string;
-  /** File size in bytes */
-  fileSize?: number;
-}
-
-// ── Document Detail ────────────────────────────────────────────────────────
-
-/** A related document shown in the sidebar / related section */
 export interface RelatedDocument {
   id: string;
   title: string;
@@ -159,4 +72,38 @@ export interface DocumentDetail {
   tags: string[];
   /** Shown in the "Tài liệu liên quan" section */
   relatedDocuments: RelatedDocument[];
+}
+
+/** Parameters passed to EditDocumentScreen (via navigation / route props) */
+export interface EditDocumentParams {
+  /** The document ID being edited */
+  documentId: string;
+  /** Pre-filled title shown in the form */
+  title: string;
+  /** Pre-filled category value */
+  category: string;
+  /** Pre-filled description */
+  description?: string;
+  /** Pre-filled comma-separated tags string */
+  tags?: string;
+  /** Display name of the attached file */
+  fileName?: string;
+  /** File size in bytes */
+  fileSize?: number;
+}
+
+export interface DocumentState {
+  trendingDocuments: Document[];
+  recommendedCourses: Course[];
+  quickPrompts: QuickPrompt[];
+  searchQuery: string;
+  setSearchQuery: (query: string) => void;
+}
+
+// ── Upload ──────────────────────────────────────────────────────────────
+
+export interface UploadFormData {
+  title: string;
+  category: string;
+  description?: string;
 }
