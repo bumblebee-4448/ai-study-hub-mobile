@@ -22,6 +22,9 @@ interface DocumentHomeScreenProps {
   onAIIconPress?: () => void;
   onViewAllDocuments?: () => void;
   onViewAllCourses?: () => void;
+  isLoggedIn?: boolean;
+  avatarUrl?: string;
+  onLoginPress?: () => void;
 }
 
 export const DocumentHomeScreen: React.FC<DocumentHomeScreenProps> = ({
@@ -30,6 +33,9 @@ export const DocumentHomeScreen: React.FC<DocumentHomeScreenProps> = ({
   onAIIconPress,
   onViewAllDocuments,
   onViewAllCourses,
+  isLoggedIn,
+  avatarUrl,
+  onLoginPress,
 }) => {
   const { searchQuery, handleSearch } = useDocumentSearch();
   const { quickPrompts, handlePromptPress } = useQuickPrompts();
@@ -64,7 +70,11 @@ export const DocumentHomeScreen: React.FC<DocumentHomeScreenProps> = ({
       >
         {/* Sticky Header Section */}
         <View style={styles.stickyHeader}>
-          <Header />
+          <Header
+            isLoggedIn={isLoggedIn}
+            avatarUrl={avatarUrl}
+            onLoginPress={onLoginPress}
+          />
           <AISearchInput
             value={searchQuery}
             onChange={handleSearch}

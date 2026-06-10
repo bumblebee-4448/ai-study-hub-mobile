@@ -65,6 +65,12 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
     [handleLogout, onMenuPress, router]
   );
 
+  React.useEffect(() => {
+    if (!profile) {
+      router.replace("/login");
+    }
+  }, [profile, router]);
+
   if (!profile) return null;
 
   return (
