@@ -1,6 +1,7 @@
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import {
+  Alert,
   SafeAreaView,
   ScrollView,
   StyleSheet,
@@ -11,6 +12,10 @@ import {
 } from "react-native";
 
 import { BORDER_RADIUS, COLORS, SPACING, TYPOGRAPHY } from "@/constants/theme";
+import {
+  ModeratorDocumentDetailScreen,
+  type ReviewDocumentDetail,
+} from "./ModeratorDocumentDetailScreen";
 
 // ── Dummy Data ──────────────────────────────────────────────────────────────
 
@@ -18,11 +23,16 @@ interface ReviewDocument {
   id: string;
   title: string;
   author: string;
+  authorAvatar?: string;
   uploadedAt: string;
   format: string;
   size: string;
   description?: string;
   isUrgent?: boolean;
+  category?: string;
+  year?: string;
+  pageCount?: number;
+  aiTrustScore?: number;
 }
 
 const REVIEW_DOCUMENTS: ReviewDocument[] = [
@@ -30,37 +40,91 @@ const REVIEW_DOCUMENTS: ReviewDocument[] = [
     id: "doc-1",
     title: "Advanced Algorithms for Quantum Computing Applications in Cryptography",
     author: "Dr. Elena Rostova",
-    uploadedAt: "2h ago",
+    uploadedAt: "14/10/2023",
     format: "PDF",
     size: "2.4MB",
-    description: "This paper explores the theoretical limits of current post-quantum cryptographic methods against Shor's algorithm variants...",
+    category: "Computer Science",
+    year: "Year 4",
+    pageCount: 45,
+    aiTrustScore: 98,
+    description:
+      "This paper explores the theoretical limits of current post-quantum cryptographic methods against Shor's algorithm variants. Covers Gradient Descent, Genetic Algorithm and Particle Swarm Optimization applied in the field of Control Engineering. Includes both theory and practical examples on MATLAB.",
   },
   {
     id: "doc-2",
     title: "Introduction to Machine Learning: Neural Networks and Deep Learning Fundamentals",
     author: "Prof. Alan Turing",
-    uploadedAt: "4h ago",
+    uploadedAt: "12/10/2023",
     format: "DOCX",
     size: "1.1MB",
-    description: "A comprehensive guide for beginners outlining the basic architecture of perceptrons and backpropagation algorithms...",
+    category: "Mathematics",
+    year: "Year 3",
+    pageCount: 32,
+    aiTrustScore: 74,
+    description:
+      "A comprehensive guide for beginners outlining the basic architecture of perceptrons and backpropagation algorithms. Suitable for undergraduate students in engineering and computer science.",
   },
   {
     id: "doc-3",
     title: "Report on Academic Integrity Policy Violations Q3",
     author: "Admin",
-    uploadedAt: "5h ago",
+    uploadedAt: "10/10/2023",
     format: "PDF",
     size: "500KB",
     isUrgent: true,
+    category: "Policy",
+    year: "Year 1",
+    pageCount: 8,
+    aiTrustScore: 41,
+    description:
+      "Quarterly report on policy violations submitted by administration. Requires urgent review before the semester ends.",
   },
 ];
 
 const FILTERS = ["Pending Review", "High Urgency", "Computer Science", "Mathematics"];
 
-// ── Components ───────────────────────────────────────────────────────────────
+// ── Main Screen ──────────────────────────────────────────────────────────────
 
 export const ModeratorReviewScreen = () => {
   const [activeFilter, setActiveFilter] = useState("Pending Review");
+  const [selectedDoc, setSelectedDoc] = useState<ReviewDocument | null>(null);
+
+  // Convert to ReviewDocumentDetail shape
+  const toDetail = (d: ReviewDocument): ReviewDocumentDetail => ({
+    id: d.id,
+    title: d.title,
+    author: d.author,
+    authorAvatar: d.authorAvatar,
+    uploadedAt: d.uploadedAt,
+    format: d.format,
+    size: d.size,
+    description: d.description,
+    isUrgent: d.isUrgent,
+    category: d.category,
+    year: d.year,
+    pageCount: d.pageCount,
+    aiTrustScore: d.aiTrustScore,
+  });
+
+  const handleApprove = (doc: ReviewDocumentDetail) => {
+    Alert.alert("Approved ✅", `"${doc.title}" has been approved.`);
+  };
+
+  const handleReject = (doc: ReviewDocumentDetail, reason: string) => {
+    Alert.alert("Rejected", `"${doc.title}" was rejected.\nReason: ${reason}`);
+  };
+
+  // Show detail screen inside this component (stack-like navigation within screen)
+  if (selectedDoc) {
+    return (
+      <ModeratorDocumentDetailScreen
+        document={toDetail(selectedDoc)}
+        onBack={() => setSelectedDoc(null)}
+        onApprove={handleApprove}
+        onReject={handleReject}
+      />
+    );
+  }
 
   const renderDocumentCard = (doc: ReviewDocument) => (
     <View key={doc.id} style={styles.card}>
@@ -103,8 +167,12 @@ export const ModeratorReviewScreen = () => {
           <MaterialCommunityIcons name="close-circle-outline" size={18} color={COLORS.error} />
           <Text style={styles.btnRejectText}>Reject</Text>
         </TouchableOpacity>
-        
-        <TouchableOpacity style={styles.btnDetail} activeOpacity={0.75}>
+
+        <TouchableOpacity
+          style={styles.btnDetail}
+          activeOpacity={0.75}
+          onPress={() => setSelectedDoc(doc)}
+        >
           <Ionicons name="eye-outline" size={18} color={COLORS["on-primary"]} />
           <Text style={styles.btnDetailText}>See Detail</Text>
         </TouchableOpacity>
@@ -114,7 +182,7 @@ export const ModeratorReviewScreen = () => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      {/* ── Header ────────────────────────────────────────────────────────── */}
+      {/* ── Header ─────────────────────────────────────────────────────── */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>AcademiShare</Text>
         <View style={styles.headerRight}>
@@ -131,7 +199,7 @@ export const ModeratorReviewScreen = () => {
         </View>
       </View>
 
-      {/* ── Main Content ─────────────────────────────────────────────────── */}
+      {/* ── Main Content ──────────────────────────────────────────────── */}
       <View style={styles.mainContainer}>
         {/* Filter Tabs */}
         <View style={styles.filterWrapper}>
@@ -164,7 +232,7 @@ export const ModeratorReviewScreen = () => {
   );
 };
 
-// ── Styles ───────────────────────────────────────────────────────────────────
+// ── Styles ────────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
   safeArea: {
