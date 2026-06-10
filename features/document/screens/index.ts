@@ -5,4 +5,5 @@
 export { DocumentDetailScreen } from "./DocumentDetailScreen";
 export { DocumentHomeScreen } from "./DocumentHomeScreen";
 export { EditDocumentScreen } from "./EditDocumentScreen";
+export { ModeratorReviewScreen } from "./ModeratorReviewScreen";
 export { UploadScreen } from "./UploadScreen";

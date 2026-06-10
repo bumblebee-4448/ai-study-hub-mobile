@@ -20,6 +20,7 @@ export {
   DocumentDetailScreen,
   DocumentHomeScreen,
   EditDocumentScreen,
+  ModeratorReviewScreen,
   UploadScreen,
 } from "./screens";
 

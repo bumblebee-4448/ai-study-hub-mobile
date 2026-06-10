@@ -50,33 +50,67 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
         // Mock authentication delay
         await new Promise<void>((resolve) => setTimeout(resolve, 1200));
 
-        // Set state in Zustand store
-        setAuth(
-          "mock-access-token-xyz",
-          "user",
-          {
+        // ── Mock moderator account ──────────────────────────────────────
+        const isModerator =
+          data.email.toLowerCase() === "moderator@academishare.com" &&
+          data.password === "Moderator@123";
+
+        if (isModerator) {
+          setAuth(
+            "mock-access-token-mod",
+            "moderator",
+            {
+              id: "mod-001",
+              name: "Moderator AcademiShare",
+              email: data.email,
+              avatarUrl:
+                "https://lh3.googleusercontent.com/aida-public/AB6AXuAOdq3b_ELYMC3GxquZ7RauzvzJ1pHpMfQQrorUfffyd_17r085qf5-VDo_tbKXmF7wHmykjJTozbpZ1TVNWoFmCwhZDY1dnPGSwk2XO-8bo-kYFGg-_BZqDhSl37KgNuJRR8jaqk4y-7pWYY09g8q--SUumhwSPTxLbMb5m84GyF68wDcKUE1AsUixdGwr9QeL4zaC2sAvFTWbPk0oMt2v9Rd-qCdCDR0sJUgAjYmwtjT5NJnGazypV9ma9i_j8OnIIMkdTuQ34E0",
+              university: "AcademiShare Platform",
+              major: "Content Moderation",
+            },
+            "mock-refresh-token-mod"
+          );
+
+          setProfile({
+            id: "mod-001",
+            name: "Moderator AcademiShare",
+            university: "AcademiShare Platform",
+            yearMajor: "Moderator",
+            avatarUrl:
+              "https://lh3.googleusercontent.com/aida-public/AB6AXuAOdq3b_ELYMC3GxquZ7RauzvzJ1pHpMfQQrorUfffyd_17r085qf5-VDo_tbKXmF7wHmykjJTozbpZ1TVNWoFmCwhZDY1dnPGSwk2XO-8bo-kYFGg-_BZqDhSl37KgNuJRR8jaqk4y-7pWYY09g8q--SUumhwSPTxLbMb5m84GyF68wDcKUE1AsUixdGwr9QeL4zaC2sAvFTWbPk0oMt2v9Rd-qCdCDR0sJUgAjYmwtjT5NJnGazypV9ma9i_j8OnIIMkdTuQ34E0",
+            documentCount: 0,
+            savedCount: 0,
+            points: 0,
+          });
+        } else {
+          // ── Regular user account ────────────────────────────────────────
+          setAuth(
+            "mock-access-token-xyz",
+            "user",
+            {
+              id: "user-001",
+              name: "Nguyễn Văn A",
+              email: data.email,
+              avatarUrl:
+                "https://lh3.googleusercontent.com/aida-public/AB6AXuByChcQ0XwJZE7ksDTDKK-d6leBoSCIpKJxnQGdxZX9s1Ai_dywhkwWtVXxQ67QZVEDBVwOIymfGb8dteXSO5w_L3S3NXtPl-DG6rWfCYFJWKQr-IJhRH7LrI2MejDxLUeSGX3eYrwFuboLtXR-rLII6GQvJ-Ln2lFUM3hgldUii1oCouxPVqTcIyiETtvwO61CT-qUBGle-Lca3bCK6mRSaMotdAi_2wOOgPB6xy-Ab7uJcXNrKX1brKh6rqCbsrSI81BQTvUIB50",
+              university: "Sinh viên Đại học Khoa học",
+              major: "Công nghệ thông tin",
+            },
+            "mock-refresh-token-xyz"
+          );
+
+          setProfile({
             id: "user-001",
             name: "Nguyễn Văn A",
-            email: data.email,
+            university: "Sinh viên Đại học Khoa học",
+            yearMajor: "Năm 3 - Công nghệ thông tin",
             avatarUrl:
               "https://lh3.googleusercontent.com/aida-public/AB6AXuByChcQ0XwJZE7ksDTDKK-d6leBoSCIpKJxnQGdxZX9s1Ai_dywhkwWtVXxQ67QZVEDBVwOIymfGb8dteXSO5w_L3S3NXtPl-DG6rWfCYFJWKQr-IJhRH7LrI2MejDxLUeSGX3eYrwFuboLtXR-rLII6GQvJ-Ln2lFUM3hgldUii1oCouxPVqTcIyiETtvwO61CT-qUBGle-Lca3bCK6mRSaMotdAi_2wOOgPB6xy-Ab7uJcXNrKX1brKh6rqCbsrSI81BQTvUIB50",
-            university: "Sinh viên Đại học Khoa học",
-            major: "Công nghệ thông tin",
-          },
-          "mock-refresh-token-xyz"
-        );
-
-        setProfile({
-          id: "user-001",
-          name: "Nguyễn Văn A",
-          university: "Sinh viên Đại học Khoa học",
-          yearMajor: "Năm 3 - Công nghệ thông tin",
-          avatarUrl:
-            "https://lh3.googleusercontent.com/aida-public/AB6AXuByChcQ0XwJZE7ksDTDKK-d6leBoSCIpKJxnQGdxZX9s1Ai_dywhkwWtVXxQ67QZVEDBVwOIymfGb8dteXSO5w_L3S3NXtPl-DG6rWfCYFJWKQr-IJhRH7LrI2MejDxLUeSGX3eYrwFuboLtXR-rLII6GQvJ-Ln2lFUM3hgldUii1oCouxPVqTcIyiETtvwO61CT-qUBGle-Lca3bCK6mRSaMotdAi_2wOOgPB6xy-Ab7uJcXNrKX1brKh6rqCbsrSI81BQTvUIB50",
-          documentCount: 12,
-          savedCount: 48,
-          points: 156,
-        });
+            documentCount: 12,
+            savedCount: 48,
+            points: 156,
+          });
+        }
 
         Alert.alert("Thành công", "Đăng nhập thành công!", [
           {
@@ -98,6 +132,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
     },
     [router, setAuth, setProfile, onSuccess]
   );
+
 
   const handleGoogleLogin = useCallback(() => {
     Alert.alert("Thông báo", "Tính năng đăng nhập Google đang được phát triển.");

@@ -23,6 +23,7 @@ export default function RootLayout() {
         <Stack.Screen name="my-documents" options={{ headerShown: false }} />
         <Stack.Screen name="document/[id]" options={{ headerShown: false }} />
         <Stack.Screen name="document/[id]/edit" options={{ headerShown: false }} />
+        <Stack.Screen name="moderator-review" options={{ headerBackTitle: ' ' }} />
       </Stack>
       <StatusBar style="auto" />
     </ThemeProvider>
