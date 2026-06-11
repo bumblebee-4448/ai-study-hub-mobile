@@ -18,6 +18,14 @@ export default function RootLayout() {
       <Stack>
         <Stack.Screen name="(admin-tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="modal" options={{ presentation: 'modal', headerShown: false }} />
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="login" options={{ headerShown: false }} />
+        <Stack.Screen name="register" options={{ headerShown: false }} />
+        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
+        <Stack.Screen name="profile-edit" options={{ headerShown: false }} />
+        <Stack.Screen name="my-documents" options={{ headerShown: false }} />
+        <Stack.Screen name="document/[id]" options={{ headerShown: false }} />
+        <Stack.Screen name="document/[id]/edit" options={{ headerShown: false }} />
       </Stack>
       <StatusBar style="auto" />
     </ThemeProvider>
