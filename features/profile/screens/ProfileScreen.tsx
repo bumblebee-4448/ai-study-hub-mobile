@@ -11,6 +11,7 @@ import {
   View,
 } from "react-native";
 
+import { useAuthStore } from "@/features/auth";
 import { BORDER_RADIUS, COLORS, SPACING, TYPOGRAPHY } from "@/constants/theme";
 import { MenuItem, MenuItemData, ProfileHeader, StatsRow } from "../components";
 import { useProfile } from "../hooks/useProfile";
@@ -23,6 +24,7 @@ const PRIMARY_MENU: MenuItemData[] = [
 
 const SETTINGS_MENU: MenuItemData[] = [
   { key: "settings", label: "Cài đặt", iconLib: "ionicons", iconName: "settings-outline" },
+  { key: "moderator-review", label: "Duyệt tài liệu (Mod)", iconLib: "material-community", iconName: "shield-check-outline" },
 ];
 
 const LOGOUT_ITEM: MenuItemData = {
@@ -46,6 +48,11 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
 }) => {
   const router = useRouter();
   const { profile, handleLogout } = useProfile();
+  const { role } = useAuthStore();
+
+  const visibleSettingsMenu = SETTINGS_MENU.filter(
+    (item) => item.key !== "moderator-review" || role === "moderator"
+  );
 
   const handleMenuPress = useCallback(
     (key: string) => {
@@ -58,6 +65,10 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
       }
       if (key === "my-documents") {
         router.push("/my-documents" as any);
+        return;
+      }
+      if (key === "moderator-review") {
+        router.push("/moderator-review" as any);
         return;
       }
       onMenuPress?.(key);
@@ -115,7 +126,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
 
           <View style={styles.menuDivider} />
 
-          {SETTINGS_MENU.map((item) => (
+          {visibleSettingsMenu.map((item) => (
             <MenuItem key={item.key} item={item} onPress={handleMenuPress} />
           ))}
 

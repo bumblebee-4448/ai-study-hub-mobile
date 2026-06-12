@@ -20,9 +20,18 @@ const TAB_CONFIG: TabConfig[] = [
   { name: "profile", title: "Hồ sơ", icon: "person-outline", activeIcon: "person" },
 ];
 
+import { useAuthStore } from "@/features/auth";
+import { Redirect } from "expo-router";
+
 const HIDDEN_TABS = ["explore"];
 
 export default function TabLayout() {
+  const { role, _hasHydrated } = useAuthStore();
+
+  if (_hasHydrated && role === "moderator") {
+    return <Redirect href="/(moderator-tabs)" />;
+  }
+
   return (
     <Tabs
       screenOptions={{

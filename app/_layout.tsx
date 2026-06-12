@@ -16,6 +16,7 @@ export default function RootLayout() {
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="(moderator-tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="login" options={{ headerShown: false }} />
         <Stack.Screen name="register" options={{ headerShown: false }} />
         <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
@@ -23,6 +24,7 @@ export default function RootLayout() {
         <Stack.Screen name="my-documents" options={{ headerShown: false }} />
         <Stack.Screen name="document/[id]" options={{ headerShown: false }} />
         <Stack.Screen name="document/[id]/edit" options={{ headerShown: false }} />
+        <Stack.Screen name="moderator-review" options={{ headerBackTitle: ' ' }} />
       </Stack>
       <StatusBar style="auto" />
     </ThemeProvider>
