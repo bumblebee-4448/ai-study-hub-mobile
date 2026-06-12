@@ -22,8 +22,8 @@ export default function RootLayout() {
           <Stack.Screen name="login" options={{ headerShown: false }} />
           <Stack.Screen name="register" options={{ headerShown: false }} />
           <Stack.Screen name="(admin-tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="(student-tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="(moderator-tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="(student-tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="modal" options={{ presentation: 'modal', headerShown: false }} />
           <Stack.Screen name="profile-edit" options={{ headerShown: false }} />
           <Stack.Screen name="my-documents" options={{ headerShown: false }} />

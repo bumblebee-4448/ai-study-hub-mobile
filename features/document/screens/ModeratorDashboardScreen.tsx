@@ -1,422 +1,305 @@
-import { COLORS, TYPOGRAPHY, SPACING } from "@/constants/theme";
-import { Ionicons } from "@expo/vector-icons";
-import React from "react";
-import {
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-  Image,
-} from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useProfileStore } from "@/features/profile/store/profileStore";
-import { useRouter } from "expo-router";
+import React from 'react';
+import { ScrollView, View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { StatsCard } from '@/features/admin/components/StatsCard';
+import { useRouter } from 'expo-router';
+import { useAuthStore } from '@/features/auth/store/authStore';
+import { useProfileStore } from '@/features/profile/store/profileStore';
+import { ChevronRight, Clock, FileText, AlertTriangle, CheckCircle } from 'lucide-react-native';
+
+const RECENT_REVIEWS = [
+  { id: '1', title: 'Giải tích 1 - Đề thi 2023', author: 'Sinh viên A', time: '2 phút trước', status: 'pending' },
+  { id: '2', title: 'Nhập môn Triết học Mác-Lênin', author: 'Giảng viên B', time: '15 phút trước', status: 'approved' },
+  { id: '3', title: 'Lập trình Python cơ bản', author: 'Sinh viên C', time: '1 giờ trước', status: 'rejected' },
+];
 
 export const ModeratorDashboardScreen = () => {
-  const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { logout } = useAuthStore();
   const { profile } = useProfileStore();
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
-      <ScrollView
-        contentContainerStyle={[styles.scrollContent, { paddingBottom: SPACING.lg }]}
+    <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        <View>
+          <Text style={styles.welcomeText}>Chào mừng trở lại,</Text>
+          <Text style={styles.title}>Moderator</Text>
+        </View>
+        <TouchableOpacity 
+          onPress={() => router.push('/(moderator-tabs)/profile')} 
+          style={styles.avatarContainer}
+          activeOpacity={0.7}
+        >
+          {profile?.avatarUrl ? (
+            <Image source={{ uri: profile.avatarUrl }} style={styles.avatar} />
+          ) : (
+            <Image 
+              source={{ uri: 'https://i.pravatar.cc/100?img=12' }} 
+              style={styles.avatar} 
+            />
+          )}
+        </TouchableOpacity>
+      </View>
+      
+      <ScrollView 
+        style={styles.content}
         showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
       >
-        <View style={styles.headerRow}>
-          <View>
-            <Text style={styles.title}>Chào mừng, Admin</Text>
-            <Text style={styles.subtitle}>
-              Dưới đây là trạng thái hiện tại của hệ thống.
-            </Text>
-          </View>
-          <TouchableOpacity onPress={() => router.push("/(moderator-tabs)/profile")}>
-            {profile?.avatarUrl ? (
-              <Image source={{ uri: profile.avatarUrl }} style={styles.avatar} />
-            ) : (
-              <View style={[styles.avatar, styles.avatarPlaceholder]}>
-                <Ionicons name="person" size={20} color={COLORS["on-surface-variant"]} />
-              </View>
-            )}
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.searchContainer}>
-          <Ionicons
-            name="search"
-            size={20}
-            color={COLORS["on-surface-variant"]}
-            style={styles.searchIcon}
+        {/* Stats Grid - Aligned with Admin Design */}
+        <View style={styles.statsGrid}>
+          <StatsCard 
+            title="Tài liệu chờ duyệt" 
+            value="12" 
+            progress={0.2} 
+            isDark={true}
+            onPress={() => router.push('/(moderator-tabs)/review')}
           />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Tìm kiếm tài liệu, người dùng..."
-            placeholderTextColor={COLORS["outline"]}
+          <StatsCard 
+            title="Báo cáo vi phạm" 
+            value="05" 
+            progress={0.1} 
+            color="#f43f5e"
+            onPress={() => {}}
+          />
+          <StatsCard 
+            title="Đã duyệt (Tuần)" 
+            value="145" 
+            progress={0.75} 
+            color="#10b981"
+            onPress={() => {}}
+          />
+          <StatsCard 
+            title="Tốc độ xử lý" 
+            value="4.5m" 
+            progress={0.9} 
+            color="#3b82f6"
+            onPress={() => {}}
           />
         </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>TỔNG QUAN KIỂM DUYỆT</Text>
-          <View style={styles.overviewGrid}>
-            <View style={styles.overviewCard}>
-              <View style={[styles.iconContainer, { backgroundColor: COLORS.primary }]}>
-                <Ionicons name="document-text" size={24} color={COLORS["on-primary"]} />
-              </View>
-              <View style={styles.overviewTextContainer}>
-                <Text style={styles.overviewValue}>1,240</Text>
-                <Text style={styles.overviewLabel}>Tổng số{"\n"}tài liệu</Text>
-              </View>
-            </View>
-
-            <View style={styles.overviewCard}>
-              <View style={[styles.iconContainer, { backgroundColor: COLORS.tertiary }]}>
-                <Ionicons name="time" size={24} color={COLORS["on-tertiary"]} />
-              </View>
-              <View style={styles.overviewTextContainer}>
-                <Text style={styles.overviewValue}>12</Text>
-                <Text style={styles.overviewLabel}>Chờ{"\n"}duyệt</Text>
-              </View>
-            </View>
-
-            <View style={styles.overviewCard}>
-              <View style={[styles.iconContainer, { backgroundColor: COLORS["surface-container-high"] }]}>
-                <Ionicons name="checkmark-circle" size={24} color={COLORS.primary} />
-              </View>
-              <View style={styles.overviewTextContainer}>
-                <Text style={styles.overviewValue}>1,185</Text>
-                <Text style={styles.overviewLabel}>Đã duyệt</Text>
-              </View>
-            </View>
-
-            <View style={styles.overviewCard}>
-              <View style={[styles.iconContainer, { backgroundColor: COLORS["error-container"] }]}>
-                <Ionicons name="close-circle" size={24} color={COLORS["on-error-container"]} />
-              </View>
-              <View style={styles.overviewTextContainer}>
-                <Text style={styles.overviewValue}>43</Text>
-                <Text style={styles.overviewLabel}>Từ chối</Text>
-              </View>
-            </View>
+        
+        {/* Weekly Efficiency Chart */}
+        <View style={styles.chartSection}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Hiệu suất duyệt tuần này</Text>
           </View>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>HOẠT ĐỘNG GẦN ĐÂY</Text>
-          <View style={styles.activitiesCard}>
-            <View style={styles.activityItem}>
-              <Ionicons name="checkmark-circle-outline" size={20} color={COLORS.primary} />
-              <View style={styles.activityTextContainer}>
-                <Text style={styles.activityText}>
-                  Tài liệu <Text style={styles.boldText}>"Quantum Computing..."</Text> đã được duyệt
-                </Text>
-                <Text style={styles.activityTime}>2 phút trước</Text>
-              </View>
-            </View>
-            <View style={styles.divider} />
-
-            <View style={styles.activityItem}>
-              <Ionicons name="flag-outline" size={20} color={COLORS.error} />
-              <View style={styles.activityTextContainer}>
-                <Text style={styles.activityText}>
-                  Cảnh báo mới trên <Text style={styles.boldText}>"CS101 Policy..."</Text>
-                </Text>
-                <Text style={styles.activityTime}>15 phút trước</Text>
-              </View>
-            </View>
-            <View style={styles.divider} />
-
-            <View style={styles.activityItem}>
-              <Ionicons name="person-add-outline" size={20} color={COLORS["on-surface-variant"]} />
-              <View style={styles.activityTextContainer}>
-                <Text style={styles.activityText}>
-                  Kiểm duyệt viên mới <Text style={styles.boldText}>Dr. Sarah Smith</Text> đã tham gia
-                </Text>
-                <Text style={styles.activityTime}>1 giờ trước</Text>
-              </View>
-            </View>
-          </View>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>THAO TÁC NHANH</Text>
-          <View style={styles.quickActionsContainer}>
-            <TouchableOpacity style={styles.quickActionButton}>
-              <Ionicons name="time-outline" size={18} color={COLORS["on-surface"]} />
-              <Text style={styles.quickActionText}>Nhật ký hệ thống</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.quickActionButton}>
-              <Ionicons name="people-outline" size={18} color={COLORS["on-surface"]} />
-              <Text style={styles.quickActionText}>Quản lý người dùng</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={[styles.quickActionButton, styles.quickActionSettings]}>
-              <Ionicons name="settings-outline" size={18} color={COLORS["on-surface"]} />
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>THỐNG KÊ NHANH</Text>
-          <View style={styles.statsCard}>
-            <Text style={styles.statsCardTitle}>TIẾN ĐỘ TUẦN NÀY</Text>
-            <View style={styles.barChartContainer}>
-              {/* Mock Bar Chart */}
-              <View style={[styles.bar, { height: 40 }]} />
-              <View style={[styles.bar, { height: 60 }]} />
-              <View style={[styles.bar, { height: 35 }]} />
-              <View style={[styles.bar, { height: 75 }]} />
-              <View style={[styles.bar, { height: 55 }]} />
-              <View style={[styles.bar, { height: 85 }]} />
-              <View style={[styles.bar, { height: 20, backgroundColor: COLORS["outline-variant"] }]} />
-            </View>
-            <View style={styles.barChartLabels}>
-              <Text style={styles.chartLabelText}>T2</Text>
-              <Text style={styles.chartLabelText}>CN</Text>
-            </View>
-          </View>
-
-          <View style={[styles.statsCard, { marginTop: SPACING.lg }]}>
-            <Text style={styles.statsCardTitle}>TỶ LỆ CHÍNH XÁC</Text>
-            <View style={styles.donutChartContainer}>
-              <View style={styles.donutOuter}>
-                <View style={styles.donutInner}>
-                  <Text style={styles.donutText}>98%</Text>
+          
+          <View style={styles.placeholderChart}>
+            <View style={styles.chartLinesRow}>
+              {[20, 55, 30, 85, 45, 90, 60].map((h, i) => (
+                <View key={i} style={styles.chartColumn}>
+                  <View style={[styles.chartBar, { height: h * 1.5, backgroundColor: i === 5 ? '#0f172a' : '#3b82f6' }]} />
+                  <Text style={styles.chartLabel}>{['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'][i]}</Text>
                 </View>
-              </View>
+              ))}
             </View>
-            <Text style={styles.statsDescription}>+2.4% so với tháng trước</Text>
+          </View>
+        </View>
+
+        {/* Recently Reviewed List */}
+        <View style={styles.listSection}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Tác vụ gần đây</Text>
+            <TouchableOpacity onPress={() => router.push('/(moderator-tabs)/review')}>
+              <Text style={styles.seeAll}>Xem hàng đợi</Text>
+            </TouchableOpacity>
+          </View>
+          
+          <View style={styles.reviewList}>
+            {RECENT_REVIEWS.map(item => (
+              <TouchableOpacity key={item.id} style={styles.reviewItem}>
+                <View style={[styles.iconBox, 
+                  item.status === 'pending' ? styles.pendingIcon : 
+                  item.status === 'approved' ? styles.approvedIcon : styles.rejectedIcon]}>
+                  {item.status === 'pending' ? <Clock size={18} color="#f59e0b" /> :
+                   item.status === 'approved' ? <CheckCircle size={18} color="#10b981" /> :
+                   <AlertTriangle size={18} color="#f43f5e" />}
+                </View>
+                <View style={styles.itemInfo}>
+                  <Text style={styles.itemTitle} numberOfLines={1}>{item.title}</Text>
+                  <Text style={styles.itemAuthor}>{item.author} • {item.time}</Text>
+                </View>
+                <ChevronRight size={18} color="#cbd5e1" />
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
+        {/* Quick Tools */}
+        <View style={styles.toolsSection}>
+          <Text style={styles.sectionTitle}>Công cụ quản trị</Text>
+          <View style={styles.toolsGrid}>
+            <TouchableOpacity style={styles.toolButton}>
+              <FileText size={20} color="#3b82f6" />
+              <Text style={styles.toolLabel}>Tờ trình</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.toolButton}>
+              <AlertTriangle size={20} color="#f59e0b" />
+              <Text style={styles.toolLabel}>Khiếu nại</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: 'white',
   },
-  scrollContent: {
-    paddingHorizontal: SPACING.gutter,
-    paddingTop: SPACING.xl,
+  header: {
+    paddingHorizontal: 24,
+    paddingTop: 20,
+    paddingBottom: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
-  headerRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: SPACING.xl,
+  welcomeText: {
+    fontSize: 14,
+    color: '#94a3b8',
   },
-  avatar: {
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#0f172a',
+  },
+  avatarContainer: {
     width: 44,
     height: 44,
     borderRadius: 22,
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: '#f1f5f9',
+    backgroundColor: '#f8fafc',
   },
-  avatarPlaceholder: {
-    backgroundColor: COLORS["surface-container-high"],
-    alignItems: "center",
-    justifyContent: "center",
+  avatar: {
+    width: '100%',
+    height: '100%',
   },
-  title: {
-    ...TYPOGRAPHY["headline-md"],
-    color: COLORS["on-surface"],
-    marginBottom: SPACING.sm,
-  },
-  subtitle: {
-    ...TYPOGRAPHY["body-md"],
-    color: COLORS["on-surface-variant"],
-  },
-  searchContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: COLORS["surface-container-lowest"],
-    borderWidth: 1,
-    borderColor: COLORS["outline-variant"],
-    borderRadius: 8,
-    paddingHorizontal: SPACING.md,
-    height: 48,
-    marginBottom: SPACING.xl,
-  },
-  searchIcon: {
-    marginRight: SPACING.sm,
-  },
-  searchInput: {
+  content: {
     flex: 1,
-    ...TYPOGRAPHY["body-md"],
-    color: COLORS["on-surface"],
-    height: "100%",
   },
-  section: {
-    marginBottom: SPACING.xl,
+  scrollContent: {
+    paddingHorizontal: 24,
+    paddingBottom: 40,
+  },
+  statsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    marginBottom: 24,
+  },
+  chartSection: {
+    marginTop: 10,
+    marginBottom: 30,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 24,
   },
   sectionTitle: {
-    ...TYPOGRAPHY["label-md"],
-    color: COLORS["on-surface-variant"],
-    letterSpacing: 1.5,
-    marginBottom: SPACING.md,
-    textTransform: "uppercase",
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#0f172a',
   },
-  overviewGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
-    gap: SPACING.md,
+  placeholderChart: {
+    height: 180,
+    paddingTop: 20,
   },
-  overviewCard: {
-    width: "47%",
-    backgroundColor: COLORS["surface-container-lowest"],
+  chartLinesRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
+    height: '100%',
+    paddingBottom: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+  },
+  chartColumn: {
+    alignItems: 'center',
+    width: 35,
+  },
+  chartBar: {
+    width: 14,
+    borderRadius: 4,
+    opacity: 0.8,
+  },
+  chartLabel: {
+    fontSize: 10,
+    color: '#94a3b8',
+    marginTop: 8,
+  },
+  listSection: {
+    marginTop: 10,
+  },
+  seeAll: {
+    fontSize: 13,
+    color: '#3b82f6',
+    fontWeight: 'bold',
+  },
+  reviewList: {
+    marginTop: 8,
+  },
+  reviewItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f8fafc',
+    padding: 12,
+    borderRadius: 12,
+    marginBottom: 12,
     borderWidth: 1,
-    borderColor: COLORS["outline-variant"],
-    borderRadius: 8,
-    padding: SPACING.md,
-    flexDirection: "row",
-    alignItems: "center",
+    borderColor: '#f1f5f9',
   },
-  iconContainer: {
+  iconBox: {
     width: 40,
     height: 40,
-    borderRadius: 4,
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: SPACING.md,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
   },
-  overviewTextContainer: {
+  pendingIcon: { backgroundColor: '#fffbeb' },
+  approvedIcon: { backgroundColor: '#f0fdf4' },
+  rejectedIcon: { backgroundColor: '#fef2f2' },
+  itemInfo: {
     flex: 1,
   },
-  overviewValue: {
-    ...TYPOGRAPHY["headline-md"],
-    color: COLORS["on-surface"],
-    fontSize: 20,
+  itemTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#0f172a',
     marginBottom: 2,
   },
-  overviewLabel: {
-    ...TYPOGRAPHY["label-sm"],
-    color: COLORS["on-surface-variant"],
+  itemAuthor: {
+    fontSize: 12,
+    color: '#64748b',
   },
-  activitiesCard: {
-    backgroundColor: COLORS["surface-container-lowest"],
-    borderWidth: 1,
-    borderColor: COLORS["outline-variant"],
-    borderRadius: 8,
-    padding: SPACING.md,
+  toolsSection: {
+    marginTop: 20,
   },
-  activityItem: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    paddingVertical: SPACING.sm,
+  toolsGrid: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 16,
   },
-  activityTextContainer: {
-    marginLeft: SPACING.md,
+  toolButton: {
     flex: 1,
-  },
-  activityText: {
-    ...TYPOGRAPHY["body-md"],
-    fontSize: 14,
-    color: COLORS["on-surface"],
-    lineHeight: 20,
-  },
-  boldText: {
-    fontWeight: "600",
-  },
-  activityTime: {
-    ...TYPOGRAPHY["label-sm"],
-    color: COLORS["on-surface-variant"],
-    marginTop: 4,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: COLORS["outline-variant"],
-    opacity: 0.5,
-    marginVertical: SPACING.sm,
-  },
-  quickActionsContainer: {
-    flexDirection: "row",
-    gap: SPACING.md,
-  },
-  quickActionButton: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: COLORS["surface-container-low"],
+    padding: 16,
+    backgroundColor: 'white',
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: COLORS["outline-variant"],
-    borderRadius: 8,
-    paddingVertical: SPACING.md,
-    gap: SPACING.sm,
+    borderColor: '#e2e8f0',
+    alignItems: 'center',
+    gap: 8,
   },
-  quickActionSettings: {
-    flex: 0,
-    paddingHorizontal: SPACING.lg,
-  },
-  quickActionText: {
-    ...TYPOGRAPHY["label-md"],
-    color: COLORS["on-surface"],
-  },
-  statsCard: {
-    backgroundColor: COLORS["surface-container-low"],
-    borderWidth: 1,
-    borderColor: COLORS["outline-variant"],
-    borderRadius: 8,
-    padding: SPACING.lg,
-  },
-  statsCardTitle: {
-    ...TYPOGRAPHY["label-sm"],
-    color: COLORS["on-surface-variant"],
-    letterSpacing: 1.5,
-    marginBottom: SPACING.lg,
-  },
-  barChartContainer: {
-    flexDirection: "row",
-    alignItems: "flex-end",
-    justifyContent: "space-between",
-    height: 100,
-    marginBottom: SPACING.sm,
-  },
-  bar: {
-    width: "12%",
-    backgroundColor: COLORS.primary,
-    borderTopLeftRadius: 2,
-    borderTopRightRadius: 2,
-  },
-  barChartLabels: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  chartLabelText: {
-    ...TYPOGRAPHY["label-sm"],
-    color: COLORS["on-surface-variant"],
-  },
-  donutChartContainer: {
-    alignItems: "center",
-    marginVertical: SPACING.md,
-  },
-  donutOuter: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    borderWidth: 8,
-    borderColor: COLORS.primary,
-    borderTopColor: COLORS.primary,
-    borderRightColor: COLORS.primary,
-    borderBottomColor: COLORS.primary,
-    borderLeftColor: COLORS["outline-variant"], // to simulate 98%
-    alignItems: "center",
-    justifyContent: "center",
-    transform: [{ rotate: "45deg" }], // Just to make the 2% gap at the top-left
-  },
-  donutInner: {
-    transform: [{ rotate: "-45deg" }], // Correct text rotation
-  },
-  donutText: {
-    ...TYPOGRAPHY["headline-md"],
-    color: COLORS.primary,
-  },
-  statsDescription: {
-    ...TYPOGRAPHY["body-md"],
-    fontSize: 14,
-    color: COLORS["on-surface-variant"],
-    textAlign: "center",
-  },
+  toolLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#334155',
+  }
 });

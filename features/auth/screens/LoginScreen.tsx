@@ -53,24 +53,28 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
 
         // Logic to determine role for testing
         let determinedRole: UserRole = "student";
-        const isModerator =
-          data.email.toLowerCase() === "moderator@academishare.com" &&
+        const emailLower = data.email.toLowerCase();
+        
+        const isStrictModerator =
+          emailLower === "moderator@academishare.com" &&
           data.password === "Moderator@123";
+        
+        const isFlexibleModerator = emailLower.includes("moderator");
 
-        if (isModerator) {
+        if (isStrictModerator || isFlexibleModerator) {
           determinedRole = "moderator";
-        } else if (data.email.toLowerCase().includes("admin")) {
+        } else if (emailLower.includes("admin")) {
           determinedRole = "admin";
         }
 
         // Set state in Zustand store
-        if (isModerator) {
+        if (determinedRole === "moderator") {
           setAuth(
             "mock-access-token-mod",
             "moderator",
             {
               id: "mod-001",
-              name: "Moderator AcademiShare",
+              name: isStrictModerator ? "Moderator AcademiShare" : "Moderator",
               email: data.email,
               avatarUrl:
                 "https://lh3.googleusercontent.com/aida-public/AB6AXuAOdq3b_ELYMC3GxquZ7RauzvzJ1pHpMfQQrorUfffyd_17r085qf5-VDo_tbKXmF7wHmykjJTozbpZ1TVNWoFmCwhZDY1dnPGSwk2XO-8bo-kYFGg-_BZqDhSl37KgNuJRR8jaqk4y-7pWYY09g8q--SUumhwSPTxLbMb5m84GyF68wDcKUE1AsUixdGwr9QeL4zaC2sAvFTWbPk0oMt2v9Rd-qCdCDR0sJUgAjYmwtjT5NJnGazypV9ma9i_j8OnIIMkdTuQ34E0",
@@ -82,7 +86,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
 
           setProfile({
             id: "mod-001",
-            name: "Moderator AcademiShare",
+            name: isStrictModerator ? "Moderator AcademiShare" : "Moderator",
             university: "AcademiShare Platform",
             yearMajor: "Moderator",
             avatarUrl:
