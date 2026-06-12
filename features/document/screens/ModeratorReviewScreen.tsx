@@ -81,12 +81,12 @@ const REVIEW_DOCUMENTS: ReviewDocument[] = [
   },
 ];
 
-const FILTERS = ["Pending Review", "High Urgency", "Computer Science", "Mathematics"];
+const FILTERS = ["Chờ duyệt", "Độ ưu tiên cao", "Khoa học máy tính", "Toán học"];
 
 // ── Main Screen ──────────────────────────────────────────────────────────────
 
 export const ModeratorReviewScreen = () => {
-  const [activeFilter, setActiveFilter] = useState("Pending Review");
+  const [activeFilter, setActiveFilter] = useState("Chờ duyệt");
   const [selectedDoc, setSelectedDoc] = useState<ReviewDocument | null>(null);
 
   // Convert to ReviewDocumentDetail shape
@@ -107,11 +107,11 @@ export const ModeratorReviewScreen = () => {
   });
 
   const handleApprove = (doc: ReviewDocumentDetail) => {
-    Alert.alert("Approved ✅", `"${doc.title}" has been approved.`);
+    Alert.alert("Đã duyệt ✅", `Tài liệu "${doc.title}" đã được duyệt.`);
   };
 
   const handleReject = (doc: ReviewDocumentDetail, reason: string) => {
-    Alert.alert("Rejected", `"${doc.title}" was rejected.\nReason: ${reason}`);
+    Alert.alert("Từ chối", `Tài liệu "${doc.title}" đã bị từ chối.\nLý do: ${reason}`);
   };
 
   // Show detail screen inside this component (stack-like navigation within screen)
@@ -143,7 +143,7 @@ export const ModeratorReviewScreen = () => {
               {doc.title}
             </Text>
             <Text style={styles.docMeta}>
-              by {doc.author} • Uploaded {doc.uploadedAt}
+              Bởi {doc.author} • Tải lên ngày {doc.uploadedAt}
             </Text>
           </View>
         </View>
@@ -165,7 +165,7 @@ export const ModeratorReviewScreen = () => {
       <View style={styles.actionRow}>
         <TouchableOpacity style={styles.btnReject} activeOpacity={0.75}>
           <MaterialCommunityIcons name="close-circle-outline" size={18} color={COLORS.error} />
-          <Text style={styles.btnRejectText}>Reject</Text>
+          <Text style={styles.btnRejectText}>Từ chối</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -174,7 +174,7 @@ export const ModeratorReviewScreen = () => {
           onPress={() => setSelectedDoc(doc)}
         >
           <Ionicons name="eye-outline" size={18} color={COLORS["on-primary"]} />
-          <Text style={styles.btnDetailText}>See Detail</Text>
+          <Text style={styles.btnDetailText}>Xem chi tiết</Text>
         </TouchableOpacity>
       </View>
     </View>

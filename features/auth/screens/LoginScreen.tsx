@@ -119,7 +119,11 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
               if (onSuccess) {
                 onSuccess();
               } else {
-                router.replace("/(tabs)/profile");
+                if (isModerator) {
+                  router.replace("/(moderator-tabs)");
+                } else {
+                  router.replace("/(tabs)/profile");
+                }
               }
             },
           },

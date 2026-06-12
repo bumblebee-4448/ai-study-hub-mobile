@@ -53,12 +53,12 @@ export const ModeratorDocumentDetailScreen: React.FC<Props> = ({
 
   const handleApprove = () => {
     Alert.alert(
-      "Approve Document",
-      `Are you sure you want to approve "${doc.title}"?`,
+      "Duyệt tài liệu",
+      `Bạn có chắc chắn muốn duyệt tài liệu "${doc.title}"?`,
       [
-        { text: "Cancel", style: "cancel" },
+        { text: "Hủy", style: "cancel" },
         {
-          text: "Approve",
+          text: "Duyệt",
           onPress: () => {
             onApprove(doc);
             onBack();
@@ -70,7 +70,7 @@ export const ModeratorDocumentDetailScreen: React.FC<Props> = ({
 
   const handleRejectSubmit = () => {
     if (!rejectReason.trim()) {
-      Alert.alert("Required", "Please provide a reason for rejection.");
+      Alert.alert("Bắt buộc", "Vui lòng cung cấp lý do từ chối.");
       return;
     }
     onReject(doc, rejectReason.trim());
@@ -88,10 +88,10 @@ export const ModeratorDocumentDetailScreen: React.FC<Props> = ({
 
   const trustLabel =
     (doc.aiTrustScore ?? 0) >= 80
-      ? "High"
+      ? "Cao"
       : (doc.aiTrustScore ?? 0) >= 50
-      ? "Medium"
-      : "Low";
+      ? "Trung bình"
+      : "Thấp";
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -100,7 +100,7 @@ export const ModeratorDocumentDetailScreen: React.FC<Props> = ({
         <TouchableOpacity onPress={onBack} style={styles.backBtn} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
           <Ionicons name="chevron-back" size={26} color={COLORS["on-surface"]} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Document Review</Text>
+        <Text style={styles.headerTitle}>Chi tiết tài liệu</Text>
         {doc.isUrgent ? (
           <View style={styles.urgentBadge}>
             <MaterialCommunityIcons name="alert" size={16} color={COLORS.error} />
@@ -120,11 +120,11 @@ export const ModeratorDocumentDetailScreen: React.FC<Props> = ({
               color={COLORS.primary}
             />
             <Text style={styles.previewMeta}>
-              {doc.format} Document • {doc.size}
+              Tài liệu {doc.format} • {doc.size}
             </Text>
             <TouchableOpacity style={styles.viewAllBtn} activeOpacity={0.85}>
               <Ionicons name="search-outline" size={16} color={COLORS["on-primary"]} />
-              <Text style={styles.viewAllText}>View Full Document</Text>
+              <Text style={styles.viewAllText}>Xem toàn bộ tài liệu</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -152,7 +152,7 @@ export const ModeratorDocumentDetailScreen: React.FC<Props> = ({
         <View style={styles.metaGrid}>
           {/* Uploader */}
           <View style={styles.metaCard}>
-            <Text style={styles.metaLabel}>UPLOADED BY</Text>
+            <Text style={styles.metaLabel}>TẢI LÊN BỞI</Text>
             <View style={styles.metaAuthorRow}>
               {doc.authorAvatar ? (
                 <Image source={{ uri: doc.authorAvatar }} style={styles.metaAvatar} />
@@ -167,22 +167,22 @@ export const ModeratorDocumentDetailScreen: React.FC<Props> = ({
 
           {/* Upload date */}
           <View style={styles.metaCard}>
-            <Text style={styles.metaLabel}>SUBMITTED</Text>
+            <Text style={styles.metaLabel}>NGÀY TẢI LÊN</Text>
             <Text style={styles.metaValue}>{doc.uploadedAt}</Text>
           </View>
 
           {/* Page count */}
           {doc.pageCount != null && (
             <View style={styles.metaCard}>
-              <Text style={styles.metaLabel}>PAGE COUNT</Text>
-              <Text style={styles.metaValue}>{doc.pageCount} pages</Text>
+              <Text style={styles.metaLabel}>SỐ TRANG</Text>
+              <Text style={styles.metaValue}>{doc.pageCount} trang</Text>
             </View>
           )}
 
           {/* AI Trust Score */}
           {doc.aiTrustScore != null && (
             <View style={styles.metaCard}>
-              <Text style={styles.metaLabel}>AI TRUST SCORE</Text>
+              <Text style={styles.metaLabel}>ĐỘ TIN CẬY AI</Text>
               <View style={styles.metaTrustRow}>
                 <View style={[styles.trustDot, { backgroundColor: trustColor }]} />
                 <Text style={[styles.metaValue, { color: trustColor }]}>
@@ -196,7 +196,7 @@ export const ModeratorDocumentDetailScreen: React.FC<Props> = ({
         {/* ── Description ──────────────────────────────────────────────── */}
         {doc.description && (
           <View style={styles.descSection}>
-            <Text style={styles.descLabel}>DETAILED DESCRIPTION</Text>
+            <Text style={styles.descLabel}>MÔ TẢ CHI TIẾT</Text>
             <Text style={styles.descText}>{doc.description}</Text>
           </View>
         )}
@@ -213,7 +213,7 @@ export const ModeratorDocumentDetailScreen: React.FC<Props> = ({
           onPress={() => setRejectModalVisible(true)}
         >
           <MaterialCommunityIcons name="close-circle-outline" size={18} color={COLORS.error} />
-          <Text style={styles.btnRejectText}>Reject</Text>
+          <Text style={styles.btnRejectText}>Từ chối</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -222,7 +222,7 @@ export const ModeratorDocumentDetailScreen: React.FC<Props> = ({
           onPress={handleApprove}
         >
           <MaterialCommunityIcons name="check-circle-outline" size={18} color={COLORS["on-primary"]} />
-          <Text style={styles.btnApproveText}>Approve</Text>
+          <Text style={styles.btnApproveText}>Duyệt</Text>
         </TouchableOpacity>
       </View>
 
@@ -236,19 +236,19 @@ export const ModeratorDocumentDetailScreen: React.FC<Props> = ({
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Reject Document</Text>
+              <Text style={styles.modalTitle}>Từ chối tài liệu</Text>
               <TouchableOpacity onPress={() => setRejectModalVisible(false)}>
                 <Ionicons name="close" size={22} color={COLORS["on-surface-variant"]} />
               </TouchableOpacity>
             </View>
 
             <Text style={styles.modalSubtitle}>
-              Please provide a reason so the author can revise and resubmit.
+              Vui lòng cung cấp lý do để tác giả có thể chỉnh sửa và nộp lại.
             </Text>
 
             <TextInput
               style={styles.reasonInput}
-              placeholder="e.g. Missing references, content violates policy..."
+              placeholder="VD: Thiếu trích dẫn, nội dung vi phạm chính sách..."
               placeholderTextColor={COLORS.outline}
               value={rejectReason}
               onChangeText={setRejectReason}
@@ -262,10 +262,10 @@ export const ModeratorDocumentDetailScreen: React.FC<Props> = ({
                 style={styles.modalCancelBtn}
                 onPress={() => setRejectModalVisible(false)}
               >
-                <Text style={styles.modalCancelText}>Cancel</Text>
+                <Text style={styles.modalCancelText}>Hủy</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.modalRejectBtn} onPress={handleRejectSubmit}>
-                <Text style={styles.modalRejectText}>Confirm Reject</Text>
+                <Text style={styles.modalRejectText}>Xác nhận từ chối</Text>
               </TouchableOpacity>
             </View>
           </View>
