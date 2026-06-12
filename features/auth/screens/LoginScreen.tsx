@@ -51,41 +51,74 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
         // Mock authentication delay
         await new Promise<void>((resolve) => setTimeout(resolve, 1200));
 
-        // Logic to determine role based on email for testing
+        // Logic to determine role for testing
         let determinedRole: UserRole = "student";
-        if (data.email.toLowerCase().includes("admin")) {
+        const isModerator =
+          data.email.toLowerCase() === "moderator@academishare.com" &&
+          data.password === "Moderator@123";
+
+        if (isModerator) {
+          determinedRole = "moderator";
+        } else if (data.email.toLowerCase().includes("admin")) {
           determinedRole = "admin";
-        } else if (data.email.toLowerCase().includes("teacher")) {
-          determinedRole = "teacher";
         }
 
         // Set state in Zustand store
-        setAuth(
-          "mock-access-token-xyz",
-          determinedRole,
-          {
+        if (isModerator) {
+          setAuth(
+            "mock-access-token-mod",
+            "moderator",
+            {
+              id: "mod-001",
+              name: "Moderator AcademiShare",
+              email: data.email,
+              avatarUrl:
+                "https://lh3.googleusercontent.com/aida-public/AB6AXuAOdq3b_ELYMC3GxquZ7RauzvzJ1pHpMfQQrorUfffyd_17r085qf5-VDo_tbKXmF7wHmykjJTozbpZ1TVNWoFmCwhZDY1dnPGSwk2XO-8bo-kYFGg-_BZqDhSl37KgNuJRR8jaqk4y-7pWYY09g8q--SUumhwSPTxLbMb5m84GyF68wDcKUE1AsUixdGwr9QeL4zaC2sAvFTWbPk0oMt2v9Rd-qCdCDR0sJUgAjYmwtjT5NJnGazypV9ma9i_j8OnIIMkdTuQ34E0",
+              university: "AcademiShare Platform",
+              major: "Content Moderation",
+            },
+            "mock-refresh-token-mod"
+          );
+
+          setProfile({
+            id: "mod-001",
+            name: "Moderator AcademiShare",
+            university: "AcademiShare Platform",
+            yearMajor: "Moderator",
+            avatarUrl:
+              "https://lh3.googleusercontent.com/aida-public/AB6AXuAOdq3b_ELYMC3GxquZ7RauzvzJ1pHpMfQQrorUfffyd_17r085qf5-VDo_tbKXmF7wHmykjJTozbpZ1TVNWoFmCwhZDY1dnPGSwk2XO-8bo-kYFGg-_BZqDhSl37KgNuJRR8jaqk4y-7pWYY09g8q--SUumhwSPTxLbMb5m84GyF68wDcKUE1AsUixdGwr9QeL4zaC2sAvFTWbPk0oMt2v9Rd-qCdCDR0sJUgAjYmwtjT5NJnGazypV9ma9i_j8OnIIMkdTuQ34E0",
+            documentCount: 0,
+            savedCount: 0,
+            points: 0,
+          });
+        } else {
+          setAuth(
+            "mock-access-token-xyz",
+            determinedRole,
+            {
+              id: "user-001",
+              name: determinedRole === 'admin' ? "Quản trị viên" : "Nguyễn Văn A",
+              email: data.email,
+              avatarUrl:
+                "https://lh3.googleusercontent.com/aida-public/AB6AXuByChcQ0XwJZE7ksDTDKK-d6leBoSCIpKJxnQGdxZX9s1Ai_dywhkwWtVXxQ67QZVEDBVwOIymfGb8dteXSO5w_L3S3NXtPl-DG6rWfCYFJWKQr-IJhRH7LrI2MejDxLUeSGX3eYrwFuboLtXR-rLII6GQvJ-Ln2lFUM3hgldUii1oCouxPVqTcIyiETtvwO61CT-qUBGle-Lca3bCK6mRSaMotdAi_2wOOgPB6xy-Ab7uJcXNrKX1brKh6rqCbsrSI81BQTvUIB50",
+              university: "Đại học Công nghệ thông tin",
+              major: "Công nghệ phần mềm",
+            },
+            "mock-refresh-token-xyz"
+          );
+
+          setProfile({
             id: "user-001",
-            name: determinedRole === 'admin' ? "Quản trị viên" : (determinedRole === 'teacher' ? "Giảng viên A" : "Nguyễn Văn A"),
-            email: data.email,
+            name: determinedRole === 'admin' ? "Quản trị viên" : "Nguyễn Văn A",
+            university: "Đại học Công nghệ thông tin",
+            yearMajor: "Năm 3 - Công nghệ phần mềm",
             avatarUrl:
               "https://lh3.googleusercontent.com/aida-public/AB6AXuByChcQ0XwJZE7ksDTDKK-d6leBoSCIpKJxnQGdxZX9s1Ai_dywhkwWtVXxQ67QZVEDBVwOIymfGb8dteXSO5w_L3S3NXtPl-DG6rWfCYFJWKQr-IJhRH7LrI2MejDxLUeSGX3eYrwFuboLtXR-rLII6GQvJ-Ln2lFUM3hgldUii1oCouxPVqTcIyiETtvwO61CT-qUBGle-Lca3bCK6mRSaMotdAi_2wOOgPB6xy-Ab7uJcXNrKX1brKh6rqCbsrSI81BQTvUIB50",
-            university: "Đại học Công nghệ thông tin",
-            major: "Công nghệ phần mềm",
-          },
-          "mock-refresh-token-xyz"
-        );
-
-        setProfile({
-          id: "user-001",
-          name: determinedRole === 'admin' ? "Quản trị viên" : (determinedRole === 'teacher' ? "Giảng viên A" : "Nguyễn Văn A"),
-          university: "Đại học Công nghệ thông tin",
-          yearMajor: "Năm 3 - Công nghệ phần mềm",
-          avatarUrl:
-            "https://lh3.googleusercontent.com/aida-public/AB6AXuByChcQ0XwJZE7ksDTDKK-d6leBoSCIpKJxnQGdxZX9s1Ai_dywhkwWtVXxQ67QZVEDBVwOIymfGb8dteXSO5w_L3S3NXtPl-DG6rWfCYFJWKQr-IJhRH7LrI2MejDxLUeSGX3eYrwFuboLtXR-rLII6GQvJ-Ln2lFUM3hgldUii1oCouxPVqTcIyiETtvwO61CT-qUBGle-Lca3bCK6mRSaMotdAi_2wOOgPB6xy-Ab7uJcXNrKX1brKh6rqCbsrSI81BQTvUIB50",
-          documentCount: 12,
-          savedCount: 48,
-          points: 156,
-        });
+            documentCount: 12,
+            savedCount: 48,
+            points: 156,
+          });
+        }
 
         Alert.alert("Thành công", "Đăng nhập thành công!", [
           {
@@ -94,10 +127,9 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
               if (onSuccess) {
                 onSuccess();
               } else {
-                // Navigate to the corresponding role flow
                 const target = determinedRole === 'admin' 
                   ? "/(admin-tabs)" 
-                  : (determinedRole === 'teacher' ? "/(teacher-tabs)" : "/(student-tabs)");
+                  : (determinedRole === 'moderator' ? "/(moderator-tabs)" : "/(student-tabs)");
                 router.replace(target as any);
               }
             },
