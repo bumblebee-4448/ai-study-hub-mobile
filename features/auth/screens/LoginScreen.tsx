@@ -19,6 +19,7 @@ import { BORDER_RADIUS, COLORS, SPACING, TYPOGRAPHY } from "@/constants/theme";
 import { useAuthStore } from "../store/authStore";
 import { useProfileStore } from "@/features/profile/store/profileStore";
 import { LoginSchema, LoginFormType } from "../schemas/authSchema";
+import { UserRole } from "../types";
 
 interface LoginScreenProps {
   onSignUpPress?: () => void;
@@ -50,18 +51,30 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
         // Mock authentication delay
         await new Promise<void>((resolve) => setTimeout(resolve, 1200));
 
-        // ── Mock moderator account ──────────────────────────────────────
-        const isModerator =
-          data.email.toLowerCase() === "moderator@academishare.com" &&
+        // Logic to determine role for testing
+        let determinedRole: UserRole = "student";
+        const emailLower = data.email.toLowerCase();
+        
+        const isStrictModerator =
+          emailLower === "moderator@academishare.com" &&
           data.password === "Moderator@123";
+        
+        const isFlexibleModerator = emailLower.includes("moderator");
 
-        if (isModerator) {
+        if (isStrictModerator || isFlexibleModerator) {
+          determinedRole = "moderator";
+        } else if (emailLower.includes("admin")) {
+          determinedRole = "admin";
+        }
+
+        // Set state in Zustand store
+        if (determinedRole === "moderator") {
           setAuth(
             "mock-access-token-mod",
             "moderator",
             {
               id: "mod-001",
-              name: "Moderator AcademiShare",
+              name: isStrictModerator ? "Moderator AcademiShare" : "Moderator",
               email: data.email,
               avatarUrl:
                 "https://lh3.googleusercontent.com/aida-public/AB6AXuAOdq3b_ELYMC3GxquZ7RauzvzJ1pHpMfQQrorUfffyd_17r085qf5-VDo_tbKXmF7wHmykjJTozbpZ1TVNWoFmCwhZDY1dnPGSwk2XO-8bo-kYFGg-_BZqDhSl37KgNuJRR8jaqk4y-7pWYY09g8q--SUumhwSPTxLbMb5m84GyF68wDcKUE1AsUixdGwr9QeL4zaC2sAvFTWbPk0oMt2v9Rd-qCdCDR0sJUgAjYmwtjT5NJnGazypV9ma9i_j8OnIIMkdTuQ34E0",
@@ -73,7 +86,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
 
           setProfile({
             id: "mod-001",
-            name: "Moderator AcademiShare",
+            name: isStrictModerator ? "Moderator AcademiShare" : "Moderator",
             university: "AcademiShare Platform",
             yearMajor: "Moderator",
             avatarUrl:
@@ -83,27 +96,26 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
             points: 0,
           });
         } else {
-          // ── Regular user account ────────────────────────────────────────
           setAuth(
             "mock-access-token-xyz",
-            "user",
+            determinedRole,
             {
               id: "user-001",
-              name: "Nguyễn Văn A",
+              name: determinedRole === 'admin' ? "Quản trị viên" : "Nguyễn Văn A",
               email: data.email,
               avatarUrl:
                 "https://lh3.googleusercontent.com/aida-public/AB6AXuByChcQ0XwJZE7ksDTDKK-d6leBoSCIpKJxnQGdxZX9s1Ai_dywhkwWtVXxQ67QZVEDBVwOIymfGb8dteXSO5w_L3S3NXtPl-DG6rWfCYFJWKQr-IJhRH7LrI2MejDxLUeSGX3eYrwFuboLtXR-rLII6GQvJ-Ln2lFUM3hgldUii1oCouxPVqTcIyiETtvwO61CT-qUBGle-Lca3bCK6mRSaMotdAi_2wOOgPB6xy-Ab7uJcXNrKX1brKh6rqCbsrSI81BQTvUIB50",
-              university: "Sinh viên Đại học Khoa học",
-              major: "Công nghệ thông tin",
+              university: "Đại học Công nghệ thông tin",
+              major: "Công nghệ phần mềm",
             },
             "mock-refresh-token-xyz"
           );
 
           setProfile({
             id: "user-001",
-            name: "Nguyễn Văn A",
-            university: "Sinh viên Đại học Khoa học",
-            yearMajor: "Năm 3 - Công nghệ thông tin",
+            name: determinedRole === 'admin' ? "Quản trị viên" : "Nguyễn Văn A",
+            university: "Đại học Công nghệ thông tin",
+            yearMajor: "Năm 3 - Công nghệ phần mềm",
             avatarUrl:
               "https://lh3.googleusercontent.com/aida-public/AB6AXuByChcQ0XwJZE7ksDTDKK-d6leBoSCIpKJxnQGdxZX9s1Ai_dywhkwWtVXxQ67QZVEDBVwOIymfGb8dteXSO5w_L3S3NXtPl-DG6rWfCYFJWKQr-IJhRH7LrI2MejDxLUeSGX3eYrwFuboLtXR-rLII6GQvJ-Ln2lFUM3hgldUii1oCouxPVqTcIyiETtvwO61CT-qUBGle-Lca3bCK6mRSaMotdAi_2wOOgPB6xy-Ab7uJcXNrKX1brKh6rqCbsrSI81BQTvUIB50",
             documentCount: 12,
@@ -119,11 +131,10 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
               if (onSuccess) {
                 onSuccess();
               } else {
-                if (isModerator) {
-                  router.replace("/(moderator-tabs)");
-                } else {
-                  router.replace("/(tabs)/profile");
-                }
+                const target = determinedRole === 'admin' 
+                  ? "/(admin-tabs)" 
+                  : (determinedRole === 'moderator' ? "/(moderator-tabs)" : "/(student-tabs)");
+                router.replace(target as any);
               }
             },
           },
@@ -136,7 +147,6 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
     },
     [router, setAuth, setProfile, onSuccess]
   );
-
 
   const handleGoogleLogin = useCallback(() => {
     Alert.alert("Thông báo", "Tính năng đăng nhập Google đang được phát triển.");

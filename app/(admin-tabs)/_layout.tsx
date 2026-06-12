@@ -1,14 +1,14 @@
-import { Tabs } from "expo-router";
-import React from "react";
-import { LayoutDashboard, ClipboardList, User } from "lucide-react-native";
+import { Tabs } from 'expo-router';
+import React from 'react';
+import { LayoutDashboard, BarChart2, Users, Settings } from 'lucide-react-native';
 
-export default function ModeratorTabLayout() {
+export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        headerShown: false,
         tabBarActiveTintColor: '#000',
         tabBarInactiveTintColor: '#94a3b8',
+        headerShown: false,
         tabBarStyle: {
           backgroundColor: 'white',
           borderTopWidth: 1,
@@ -21,27 +21,33 @@ export default function ModeratorTabLayout() {
           fontSize: 10,
           fontWeight: '500',
         }
-      }}
-    >
+      }}>
       <Tabs.Screen
         name="index"
         options={{
-          title: "Home",
+          title: 'Home',
           tabBarIcon: ({ color }) => <LayoutDashboard size={24} color={color} />,
         }}
       />
       <Tabs.Screen
-        name="review"
+        name="analytics"
         options={{
-          title: "Duyệt tài liệu",
-          tabBarIcon: ({ color }) => <ClipboardList size={24} color={color} />,
+          title: 'Analytics',
+          tabBarIcon: ({ color }) => <BarChart2 size={24} color={color} />,
         }}
       />
       <Tabs.Screen
-        name="profile"
+        name="users"
         options={{
-          title: "Hồ sơ",
-          tabBarIcon: ({ color }) => <User size={24} color={color} />,
+          title: 'Users',
+          tabBarIcon: ({ color }) => <Users size={24} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="settings"
+        options={{
+          title: 'Settings',
+          tabBarIcon: ({ color }) => <Settings size={24} color={color} />,
         }}
       />
     </Tabs>

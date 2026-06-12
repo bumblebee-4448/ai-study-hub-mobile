@@ -1,0 +1,274 @@
+import React, { useState } from 'react';
+import { 
+  View, 
+  Text, 
+  StyleSheet, 
+  ScrollView, 
+  TextInput, 
+  TouchableOpacity,
+  Platform,
+  ActivityIndicator
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { ChevronLeft, Save, Globe, Mail, Shield, Brain, Settings as SettingsIcon, LogOut } from 'lucide-react-native';
+import { useRouter } from 'expo-router';
+import { useAuthStore } from '@/features/auth/store/authStore';
+import * as Haptics from 'expo-haptics';
+import { theme } from '@/constants/theme';
+
+export const SettingsScreen = () => {
+  const router = useRouter();
+  const { logout } = useAuthStore();
+  const [isSaving, setIsSaving] = useState(false);
+  const [showToast, setShowToast] = useState(false);
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
+    // Simulate API save delay
+    setTimeout(() => {
+      setIsSaving(false);
+      setShowToast(true);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+
+      // Dismiss toast after 3 seconds
+      setTimeout(() => {
+        setShowToast(false);
+      }, 3000);
+    }, 1500);
+  };
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity 
+          onPress={() => router.back()}
+          style={styles.backButton}
+        >
+          <ChevronLeft size={22} color="#1e293b" />
+        </TouchableOpacity>
+        <Text style={styles.title}>Cài đặt hệ thống</Text>
+      </View>
+      
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Cấu hình nền tảng</Text>
+          
+          <View style={styles.card}>
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Tên ứng dụng</Text>
+              <View style={styles.inputWrapper}>
+                <Globe size={18} color="#94a3b8" />
+                <TextInput style={styles.input} defaultValue="AcademicShare Hub" />
+              </View>
+            </View>
+            
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Email quản trị</Text>
+              <View style={styles.inputWrapper}>
+                <Mail size={18} color="#94a3b8" />
+                <TextInput style={styles.input} defaultValue="admin@academicshare.vn" />
+              </View>
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Danh mục cài đặt</Text>
+          <View style={styles.menuList}>
+            <TouchableOpacity style={styles.menuItem}>
+              <View style={[styles.menuIcon, { backgroundColor: '#eff6ff' }]}>
+                <Shield size={20} color="#3b82f6" />
+              </View>
+              <Text style={styles.menuLabel}>Bảo mật hệ thống</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity style={styles.menuItem}>
+              <View style={[styles.menuIcon, { backgroundColor: '#f5f3ff' }]}>
+                <Brain size={20} color="#8b5cf6" />
+              </View>
+              <Text style={styles.menuLabel}>Cấu hình AI & Training</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={styles.menuItem}
+              onPress={() => {
+                logout();
+                router.replace('/login');
+              }}
+            >
+              <View style={[styles.menuIcon, { backgroundColor: '#fee2e2' }]}>
+                <LogOut size={20} color="#ef4444" />
+              </View>
+              <Text style={[styles.menuLabel, { color: '#ef4444' }]}>Đăng xuất khỏi hệ thống</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        <TouchableOpacity 
+          style={[styles.saveButton, isSaving && styles.saveButtonDisabled]} 
+          onPress={handleSave}
+          disabled={isSaving}
+          activeOpacity={0.7}
+        >
+          {isSaving ? (
+            <ActivityIndicator color="white" size="small" />
+          ) : (
+            <>
+              <Save size={20} color="white" />
+              <Text style={styles.saveButtonText}>Lưu tất cả thay đổi</Text>
+            </>
+          )}
+        </TouchableOpacity>
+      </ScrollView>
+
+      {showToast && (
+        <View style={styles.toast}>
+          <Text style={styles.toastText}>Đã lưu cấu hình hệ thống thành công!</Text>
+        </View>
+      )}
+    </SafeAreaView>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#f8fafc',
+  },
+  header: {
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'white',
+    ...Platform.select({
+      ios: { paddingTop: 60 },
+      android: { paddingTop: 40 }
+    })
+  },
+  backButton: {
+    padding: 8,
+    backgroundColor: '#f8fafc',
+    borderRadius: 12,
+    marginRight: 16,
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#0f172a',
+  },
+  content: {
+    padding: 20,
+  },
+  section: {
+    marginBottom: 24,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#64748b',
+    marginBottom: 16,
+    marginLeft: 4,
+  },
+  card: {
+    backgroundColor: 'white',
+    borderRadius: 20,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  inputGroup: {
+    marginBottom: 16,
+  },
+  label: {
+    fontSize: 14,
+    color: '#64748b',
+    marginBottom: 8,
+    fontWeight: '500',
+  },
+  inputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f8fafc',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    height: 48,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  input: {
+    flex: 1,
+    marginLeft: 10,
+    fontSize: 14,
+    color: '#0f172a',
+  },
+  menuList: {
+    backgroundColor: 'white',
+    borderRadius: 20,
+    padding: 8,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+  },
+  menuIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 16,
+  },
+  menuLabel: {
+    fontSize: 15,
+    color: '#334155',
+    fontWeight: '500',
+  },
+  saveButton: {
+    backgroundColor: theme.colors.primary,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    borderRadius: theme.borderRadius.lg,
+    gap: 10,
+    marginTop: 10,
+    marginBottom: 40,
+    ...theme.shadows.soft,
+  },
+  saveButtonDisabled: {
+    opacity: 0.6,
+  },
+  saveButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  toast: {
+    position: 'absolute',
+    bottom: 40,
+    left: 20,
+    right: 20,
+    backgroundColor: '#0f172a',
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderRadius: theme.borderRadius.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...theme.shadows.medium,
+    zIndex: 9999,
+  },
+  toastText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+});

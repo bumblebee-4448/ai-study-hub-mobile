@@ -1,5 +1,4 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import React, { useCallback, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
@@ -14,34 +13,13 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { ChevronLeft, Camera, User, School, BookOpen, GraduationCap, Save } from 'lucide-react-native';
 
-import { BORDER_RADIUS, COLORS, SPACING, TYPOGRAPHY } from "@/constants/theme";
+import { COLORS, SPACING } from "@/constants/theme";
 import { EditProfileFormSchema, EditProfileFormType } from "../schemas/profileSchema";
 import { useProfile } from "../hooks/useProfile";
 
 const BIO_MAX_LENGTH = 150;
-
-interface FormFieldProps {
-  label: string;
-  error?: string;
-  children: React.ReactNode;
-  charCount?: { current: number; max: number };
-}
-
-const FormField: React.FC<FormFieldProps> = ({ label, error, children, charCount }) => (
-  <View style={styles.fieldBlock}>
-    <View style={styles.labelRow}>
-      <Text style={styles.label}>{label}</Text>
-      {charCount && (
-        <Text style={styles.charCount}>
-          {charCount.current}/{charCount.max}
-        </Text>
-      )}
-    </View>
-    {children}
-    {error && <Text style={styles.fieldError}>{error}</Text>}
-  </View>
-);
 
 interface EditProfileScreenProps {
   onBack?: () => void;
@@ -54,9 +32,7 @@ export const EditProfileScreen: React.FC<EditProfileScreenProps> = ({
 }) => {
   const { profile, setProfile } = useProfile();
   const [isSaving, setIsSaving] = useState(false);
-  const [bioLength, setBioLength] = useState(
-    profile?.bio?.length ?? 0
-  );
+  const [bioLength, setBioLength] = useState(profile?.bio?.length ?? 0);
 
   const { control, handleSubmit, formState: { errors } } = useForm<EditProfileFormType>({
     resolver: zodResolver(EditProfileFormSchema),
@@ -90,160 +66,138 @@ export const EditProfileScreen: React.FC<EditProfileScreenProps> = ({
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.iconBtn}
-          onPress={onBack}
-          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-        >
-          <Ionicons name="arrow-back" size={24} color={COLORS["on-surface"]} />
-        </TouchableOpacity>
-
-        <Text style={styles.logo}>AcademiShare</Text>
-
-        <View style={styles.headerRight}>
-          <TouchableOpacity style={styles.iconBtn} accessibilityLabel="Ngôn ngữ">
-            <MaterialCommunityIcons name="web" size={22} color={COLORS["on-surface-variant"]} />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.iconBtn} accessibilityLabel="Chế độ tối">
-            <Ionicons name="moon-outline" size={22} color={COLORS["on-surface-variant"]} />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.iconBtn} accessibilityLabel="Thông báo">
-            <Ionicons name="notifications-outline" size={22} color={COLORS["on-surface-variant"]} />
-          </TouchableOpacity>
-        </View>
-      </View>
-
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.pageIntro}>
-          <Text style={styles.pageTitle}>Hồ sơ học thuật</Text>
-          <Text style={styles.pageSubtitle}>
-            Quản lý thông tin cá nhân để định danh trong cộng đồng.
-          </Text>
+        <View style={styles.topHeader}>
+          <TouchableOpacity onPress={onBack} style={styles.backButton}>
+            <ChevronLeft size={24} color="#0f172a" />
+          </TouchableOpacity>
+          <View>
+            <Text style={styles.welcomeText}>Cài đặt tài khoản</Text>
+            <Text style={styles.pageTitleSmall}>Chỉnh sửa thông tin</Text>
+          </View>
         </View>
 
+        {/* Change Avatar - Premium Design */}
         <View style={styles.avatarSection}>
           <TouchableOpacity style={styles.avatarWrapper} activeOpacity={0.8}>
-            <Image
-              source={{ uri: profile?.avatarUrl }}
-              style={styles.avatar}
-              resizeMode="cover"
-            />
-            <View style={styles.avatarOverlay}>
-              <Ionicons name="camera" size={28} color={COLORS["surface-container-lowest"]} />
-            </View>
-            <View style={styles.avatarEditBar}>
-              <Ionicons name="pencil" size={14} color={COLORS["surface-container-lowest"]} />
+            {profile?.avatarUrl ? (
+              <Image source={{ uri: profile.avatarUrl }} style={styles.avatar} />
+            ) : (
+              <View style={styles.avatarDefault}>
+                <User size={40} color="#94a3b8" />
+              </View>
+            )}
+            <View style={styles.cameraIcon}>
+              <Camera size={20} color="white" />
             </View>
           </TouchableOpacity>
-          <TouchableOpacity activeOpacity={0.7}>
-            <Text style={styles.changeAvatarText}>Thay đổi ảnh đại diện</Text>
-          </TouchableOpacity>
+          <Text style={styles.changeAvatarText}>Nhấn để thay đổi ảnh</Text>
         </View>
 
+        {/* Form Fields */}
         <View style={styles.form}>
-          <FormField label="Họ và tên" error={errors.name?.message}>
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Họ và tên</Text>
             <Controller
               control={control}
               name="name"
               render={({ field: { onChange, onBlur, value } }) => (
-                <TextInput
-                  style={[styles.input, errors.name && styles.inputError]}
-                  placeholder="Nhập họ và tên đầy đủ"
-                  placeholderTextColor={COLORS.outline}
-                  value={value}
-                  onChangeText={onChange}
-                  onBlur={onBlur}
-                  returnKeyType="next"
-                  maxLength={80}
-                />
-              )}
-            />
-          </FormField>
-
-          <FormField label="Trường Đại học" error={errors.university?.message}>
-            <Controller
-              control={control}
-              name="university"
-              render={({ field: { onChange, onBlur, value } }) => (
-                <View style={styles.inputWrapper}>
+                <View style={styles.inputContainer}>
+                  <User size={18} color="#94a3b8" style={styles.inputIcon} />
                   <TextInput
-                    style={[styles.input, styles.inputWithIcon, errors.university && styles.inputError]}
-                    placeholder="Chọn hoặc nhập tên trường"
-                    placeholderTextColor={COLORS.outline}
+                    style={styles.input}
+                    placeholder="VD: Nguyễn Văn A"
                     value={value}
                     onChangeText={onChange}
                     onBlur={onBlur}
-                    returnKeyType="next"
-                    maxLength={120}
-                  />
-                  <Ionicons
-                    name="school-outline"
-                    size={20}
-                    color={COLORS["outline-variant"]}
-                    style={styles.inputIcon}
+                    placeholderTextColor="#94a3b8"
                   />
                 </View>
               )}
             />
-          </FormField>
+            {errors.name && <Text style={styles.errorText}>{errors.name.message}</Text>}
+          </View>
 
-          <FormField label="Chuyên ngành" error={errors.major?.message}>
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Trường Đại học</Text>
+            <Controller
+              control={control}
+              name="university"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <View style={styles.inputContainer}>
+                  <School size={18} color="#94a3b8" style={styles.inputIcon} />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="VD: ĐH Bách Khoa"
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    placeholderTextColor="#94a3b8"
+                  />
+                </View>
+              )}
+            />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Chuyên ngành</Text>
             <Controller
               control={control}
               name="major"
               render={({ field: { onChange, onBlur, value } }) => (
-                <TextInput
-                  style={[styles.input, errors.major && styles.inputError]}
-                  placeholder="VD: Kỹ thuật phần mềm"
-                  placeholderTextColor={COLORS.outline}
-                  value={value}
-                  onChangeText={onChange}
-                  onBlur={onBlur}
-                  returnKeyType="next"
-                  maxLength={80}
-                />
+                <View style={styles.inputContainer}>
+                  <BookOpen size={18} color="#94a3b8" style={styles.inputIcon} />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="VD: Khoa học máy tính"
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    placeholderTextColor="#94a3b8"
+                  />
+                </View>
               )}
             />
-          </FormField>
+          </View>
 
-          <FormField label="Khóa / Niên khóa" error={errors.cohort?.message}>
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Khóa / Niên khóa</Text>
             <Controller
               control={control}
               name="cohort"
               render={({ field: { onChange, onBlur, value } }) => (
-                <TextInput
-                  style={[styles.input, errors.cohort && styles.inputError]}
-                  placeholder="VD: K65"
-                  placeholderTextColor={COLORS.outline}
-                  value={value}
-                  onChangeText={onChange}
-                  onBlur={onBlur}
-                  returnKeyType="next"
-                  maxLength={20}
-                />
+                <View style={styles.inputContainer}>
+                  <GraduationCap size={18} color="#94a3b8" style={styles.inputIcon} />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="VD: K64"
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    placeholderTextColor="#94a3b8"
+                  />
+                </View>
               )}
             />
-          </FormField>
+          </View>
 
-          <FormField
-            label="Mô tả bản thân"
-            error={errors.bio?.message}
-            charCount={{ current: bioLength, max: BIO_MAX_LENGTH }}
-          >
+          <View style={styles.inputGroup}>
+            <View style={styles.labelRow}>
+              <Text style={styles.label}>Mô tả bản thân</Text>
+              <Text style={styles.charCount}>{bioLength}/{BIO_MAX_LENGTH}</Text>
+            </View>
             <Controller
               control={control}
               name="bio"
               render={({ field: { onChange, onBlur, value } }) => (
                 <TextInput
-                  style={[styles.input, styles.textarea, errors.bio && styles.inputError]}
-                  placeholder="Giới thiệu ngắn về định hướng học tập và nghiên cứu..."
-                  placeholderTextColor={COLORS.outline}
+                  style={[styles.input, styles.textArea]}
+                  placeholder="Giới thiệu ngắn về bản thân..."
                   value={value}
                   onChangeText={(text) => {
                     onChange(text);
@@ -252,31 +206,30 @@ export const EditProfileScreen: React.FC<EditProfileScreenProps> = ({
                   onBlur={onBlur}
                   multiline
                   numberOfLines={4}
-                  textAlignVertical="top"
+                  placeholderTextColor="#94a3b8"
                   maxLength={BIO_MAX_LENGTH}
                 />
               )}
             />
-          </FormField>
+          </View>
+
+          <TouchableOpacity
+            style={[styles.saveButton, isSaving && styles.saveButtonDisabled]}
+            onPress={handleSubmit(onSubmit)}
+            disabled={isSaving}
+          >
+            {isSaving ? (
+              <ActivityIndicator color="white" />
+            ) : (
+              <>
+                <Save size={20} color="white" />
+                <Text style={styles.saveButtonText}>Lưu thay đổi</Text>
+              </>
+            )}
+          </TouchableOpacity>
         </View>
 
-        <TouchableOpacity
-          style={[styles.saveBtn, isSaving && styles.btnDisabled]}
-          onPress={handleSubmit(onSubmit)}
-          activeOpacity={0.8}
-          disabled={isSaving}
-        >
-          {isSaving ? (
-            <ActivityIndicator color={COLORS["on-primary"]} size="small" />
-          ) : (
-            <>
-              <MaterialCommunityIcons name="content-save" size={18} color={COLORS["on-primary"]} />
-              <Text style={styles.saveBtnText}>Lưu thay đổi</Text>
-            </>
-          )}
-        </TouchableOpacity>
-
-        <View style={{ height: SPACING.xl }} />
+        <View style={{ height: 40 }} />
       </ScrollView>
     </SafeAreaView>
   );
@@ -285,167 +238,165 @@ export const EditProfileScreen: React.FC<EditProfileScreenProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.surface,
+    backgroundColor: 'white',
   },
-
-  header: {
-    height: 64,
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: SPACING.gutter,
-    backgroundColor: COLORS.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS["outline-variant"],
-  },
-  logo: {
-    flex: 1,
-    textAlign: "center",
-    ...TYPOGRAPHY["headline-md"],
-    fontWeight: "700",
-    color: COLORS.primary,
-  },
-  headerRight: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  iconBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
   scroll: { flex: 1 },
   scrollContent: {
-    paddingHorizontal: SPACING["margin-mobile"],
-    paddingTop: SPACING.xl,
-    gap: SPACING.xl,
+    paddingHorizontal: 24,
+    paddingTop: 32,
   },
-
-  pageIntro: { gap: SPACING.base },
+  backButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#f8fafc',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  topHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+    marginBottom: 32,
+  },
+  headerSection: {
+    marginBottom: 32,
+  },
+  welcomeText: {
+    fontSize: 14,
+    color: '#94a3b8',
+    marginBottom: 4,
+  },
   pageTitle: {
-    ...TYPOGRAPHY["headline-lg-mobile"],
-    color: COLORS["on-surface"],
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#0f172a',
   },
-  pageSubtitle: {
-    ...TYPOGRAPHY["body-md"],
-    color: COLORS["on-surface-variant"],
+  pageTitleSmall: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#0f172a',
   },
-
   avatarSection: {
-    alignItems: "center",
-    gap: SPACING.md,
-    paddingBottom: SPACING.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS["outline-variant"],
+    alignItems: 'center',
+    marginBottom: 32,
   },
   avatarWrapper: {
-    width: 112,
-    height: 112,
-    borderRadius: 56,
-    overflow: "hidden",
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: '#f1f5f9',
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
     borderWidth: 1,
-    borderColor: COLORS["outline-variant"],
-    backgroundColor: COLORS["surface-container"],
+    borderColor: '#e2e8f0',
   },
   avatar: {
-    width: "100%",
-    height: "100%",
+    width: '100%',
+    height: '100%',
+    borderRadius: 50,
   },
-  avatarOverlay: {
-    position: "absolute",
-    inset: 0,
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: "rgba(25,27,35,0.4)",
-    alignItems: "center",
-    justifyContent: "center",
+  avatarDefault: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  avatarEditBar: {
-    position: "absolute",
+  cameraIcon: {
+    position: 'absolute',
     bottom: 0,
-    left: 0,
     right: 0,
-    height: 28,
-    backgroundColor: "rgba(25,27,35,0.6)",
-    alignItems: "center",
-    justifyContent: "center",
+    backgroundColor: '#0f172a',
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: 'white',
   },
   changeAvatarText: {
-    ...TYPOGRAPHY["label-md"],
-    color: COLORS.primary,
-    textDecorationLine: "underline",
+    marginTop: 12,
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#3b82f6',
   },
-
-  form: { gap: SPACING.lg },
-  fieldBlock: { gap: SPACING.base },
+  form: {
+    gap: 20,
+  },
+  inputGroup: {
+    gap: 8,
+  },
   labelRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   label: {
-    ...TYPOGRAPHY["label-md"],
-    color: COLORS["on-surface"],
+    fontSize: 13,
+    fontWeight: 'bold',
+    color: '#64748b',
+    marginLeft: 4,
   },
   charCount: {
-    ...TYPOGRAPHY["label-sm"],
-    color: COLORS.outline,
+    fontSize: 11,
+    color: '#94a3b8',
   },
-  input: {
-    ...TYPOGRAPHY["body-md"],
-    color: COLORS["on-surface"],
-    backgroundColor: COLORS["surface-container-lowest"],
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f8fafc',
     borderWidth: 1,
-    borderColor: COLORS["outline-variant"],
-    borderRadius: BORDER_RADIUS.sm,
-    paddingHorizontal: SPACING.lg,
-    paddingVertical: SPACING.md,
-  },
-  inputError: {
-    borderColor: COLORS.error,
-    borderWidth: 1.5,
-  },
-  textarea: {
-    height: 108,
-    paddingTop: SPACING.md,
-  },
-  fieldError: {
-    ...TYPOGRAPHY["label-sm"],
-    color: COLORS.error,
-  },
-
-  inputWrapper: {
-    position: "relative",
-  },
-  inputWithIcon: {
-    paddingRight: 44,
+    borderColor: '#f1f5f9',
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    height: 56,
   },
   inputIcon: {
-    position: "absolute",
-    right: SPACING.md,
-    top: "50%",
-    transform: [{ translateY: -10 }],
+    marginRight: 12,
   },
-
-  saveBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: SPACING.base,
-    backgroundColor: COLORS.primary,
-    borderRadius: BORDER_RADIUS.xl,
-    paddingVertical: SPACING.md,
-    paddingHorizontal: SPACING.xl,
+  input: {
+    flex: 1,
+    fontSize: 15,
+    color: '#0f172a',
+    fontWeight: '500',
   },
-  saveBtnText: {
-    ...TYPOGRAPHY["label-md"],
-    color: COLORS["on-primary"],
+  textArea: {
+    backgroundColor: '#f8fafc',
+    borderWidth: 1,
+    borderColor: '#f1f5f9',
+    borderRadius: 16,
+    padding: 16,
+    height: 120,
+    textAlignVertical: 'top',
   },
-  btnDisabled: {
-    opacity: 0.55,
+  errorText: {
+    fontSize: 12,
+    color: '#ef4444',
+    marginLeft: 4,
   },
+  saveButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+    backgroundColor: '#0f172a',
+    height: 56,
+    borderRadius: 16,
+    marginTop: 12,
+    shadowColor: '#0f172a',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 4,
+  },
+  saveButtonDisabled: {
+    opacity: 0.6,
+  },
+  saveButtonText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: 'white',
+  }
 });

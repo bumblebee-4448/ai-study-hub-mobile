@@ -1,4 +1,3 @@
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import {
   Alert,
@@ -8,34 +7,23 @@ import {
   Text,
   TouchableOpacity,
   View,
-  Image,
 } from "react-native";
+import { 
+  Search, 
+  Filter, 
+  Clock, 
+  CheckCircle2, 
+  XCircle, 
+  Eye, 
+  FileText,
+  ChevronRight,
+  AlertCircle
+} from "lucide-react-native";
 
-import { BORDER_RADIUS, COLORS, SPACING, TYPOGRAPHY } from "@/constants/theme";
-import {
-  ModeratorDocumentDetailScreen,
-  type ReviewDocumentDetail,
-} from "./ModeratorDocumentDetailScreen";
+import { ModeratorDocumentDetailScreen } from "./ModeratorDocumentDetailScreen";
 
 // ── Dummy Data ──────────────────────────────────────────────────────────────
-
-interface ReviewDocument {
-  id: string;
-  title: string;
-  author: string;
-  authorAvatar?: string;
-  uploadedAt: string;
-  format: string;
-  size: string;
-  description?: string;
-  isUrgent?: boolean;
-  category?: string;
-  year?: string;
-  pageCount?: number;
-  aiTrustScore?: number;
-}
-
-const REVIEW_DOCUMENTS: ReviewDocument[] = [
+const REVIEW_DOCUMENTS = [
   {
     id: "doc-1",
     title: "Advanced Algorithms for Quantum Computing Applications in Cryptography",
@@ -47,8 +35,8 @@ const REVIEW_DOCUMENTS: ReviewDocument[] = [
     year: "Year 4",
     pageCount: 45,
     aiTrustScore: 98,
-    description:
-      "This paper explores the theoretical limits of current post-quantum cryptographic methods against Shor's algorithm variants. Covers Gradient Descent, Genetic Algorithm and Particle Swarm Optimization applied in the field of Control Engineering. Includes both theory and practical examples on MATLAB.",
+    isUrgent: false,
+    description: "This paper explores the theoretical limits of current post-quantum cryptographic methods against Shor's algorithm variants."
   },
   {
     id: "doc-2",
@@ -61,337 +49,316 @@ const REVIEW_DOCUMENTS: ReviewDocument[] = [
     year: "Year 3",
     pageCount: 32,
     aiTrustScore: 74,
-    description:
-      "A comprehensive guide for beginners outlining the basic architecture of perceptrons and backpropagation algorithms. Suitable for undergraduate students in engineering and computer science.",
+    isUrgent: false,
+    description: "A comprehensive guide for beginners outlining the basic architecture of perceptrons and backpropagation algorithms."
   },
   {
     id: "doc-3",
     title: "Report on Academic Integrity Policy Violations Q3",
-    author: "Admin",
+    author: "Admin System",
     uploadedAt: "10/10/2023",
     format: "PDF",
     size: "500KB",
-    isUrgent: true,
     category: "Policy",
     year: "Year 1",
     pageCount: 8,
     aiTrustScore: 41,
-    description:
-      "Quarterly report on policy violations submitted by administration. Requires urgent review before the semester ends.",
+    isUrgent: true,
+    description: "Quarterly report on policy violations. Requires urgent review before the semester ends."
   },
 ];
 
-const FILTERS = ["Chờ duyệt", "Độ ưu tiên cao", "Khoa học máy tính", "Toán học"];
-
-// ── Main Screen ──────────────────────────────────────────────────────────────
+const FILTERS = ["Tất cả", "Chờ duyệt", "Ưu tiên cao", "Đã duyệt", "Từ chối"];
 
 export const ModeratorReviewScreen = () => {
-  const [activeFilter, setActiveFilter] = useState("Chờ duyệt");
-  const [selectedDoc, setSelectedDoc] = useState<ReviewDocument | null>(null);
+  const [activeFilter, setActiveFilter] = useState("Tất cả");
+  const [selectedDoc, setSelectedDoc] = useState<any>(null);
 
-  // Convert to ReviewDocumentDetail shape
-  const toDetail = (d: ReviewDocument): ReviewDocumentDetail => ({
-    id: d.id,
-    title: d.title,
-    author: d.author,
-    authorAvatar: d.authorAvatar,
-    uploadedAt: d.uploadedAt,
-    format: d.format,
-    size: d.size,
-    description: d.description,
-    isUrgent: d.isUrgent,
-    category: d.category,
-    year: d.year,
-    pageCount: d.pageCount,
-    aiTrustScore: d.aiTrustScore,
-  });
-
-  const handleApprove = (doc: ReviewDocumentDetail) => {
-    Alert.alert("Đã duyệt ✅", `Tài liệu "${doc.title}" đã được duyệt.`);
-  };
-
-  const handleReject = (doc: ReviewDocumentDetail, reason: string) => {
-    Alert.alert("Từ chối", `Tài liệu "${doc.title}" đã bị từ chối.\nLý do: ${reason}`);
-  };
-
-  // Show detail screen inside this component (stack-like navigation within screen)
   if (selectedDoc) {
     return (
       <ModeratorDocumentDetailScreen
-        document={toDetail(selectedDoc)}
+        document={selectedDoc}
         onBack={() => setSelectedDoc(null)}
-        onApprove={handleApprove}
-        onReject={handleReject}
+        onApprove={(doc) => Alert.alert("Thành công", `Đã duyệt ${doc.title}`)}
+        onReject={(doc, reason) => Alert.alert("Từ chối", `Lý do: ${reason}`)}
       />
     );
   }
 
-  const renderDocumentCard = (doc: ReviewDocument) => (
-    <View key={doc.id} style={styles.card}>
-      <View style={styles.cardHeader}>
-        <View style={styles.cardHeaderLeft}>
-          {doc.isUrgent && (
-            <MaterialCommunityIcons
-              name="alert"
-              size={20}
-              color={COLORS.error}
-              style={{ marginRight: 6 }}
-            />
-          )}
-          <View style={{ flex: 1 }}>
-            <Text style={styles.docTitle} numberOfLines={2}>
-              {doc.title}
-            </Text>
-            <Text style={styles.docMeta}>
-              Bởi {doc.author} • Tải lên ngày {doc.uploadedAt}
-            </Text>
-          </View>
-        </View>
-        <View style={styles.badge}>
-          <Text style={styles.badgeText}>
-            {doc.format} • {doc.size}
-          </Text>
-        </View>
-      </View>
-
-      {doc.description && (
-        <View style={styles.descriptionBox}>
-          <Text style={styles.descriptionText} numberOfLines={2}>
-            {doc.description}
-          </Text>
-        </View>
-      )}
-
-      <View style={styles.actionRow}>
-        <TouchableOpacity style={styles.btnReject} activeOpacity={0.75}>
-          <MaterialCommunityIcons name="close-circle-outline" size={18} color={COLORS.error} />
-          <Text style={styles.btnRejectText}>Từ chối</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.btnDetail}
-          activeOpacity={0.75}
-          onPress={() => setSelectedDoc(doc)}
-        >
-          <Ionicons name="eye-outline" size={18} color={COLORS["on-primary"]} />
-          <Text style={styles.btnDetailText}>Xem chi tiết</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
-
   return (
-    <SafeAreaView style={styles.safeArea}>
-      {/* ── Header ─────────────────────────────────────────────────────── */}
+    <SafeAreaView style={styles.container}>
+      {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>AcademiShare</Text>
-        <View style={styles.headerRight}>
-          <TouchableOpacity style={styles.iconBtn}>
-            <MaterialCommunityIcons name="filter-variant" size={24} color={COLORS["on-surface-variant"]} />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.iconBtn}>
-            <Ionicons name="notifications-outline" size={24} color={COLORS["on-surface-variant"]} />
-          </TouchableOpacity>
-          <Image
-            source={{ uri: "https://lh3.googleusercontent.com/aida-public/AB6AXuAOdq3b_ELYMC3GxquZ7RauzvzJ1pHpMfQQrorUfffyd_17r085qf5-VDo_tbKXmF7wHmykjJTozbpZ1TVNWoFmCwhZDY1dnPGSwk2XO-8bo-kYFGg-_BZqDhSl37KgNuJRR8jaqk4y-7pWYY09g8q--SUumhwSPTxLbMb5m84GyF68wDcKUE1AsUixdGwr9QeL4zaC2sAvFTWbPk0oMt2v9Rd-qCdCDR0sJUgAjYmwtjT5NJnGazypV9ma9i_j8OnIIMkdTuQ34E0" }}
-            style={styles.avatar}
-          />
+        <View>
+          <Text style={styles.headerTitle}>Hàng đợi kiểm duyệt</Text>
+          <Text style={styles.headerSubtitle}>{REVIEW_DOCUMENTS.length} tài liệu đang chờ xử lý</Text>
         </View>
+        <TouchableOpacity style={styles.searchButton}>
+          <Search size={22} color="#64748b" />
+        </TouchableOpacity>
       </View>
 
-      {/* ── Main Content ──────────────────────────────────────────────── */}
-      <View style={styles.mainContainer}>
-        {/* Filter Tabs */}
-        <View style={styles.filterWrapper}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScroll}>
-            {FILTERS.map((filter) => {
-              const isActive = filter === activeFilter;
-              return (
-                <TouchableOpacity
-                  key={filter}
-                  style={[styles.filterChip, isActive && styles.filterChipActive]}
-                  onPress={() => setActiveFilter(filter)}
-                  activeOpacity={0.8}
-                >
-                  <Text style={[styles.filterText, isActive && styles.filterTextActive]}>
-                    {filter}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
-        </View>
-
-        {/* Document List */}
-        <ScrollView style={styles.listContainer} contentContainerStyle={styles.listContent}>
-          {REVIEW_DOCUMENTS.map(renderDocumentCard)}
-          <View style={{ height: 40 }} />
+      {/* Filters */}
+      <View style={styles.filterContainer}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScroll}>
+          {FILTERS.map((filter) => (
+            <TouchableOpacity
+              key={filter}
+              onPress={() => setActiveFilter(filter)}
+              style={[styles.filterChip, activeFilter === filter && styles.filterChipActive]}
+            >
+              <Text style={[styles.filterText, activeFilter === filter && styles.filterTextActive]}>{filter}</Text>
+            </TouchableOpacity>
+          ))}
         </ScrollView>
       </View>
+
+      {/* List */}
+      <ScrollView 
+        style={styles.list} 
+        contentContainerStyle={styles.listContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {REVIEW_DOCUMENTS.map((doc) => (
+          <TouchableOpacity 
+            key={doc.id} 
+            style={styles.card}
+            activeOpacity={0.7}
+            onPress={() => setSelectedDoc(doc)}
+          >
+            <View style={styles.cardTop}>
+              <View style={[styles.formatBadge, { backgroundColor: doc.isUrgent ? '#fef2f2' : '#f8fafc' }]}>
+                {doc.isUrgent ? (
+                  <AlertCircle size={14} color="#ef4444" />
+                ) : (
+                  <FileText size={14} color="#64748b" />
+                )}
+                <Text style={[styles.formatText, doc.isUrgent && { color: '#ef4444' }]}>
+                  {doc.format} • {doc.size}
+                </Text>
+              </View>
+              {doc.aiTrustScore && (
+                <View style={styles.aiBadge}>
+                  <Text style={styles.aiLabel}>AI Score:</Text>
+                  <Text style={[styles.aiValue, { color: doc.aiTrustScore > 90 ? '#10b981' : '#f59e0b' }]}>
+                    {doc.aiTrustScore}%
+                  </Text>
+                </View>
+              )}
+            </View>
+
+            <Text style={styles.docTitle} numberOfLines={2}>{doc.title}</Text>
+            
+            <View style={styles.cardFooter}>
+              <View style={styles.authorRow}>
+                <View style={styles.authorAvatarPlaceholder}>
+                  <Text style={styles.avatarInitial}>{doc.author[0]}</Text>
+                </View>
+                <Text style={styles.authorName}>{doc.author}</Text>
+              </View>
+              <View style={styles.uploadedAtRow}>
+                <Clock size={12} color="#94a3b8" />
+                <Text style={styles.uploadedAtText}>{doc.uploadedAt}</Text>
+              </View>
+            </View>
+
+            <View style={styles.cardActions}>
+              <View style={styles.categoryBadge}>
+                <Text style={styles.categoryText}>{doc.category}</Text>
+              </View>
+              <View style={styles.detailLink}>
+                <Text style={styles.detailLinkText}>Kiểm tra</Text>
+                <ChevronRight size={16} color="#3b82f6" />
+              </View>
+            </View>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
     </SafeAreaView>
   );
 };
 
-// ── Styles ────────────────────────────────────────────────────────────────────
-
 const styles = StyleSheet.create({
-  safeArea: {
+  container: {
     flex: 1,
-    backgroundColor: COLORS.surface,
+    backgroundColor: '#fff',
   },
   header: {
-    height: 64,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: SPACING["margin-mobile"],
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS["outline-variant"],
-    backgroundColor: COLORS["surface-container-lowest"],
+    paddingHorizontal: 24,
+    paddingVertical: 20,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   headerTitle: {
-    ...TYPOGRAPHY["headline-md"],
-    color: COLORS.primary,
-    fontWeight: "700",
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#0f172a',
   },
-  headerRight: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 16,
+  headerSubtitle: {
+    fontSize: 13,
+    color: '#94a3b8',
+    marginTop: 2,
   },
-  iconBtn: {
-    padding: 4,
+  searchButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#f8fafc',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  avatar: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: COLORS["outline-variant"],
-  },
-  mainContainer: {
-    flex: 1,
-    backgroundColor: COLORS.surface,
-  },
-  filterWrapper: {
-    paddingVertical: SPACING.md,
+  filterContainer: {
+    paddingBottom: 16,
   },
   filterScroll: {
-    paddingHorizontal: SPACING["margin-mobile"],
+    paddingHorizontal: 24,
     gap: 8,
   },
   filterChip: {
     paddingHorizontal: 16,
     paddingVertical: 8,
-    borderRadius: BORDER_RADIUS.full,
+    borderRadius: 100,
+    backgroundColor: '#f1f5f9',
     borderWidth: 1,
-    borderColor: COLORS["outline-variant"],
-    backgroundColor: COLORS.surface,
+    borderColor: '#f1f5f9',
   },
   filterChipActive: {
-    borderColor: COLORS.primary,
-    borderWidth: 2,
-    backgroundColor: COLORS["primary-container"],
+    backgroundColor: '#0f172a',
+    borderColor: '#0f172a',
   },
   filterText: {
-    ...TYPOGRAPHY["label-md"],
-    color: COLORS["on-surface-variant"],
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#64748b',
   },
   filterTextActive: {
-    color: COLORS["on-primary-container"],
+    color: '#fff',
   },
-  listContainer: {
+  list: {
     flex: 1,
   },
   listContent: {
-    paddingHorizontal: SPACING["margin-mobile"],
-    gap: SPACING.md,
-    paddingBottom: SPACING.xl,
+    paddingHorizontal: 24,
+    paddingBottom: 40,
   },
   card: {
-    backgroundColor: COLORS["surface-container-lowest"],
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
     borderWidth: 1,
-    borderColor: COLORS["outline-variant"],
-    borderRadius: BORDER_RADIUS.md,
-    padding: SPACING.md,
-    gap: SPACING.md,
+    borderColor: '#f1f5f9',
+    shadowColor: '#0f172a',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.02,
+    shadowRadius: 8,
+    elevation: 2,
   },
-  cardHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    gap: SPACING.sm,
+  cardTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
   },
-  cardHeaderLeft: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    flex: 1,
-  },
-  docTitle: {
-    ...TYPOGRAPHY["label-md"],
-    color: COLORS["on-surface"],
-    marginBottom: 4,
-  },
-  docMeta: {
-    ...TYPOGRAPHY["label-sm"],
-    color: COLORS["on-surface-variant"],
-  },
-  badge: {
-    backgroundColor: COLORS["surface-container-high"],
-    borderWidth: 1,
-    borderColor: COLORS["outline-variant"],
+  formatBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: BORDER_RADIUS.sm,
+    borderRadius: 6,
   },
-  badgeText: {
-    ...TYPOGRAPHY["label-sm"],
-    color: COLORS["on-surface-variant"],
+  formatText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#64748b',
   },
-  descriptionBox: {
-    backgroundColor: COLORS["surface-container-low"],
-    padding: SPACING.md,
-    borderRadius: BORDER_RADIUS.sm,
-    borderWidth: 1,
-    borderColor: COLORS["outline-variant"],
+  aiBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
-  descriptionText: {
-    ...TYPOGRAPHY["body-md"],
-    color: COLORS["on-surface-variant"],
-    fontSize: 14,
+  aiLabel: {
+    fontSize: 11,
+    color: '#94a3b8',
   },
-  actionRow: {
-    flexDirection: "row",
-    gap: SPACING.sm,
-    marginTop: 8,
+  aiValue: {
+    fontSize: 12,
+    fontWeight: 'bold',
   },
-  btnReject: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
+  docTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#0f172a',
+    lineHeight: 22,
+    marginBottom: 16,
+  },
+  cardFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f8fafc',
+  },
+  authorRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 8,
-    borderWidth: 1,
-    borderColor: COLORS.error,
-    paddingVertical: 10,
-    borderRadius: BORDER_RADIUS.sm,
   },
-  btnRejectText: {
-    ...TYPOGRAPHY["label-md"],
-    color: COLORS.error,
+  authorAvatarPlaceholder: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#e2e8f0',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  btnDetail: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    backgroundColor: COLORS.primary,
-    paddingVertical: 10,
-    borderRadius: BORDER_RADIUS.sm,
+  avatarInitial: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: '#64748b',
   },
-  btnDetailText: {
-    ...TYPOGRAPHY["label-md"],
-    color: COLORS["on-primary"],
+  authorName: {
+    fontSize: 13,
+    color: '#475569',
+    fontWeight: '500',
   },
+  uploadedAtRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  uploadedAtText: {
+    fontSize: 12,
+    color: '#94a3b8',
+  },
+  cardActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  categoryBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    backgroundColor: '#f1f5f9',
+    borderRadius: 6,
+  },
+  categoryText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#64748b',
+  },
+  detailLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+  },
+  detailLinkText: {
+    fontSize: 13,
+    fontWeight: 'bold',
+    color: '#3b82f6',
+  }
 });

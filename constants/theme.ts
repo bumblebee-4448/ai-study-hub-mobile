@@ -137,18 +137,60 @@ export const FONT_FAMILY = Platform.select({
   default: { sans: "System" },
 });
 
+export const theme = {
+  colors: {
+    primary: '#6366f1', // Indigo
+    primaryGradient: ['#6366f1', '#8b5cf6'] as const, // Indigo to Violet
+    secondary: '#06b6d4', // Cyan
+    secondaryGradient: ['#06b6d4', '#3b82f6'] as const, // Cyan to Blue
+    success: '#10b981', // Emerald green
+    successBg: '#ecfdf5',
+    warning: '#f59e0b', // Amber/orange
+    warningBg: '#fffbe6',
+    danger: '#f43f5e', // Rose red
+    dangerBg: '#fff1f2',
+    backgroundLight: '#f8fafc', // Slate 50
+    backgroundDark: '#0f172a',  // Slate 900
+    cardLight: '#ffffff',
+    cardDark: '#1e293b',        // Slate 800
+    borderLight: '#f1f5f9',     // Slate 100
+    borderDark: '#334155',      // Slate 700
+    textPrimaryLight: '#0f172a', // Slate 900
+    textPrimaryDark: '#f8fafc',
+    textSecondaryLight: '#64748b', // Slate 500
+    textSecondaryDark: '#94a3b8',
+  },
+  shadows: {
+    soft: {
+      shadowColor: '#0f172a',
+      shadowOffset: { width: 0, height: 6 },
+      shadowOpacity: 0.03,
+      shadowRadius: 12,
+      elevation: 2,
+    },
+    medium: {
+      shadowColor: '#0f172a',
+      shadowOffset: { width: 0, height: 10 },
+      shadowOpacity: 0.06,
+      shadowRadius: 18,
+      elevation: 4,
+    },
+  },
+  borderRadius: {
+    sm: 8,
+    md: 12,
+    lg: 20,
+    xl: 24,
+    round: 9999,
+  }
+};
+
 export const Fonts = Platform.select({
   ios: {
     sans: 'system-ui',
     serif: 'ui-serif',
     rounded: 'ui-rounded',
     mono: 'ui-monospace',
-  },
-  default: {
-    sans: 'normal',
-    serif: 'serif',
-    rounded: 'normal',
-    mono: 'monospace',
   },
   web: {
     sans: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
