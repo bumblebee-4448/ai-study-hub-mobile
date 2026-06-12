@@ -1,4 +1,3 @@
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import {
   Alert,
@@ -12,10 +11,18 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-
-import { BORDER_RADIUS, COLORS, SPACING, TYPOGRAPHY } from "@/constants/theme";
-
-// ── Types ────────────────────────────────────────────────────────────────────
+import { 
+  ChevronLeft, 
+  FileText, 
+  User, 
+  Calendar, 
+  Layers, 
+  ShieldCheck, 
+  CheckCircle, 
+  XCircle, 
+  Search,
+  X
+} from "lucide-react-native";
 
 export interface ReviewDocumentDetail {
   id: string;
@@ -30,7 +37,7 @@ export interface ReviewDocumentDetail {
   category?: string;
   year?: string;
   pageCount?: number;
-  aiTrustScore?: number; // 0-100
+  aiTrustScore?: number;
 }
 
 interface Props {
@@ -39,8 +46,6 @@ interface Props {
   onApprove: (doc: ReviewDocumentDetail) => void;
   onReject: (doc: ReviewDocumentDetail, reason: string) => void;
 }
-
-// ── Component ─────────────────────────────────────────────────────────────────
 
 export const ModeratorDocumentDetailScreen: React.FC<Props> = ({
   document: doc,
@@ -53,12 +58,12 @@ export const ModeratorDocumentDetailScreen: React.FC<Props> = ({
 
   const handleApprove = () => {
     Alert.alert(
-      "Duyệt tài liệu",
-      `Bạn có chắc chắn muốn duyệt tài liệu "${doc.title}"?`,
+      "Xác nhận duyệt",
+      `Tài liệu "${doc.title}" sẽ được xuất bản lên hệ thống.`,
       [
-        { text: "Hủy", style: "cancel" },
+        { text: "Để sau", style: "cancel" },
         {
-          text: "Duyệt",
+          text: "Duyệt ngay",
           onPress: () => {
             onApprove(doc);
             onBack();
@@ -70,7 +75,7 @@ export const ModeratorDocumentDetailScreen: React.FC<Props> = ({
 
   const handleRejectSubmit = () => {
     if (!rejectReason.trim()) {
-      Alert.alert("Bắt buộc", "Vui lòng cung cấp lý do từ chối.");
+      Alert.alert("Lỗi", "Vui lòng nhập lý do từ chối.");
       return;
     }
     onReject(doc, rejectReason.trim());
@@ -79,193 +84,128 @@ export const ModeratorDocumentDetailScreen: React.FC<Props> = ({
     onBack();
   };
 
-  const trustColor =
-    (doc.aiTrustScore ?? 0) >= 80
-      ? "#16a34a"
-      : (doc.aiTrustScore ?? 0) >= 50
-      ? "#d97706"
-      : COLORS.error;
-
-  const trustLabel =
-    (doc.aiTrustScore ?? 0) >= 80
-      ? "Cao"
-      : (doc.aiTrustScore ?? 0) >= 50
-      ? "Trung bình"
-      : "Thấp";
+  const scoreColor = (doc.aiTrustScore ?? 0) >= 80 ? '#10b981' : (doc.aiTrustScore ?? 0) >= 50 ? '#f59e0b' : '#ef4444';
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      {/* ── Header ──────────────────────────────────────────────────────── */}
+    <SafeAreaView style={styles.container}>
+      {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={onBack} style={styles.backBtn} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-          <Ionicons name="chevron-back" size={26} color={COLORS["on-surface"]} />
+        <TouchableOpacity onPress={onBack} style={styles.backButton}>
+          <ChevronLeft size={24} color="#0f172a" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Chi tiết tài liệu</Text>
-        {doc.isUrgent ? (
-          <View style={styles.urgentBadge}>
-            <MaterialCommunityIcons name="alert" size={16} color={COLORS.error} />
-          </View>
-        ) : (
-          <View style={{ width: 36 }} />
-        )}
+        <Text style={styles.headerTitle}>Kiểm tra nội dung</Text>
+        <View style={{ width: 44 }} />
       </View>
 
       <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* ── Document Preview ─────────────────────────────────────────── */}
-        <View style={styles.previewBox}>
-          <View style={styles.previewInner}>
-            <MaterialCommunityIcons
-              name={doc.format === "PDF" ? "file-pdf-box" : doc.format === "DOCX" ? "file-word-box" : "file-document"}
-              size={64}
-              color={COLORS.primary}
-            />
-            <Text style={styles.previewMeta}>
-              Tài liệu {doc.format} • {doc.size}
-            </Text>
-            <TouchableOpacity style={styles.viewAllBtn} activeOpacity={0.85}>
-              <Ionicons name="search-outline" size={16} color={COLORS["on-primary"]} />
-              <Text style={styles.viewAllText}>Xem toàn bộ tài liệu</Text>
+        {/* Document Preview Placeholder */}
+        <View style={styles.previewContainer}>
+          <View style={styles.previewCard}>
+            <FileText size={64} color="#3b82f6" strokeWidth={1.5} />
+            <Text style={styles.formatText}>{doc.format} • {doc.size}</Text>
+            <TouchableOpacity style={styles.previewButton}>
+              <Search size={18} color="#fff" />
+              <Text style={styles.previewButtonText}>Xem chi tiết file</Text>
             </TouchableOpacity>
           </View>
         </View>
 
-        {/* ── Category Tags ────────────────────────────────────────────── */}
-        {(doc.category || doc.year) && (
+        {/* Info Section */}
+        <View style={styles.infoSection}>
           <View style={styles.tagRow}>
-            {doc.category && (
-              <View style={styles.tag}>
-                <Text style={styles.tagText}>{doc.category.toUpperCase()}</Text>
-              </View>
-            )}
-            {doc.year && (
-              <View style={styles.tag}>
-                <Text style={styles.tagText}>{doc.year.toUpperCase()}</Text>
-              </View>
-            )}
+            <View style={styles.categoryTag}>
+              <Text style={styles.categoryTagText}>{doc.category}</Text>
+            </View>
+            <View style={styles.yearTag}>
+              <Text style={styles.yearTagText}>{doc.year}</Text>
+            </View>
           </View>
-        )}
 
-        {/* ── Title ────────────────────────────────────────────────────── */}
-        <Text style={styles.docTitle}>{doc.title}</Text>
+          <Text style={styles.docTitle}>{doc.title}</Text>
 
-        {/* ── Meta Grid ────────────────────────────────────────────────── */}
-        <View style={styles.metaGrid}>
-          {/* Uploader */}
-          <View style={styles.metaCard}>
-            <Text style={styles.metaLabel}>TẢI LÊN BỞI</Text>
-            <View style={styles.metaAuthorRow}>
-              {doc.authorAvatar ? (
-                <Image source={{ uri: doc.authorAvatar }} style={styles.metaAvatar} />
-              ) : (
-                <View style={[styles.metaAvatar, styles.metaAvatarPlaceholder]}>
-                  <Text style={styles.metaAvatarText}>{doc.author[0]}</Text>
+          <View style={styles.metaGrid}>
+            <View style={styles.metaItem}>
+              <Text style={styles.metaLabel}>NGƯỜI TẢI LÊN</Text>
+              <View style={styles.metaValueRow}>
+                <View style={styles.avatarMini}>
+                  <Text style={styles.avatarText}>{doc.author[0]}</Text>
                 </View>
-              )}
-              <Text style={styles.metaValue}>{doc.author}</Text>
+                <Text style={styles.metaValueText}>{doc.author}</Text>
+              </View>
             </View>
-          </View>
 
-          {/* Upload date */}
-          <View style={styles.metaCard}>
-            <Text style={styles.metaLabel}>NGÀY TẢI LÊN</Text>
-            <Text style={styles.metaValue}>{doc.uploadedAt}</Text>
-          </View>
+            <View style={styles.metaItem}>
+              <Text style={styles.metaLabel}>NGÀY TẢI</Text>
+              <View style={styles.metaValueRow}>
+                <Calendar size={14} color="#64748b" />
+                <Text style={styles.metaValueText}>{doc.uploadedAt}</Text>
+              </View>
+            </View>
 
-          {/* Page count */}
-          {doc.pageCount != null && (
-            <View style={styles.metaCard}>
+            <View style={styles.metaItem}>
               <Text style={styles.metaLabel}>SỐ TRANG</Text>
-              <Text style={styles.metaValue}>{doc.pageCount} trang</Text>
+              <View style={styles.metaValueRow}>
+                <Layers size={14} color="#64748b" />
+                <Text style={styles.metaValueText}>{doc.pageCount} trang</Text>
+              </View>
             </View>
-          )}
 
-          {/* AI Trust Score */}
-          {doc.aiTrustScore != null && (
-            <View style={styles.metaCard}>
+            <View style={styles.metaItem}>
               <Text style={styles.metaLabel}>ĐỘ TIN CẬY AI</Text>
-              <View style={styles.metaTrustRow}>
-                <View style={[styles.trustDot, { backgroundColor: trustColor }]} />
-                <Text style={[styles.metaValue, { color: trustColor }]}>
-                  {trustLabel} ({doc.aiTrustScore}%)
+              <View style={styles.metaValueRow}>
+                <ShieldCheck size={14} color={scoreColor} />
+                <Text style={[styles.metaValueText, { color: scoreColor, fontWeight: 'bold' }]}>
+                  {doc.aiTrustScore}% Accurate
                 </Text>
               </View>
             </View>
+          </View>
+
+          {doc.description && (
+            <View style={styles.descriptionContainer}>
+              <Text style={styles.descriptionLabel}>MÔ TẢ NỘI DUNG</Text>
+              <Text style={styles.descriptionText}>{doc.description}</Text>
+            </View>
           )}
         </View>
-
-        {/* ── Description ──────────────────────────────────────────────── */}
-        {doc.description && (
-          <View style={styles.descSection}>
-            <Text style={styles.descLabel}>MÔ TẢ CHI TIẾT</Text>
-            <Text style={styles.descText}>{doc.description}</Text>
-          </View>
-        )}
-
-        {/* Bottom spacer for fixed buttons */}
-        <View style={{ height: 100 }} />
       </ScrollView>
 
-      {/* ── Fixed Action Buttons ─────────────────────────────────────── */}
+      {/* Action Bar */}
       <View style={styles.actionBar}>
-        <TouchableOpacity
-          style={styles.btnReject}
-          activeOpacity={0.8}
-          onPress={() => setRejectModalVisible(true)}
-        >
-          <MaterialCommunityIcons name="close-circle-outline" size={18} color={COLORS.error} />
-          <Text style={styles.btnRejectText}>Từ chối</Text>
+        <TouchableOpacity style={styles.rejectButton} onPress={() => setRejectModalVisible(true)}>
+          <XCircle size={20} color="#64748b" />
+          <Text style={styles.rejectButtonText}>Từ chối</Text>
         </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.btnApprove}
-          activeOpacity={0.8}
-          onPress={handleApprove}
-        >
-          <MaterialCommunityIcons name="check-circle-outline" size={18} color={COLORS["on-primary"]} />
-          <Text style={styles.btnApproveText}>Duyệt</Text>
+        <TouchableOpacity style={styles.approveButton} onPress={handleApprove}>
+          <CheckCircle size={20} color="#fff" />
+          <Text style={styles.approveButtonText}>Duyệt bài</Text>
         </TouchableOpacity>
       </View>
 
-      {/* ── Reject Reason Modal ──────────────────────────────────────── */}
-      <Modal
-        visible={rejectModalVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setRejectModalVisible(false)}
-      >
+      {/* Reject Modal */}
+      <Modal visible={rejectModalVisible} transparent animationType="fade">
         <View style={styles.modalOverlay}>
-          <View style={styles.modalCard}>
+          <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Từ chối tài liệu</Text>
+              <Text style={styles.modalTitle}>Lý do từ chối</Text>
               <TouchableOpacity onPress={() => setRejectModalVisible(false)}>
-                <Ionicons name="close" size={22} color={COLORS["on-surface-variant"]} />
+                <X size={20} color="#64748b" />
               </TouchableOpacity>
             </View>
-
-            <Text style={styles.modalSubtitle}>
-              Vui lòng cung cấp lý do để tác giả có thể chỉnh sửa và nộp lại.
-            </Text>
-
             <TextInput
               style={styles.reasonInput}
-              placeholder="VD: Thiếu trích dẫn, nội dung vi phạm chính sách..."
-              placeholderTextColor={COLORS.outline}
+              placeholder="Nhập lý do chi tiết..."
+              multiline
               value={rejectReason}
               onChangeText={setRejectReason}
-              multiline
-              numberOfLines={4}
-              textAlignVertical="top"
+              placeholderTextColor="#94a3b8"
             />
-
-            <View style={styles.modalActions}>
-              <TouchableOpacity
-                style={styles.modalCancelBtn}
-                onPress={() => setRejectModalVisible(false)}
-              >
+            <View style={styles.modalFooter}>
+              <TouchableOpacity style={styles.modalCancelButton} onPress={() => setRejectModalVisible(false)}>
                 <Text style={styles.modalCancelText}>Hủy</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.modalRejectBtn} onPress={handleRejectSubmit}>
-                <Text style={styles.modalRejectText}>Xác nhận từ chối</Text>
+              <TouchableOpacity style={styles.modalConfirmButton} onPress={handleRejectSubmit}>
+                <Text style={styles.modalConfirmText}>Xác nhận</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -275,287 +215,264 @@ export const ModeratorDocumentDetailScreen: React.FC<Props> = ({
   );
 };
 
-// ── Styles ────────────────────────────────────────────────────────────────────
-
 const styles = StyleSheet.create({
-  safeArea: {
+  container: {
     flex: 1,
-    backgroundColor: COLORS.surface,
+    backgroundColor: '#fff',
   },
-  // Header
   header: {
-    height: 56,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: SPACING["margin-mobile"],
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 24,
+    paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS["outline-variant"],
-    backgroundColor: COLORS["surface-container-lowest"],
+    borderBottomColor: '#f1f5f9',
   },
-  backBtn: {
-    width: 36,
-    height: 36,
-    alignItems: "center",
-    justifyContent: "center",
+  backButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#f8fafc',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   headerTitle: {
-    ...TYPOGRAPHY["label-md"],
-    color: COLORS["on-surface"],
     fontSize: 16,
-    fontWeight: "700",
+    fontWeight: '700',
+    color: '#0f172a',
   },
-  urgentBadge: {
-    width: 36,
-    height: 36,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  // Scroll
-  scroll: { flex: 1 },
-  scrollContent: {
-    paddingHorizontal: SPACING["margin-mobile"],
-    paddingTop: SPACING.xl,
-    gap: SPACING.lg,
-  },
-  // Preview box
-  previewBox: {
-    borderWidth: 1,
-    borderColor: COLORS["outline-variant"],
-    borderRadius: BORDER_RADIUS.md,
-    backgroundColor: COLORS["surface-container-low"],
-    overflow: "hidden",
-  },
-  previewInner: {
-    paddingVertical: 40,
-    alignItems: "center",
-    gap: SPACING.md,
-  },
-  previewMeta: {
-    ...TYPOGRAPHY["label-sm"],
-    color: COLORS["on-surface-variant"],
-  },
-  viewAllBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    backgroundColor: COLORS.primary,
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: BORDER_RADIUS.sm,
-    marginTop: SPACING.base,
-  },
-  viewAllText: {
-    ...TYPOGRAPHY["label-md"],
-    color: COLORS["on-primary"],
-  },
-  // Tags
-  tagRow: {
-    flexDirection: "row",
-    gap: 8,
-    flexWrap: "wrap",
-  },
-  tag: {
-    backgroundColor: COLORS["surface-container-high"],
-    borderWidth: 1,
-    borderColor: COLORS["outline-variant"],
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: BORDER_RADIUS.sm,
-  },
-  tagText: {
-    ...TYPOGRAPHY["label-sm"],
-    color: COLORS["on-surface-variant"],
-    fontWeight: "700",
-    letterSpacing: 0.5,
-  },
-  // Title
-  docTitle: {
-    ...TYPOGRAPHY["headline-md"],
-    color: COLORS["on-surface"],
-    fontWeight: "700",
-    lineHeight: 32,
-  },
-  // Meta grid
-  metaGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: SPACING.base,
-  },
-  metaCard: {
+  scroll: {
     flex: 1,
-    minWidth: "45%",
+  },
+  scrollContent: {
+    paddingHorizontal: 24,
+    paddingTop: 24,
+    paddingBottom: 40,
+  },
+  previewContainer: {
+    marginBottom: 32,
+  },
+  previewCard: {
+    height: 240,
+    backgroundColor: '#f8fafc',
+    borderRadius: 24,
     borderWidth: 1,
-    borderColor: COLORS["outline-variant"],
-    borderRadius: BORDER_RADIUS.sm,
-    padding: SPACING.md,
-    gap: 6,
-    backgroundColor: COLORS["surface-container-lowest"],
+    borderColor: '#f1f5f9',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 16,
   },
-  metaLabel: {
-    ...TYPOGRAPHY["label-sm"],
-    color: COLORS["on-surface-variant"],
-    fontWeight: "700",
-    letterSpacing: 0.6,
-    fontSize: 10,
+  formatText: {
+    fontSize: 14,
+    color: '#64748b',
+    fontWeight: '500',
   },
-  metaValue: {
-    ...TYPOGRAPHY["label-md"],
-    color: COLORS["on-surface"],
-  },
-  metaAuthorRow: {
-    flexDirection: "row",
-    alignItems: "center",
+  previewButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 8,
-  },
-  metaAvatar: {
-    width: 24,
-    height: 24,
+    backgroundColor: '#0f172a',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
     borderRadius: 12,
   },
-  metaAvatarPlaceholder: {
-    backgroundColor: COLORS["primary-fixed"],
-    alignItems: "center",
-    justifyContent: "center",
+  previewButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 14,
   },
-  metaAvatarText: {
-    fontSize: 11,
-    fontWeight: "700",
-    color: COLORS.primary,
+  infoSection: {
+    gap: 16,
   },
-  metaTrustRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
+  tagRow: {
+    flexDirection: 'row',
+    gap: 8,
   },
-  trustDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+  categoryTag: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    backgroundColor: '#eff6ff',
+    borderRadius: 8,
   },
-  // Description
-  descSection: {
-    gap: SPACING.base,
+  categoryTagText: {
+    color: '#3b82f6',
+    fontSize: 12,
+    fontWeight: '700',
   },
-  descLabel: {
-    ...TYPOGRAPHY["label-sm"],
-    color: COLORS["on-surface-variant"],
-    fontWeight: "700",
-    letterSpacing: 0.6,
+  yearTag: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    backgroundColor: '#f1f5f9',
+    borderRadius: 8,
+  },
+  yearTagText: {
+    color: '#64748b',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  docTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#0f172a',
+    lineHeight: 32,
+  },
+  metaGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+    marginTop: 8,
+  },
+  metaItem: {
+    width: '48%',
+    padding: 16,
+    backgroundColor: '#f8fafc',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#f1f5f9',
+  },
+  metaLabel: {
     fontSize: 10,
+    fontWeight: 'bold',
+    color: '#94a3b8',
+    letterSpacing: 0.5,
+    marginBottom: 8,
   },
-  descText: {
-    ...TYPOGRAPHY["body-md"],
-    color: COLORS["on-surface-variant"],
+  metaValueRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  avatarMini: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#cbd5e1',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarText: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: '#fff',
+  },
+  metaValueText: {
+    fontSize: 13,
+    color: '#334155',
+    fontWeight: '500',
+  },
+  descriptionContainer: {
+    marginTop: 8,
+    paddingTop: 24,
+    borderTopWidth: 1,
+    borderTopColor: '#f1f5f9',
+  },
+  descriptionLabel: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: '#94a3b8',
+    letterSpacing: 0.5,
+    marginBottom: 12,
+  },
+  descriptionText: {
+    fontSize: 15,
+    color: '#475569',
     lineHeight: 24,
   },
-  // Action bar
   actionBar: {
-    flexDirection: "row",
-    gap: SPACING.md,
-    paddingHorizontal: SPACING["margin-mobile"],
-    paddingVertical: SPACING.md,
+    flexDirection: 'row',
+    padding: 24,
+    gap: 12,
     borderTopWidth: 1,
-    borderTopColor: COLORS["outline-variant"],
-    backgroundColor: COLORS["surface-container-lowest"],
+    borderTopColor: '#f1f5f9',
+    backgroundColor: '#fff',
   },
-  btnReject: {
+  rejectButton: {
     flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     gap: 8,
-    borderWidth: 1.5,
-    borderColor: COLORS.error,
-    paddingVertical: 12,
-    borderRadius: BORDER_RADIUS.sm,
+    height: 56,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
   },
-  btnRejectText: {
-    ...TYPOGRAPHY["label-md"],
-    color: COLORS.error,
+  rejectButtonText: {
+    fontWeight: 'bold',
+    color: '#64748b',
   },
-  btnApprove: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
+  approveButton: {
+    flex: 2,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     gap: 8,
-    backgroundColor: COLORS.primary,
-    paddingVertical: 12,
-    borderRadius: BORDER_RADIUS.sm,
+    height: 56,
+    borderRadius: 16,
+    backgroundColor: '#0f172a',
   },
-  btnApproveText: {
-    ...TYPOGRAPHY["label-md"],
-    color: COLORS["on-primary"],
+  approveButtonText: {
+    fontWeight: 'bold',
+    color: '#fff',
   },
-  // Modal
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.45)",
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: SPACING.xl,
+    backgroundColor: 'rgba(15, 23, 42, 0.5)',
+    justifyContent: 'center',
+    padding: 24,
   },
-  modalCard: {
-    width: "100%",
-    backgroundColor: COLORS["surface-container-lowest"],
-    borderRadius: BORDER_RADIUS.md,
-    padding: SPACING.xl,
-    gap: SPACING.lg,
-    borderWidth: 1,
-    borderColor: COLORS["outline-variant"],
+  modalContent: {
+    backgroundColor: '#fff',
+    borderRadius: 24,
+    padding: 24,
   },
   modalHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
   },
   modalTitle: {
-    ...TYPOGRAPHY["label-md"],
-    color: COLORS["on-surface"],
-    fontSize: 16,
-    fontWeight: "700",
-  },
-  modalSubtitle: {
-    ...TYPOGRAPHY["body-md"],
-    color: COLORS["on-surface-variant"],
-    fontSize: 14,
-    lineHeight: 20,
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#0f172a',
   },
   reasonInput: {
-    borderWidth: 1,
-    borderColor: COLORS["outline-variant"],
-    borderRadius: BORDER_RADIUS.sm,
-    padding: SPACING.md,
-    ...TYPOGRAPHY["body-md"],
-    color: COLORS["on-surface"],
-    minHeight: 100,
+    height: 120,
+    backgroundColor: '#f8fafc',
+    borderRadius: 16,
+    padding: 16,
+    textAlignVertical: 'top',
+    color: '#0f172a',
+    marginBottom: 24,
   },
-  modalActions: {
-    flexDirection: "row",
-    gap: SPACING.md,
+  modalFooter: {
+    flexDirection: 'row',
+    gap: 12,
   },
-  modalCancelBtn: {
+  modalCancelButton: {
     flex: 1,
-    paddingVertical: 12,
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: COLORS["outline-variant"],
-    borderRadius: BORDER_RADIUS.sm,
+    height: 48,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#f1f5f9',
   },
   modalCancelText: {
-    ...TYPOGRAPHY["label-md"],
-    color: COLORS["on-surface-variant"],
+    fontWeight: 'bold',
+    color: '#64748b',
   },
-  modalRejectBtn: {
-    flex: 1,
-    paddingVertical: 12,
-    alignItems: "center",
-    backgroundColor: COLORS.error,
-    borderRadius: BORDER_RADIUS.sm,
+  modalConfirmButton: {
+    flex: 2,
+    height: 48,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#ef4444',
   },
-  modalRejectText: {
-    ...TYPOGRAPHY["label-md"],
-    color: COLORS["on-error"],
-  },
+  modalConfirmText: {
+    fontWeight: 'bold',
+    color: '#fff',
+  }
 });
