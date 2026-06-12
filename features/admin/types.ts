@@ -10,7 +10,7 @@ export interface UserAdmin {
   id: string;
   fullName: string;
   email: string;
-  role: 'admin' | 'member' | 'guest';
+  role: 'admin' | 'student' | 'teacher';
   joinedDate: string;
   status: 'active' | 'blocked' | 'pending';
   avatar?: string;

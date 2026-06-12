@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
-import { ScrollView, View, Text, StyleSheet, Image, TouchableOpacity, LayoutAnimation, Platform, UIManager } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Filter } from 'lucide-react-native';
 import { theme } from '@/constants/theme';
+import { Filter } from 'lucide-react-native';
+import React, { useState } from 'react';
+import { Image, LayoutAnimation, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, UIManager, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -60,8 +60,8 @@ export const AnalyticsScreen = () => {
           <Filter size={20} color="black" />
         </TouchableOpacity>
       </View>
-      
-      <ScrollView 
+
+      <ScrollView
         style={styles.content}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
@@ -76,7 +76,7 @@ export const AnalyticsScreen = () => {
             <Text style={styles.statsValueSmall}>850K</Text>
             <Text style={styles.statsLabelSmall}>Tổng lượt xem</Text>
           </View>
-          
+
           <View style={styles.statsSmallCard}>
             <View style={styles.iconBox}>
               <View style={styles.waveIcon} />
@@ -106,7 +106,7 @@ export const AnalyticsScreen = () => {
               })}
             </View>
           </View>
-          
+
           <View style={styles.areaChartPlaceholder}>
             <View style={styles.chartBarsRow}>
               {FILTER_DATA[activeFilter].values.map((val, idx) => (

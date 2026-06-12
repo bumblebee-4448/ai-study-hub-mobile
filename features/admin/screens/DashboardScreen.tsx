@@ -5,15 +5,18 @@ import { StatsCard } from '../components/StatsCard';
 import { UserListItem } from '../components/UserListItem';
 import { UserAdmin } from '../types';
 import { useRouter } from 'expo-router';
+import { useAuthStore } from '@/features/auth/store/authStore';
+import { LogOut } from 'lucide-react-native';
 
 const RECENT_USERS: UserAdmin[] = [
-  { id: '1', fullName: 'Nguyên Anh', email: 'anh.n@academy.vn', role: 'member', joinedDate: '12/05/2024', status: 'active' },
+  { id: '1', fullName: 'Nguyên Anh', email: 'anh.n@academy.vn', role: 'student', joinedDate: '12/05/2024', status: 'active' },
   { id: '2', fullName: 'Trần Thế Dân', email: 'dan.t@academy.vn', role: 'admin', joinedDate: '10/05/2024', status: 'active' },
-  { id: '3', fullName: 'Hoàng Lan', email: 'lan.h@academy.vn', role: 'guest', joinedDate: '08/05/2024', status: 'blocked' }
+  { id: '3', fullName: 'Hoàng Lan', email: 'lan.h@academy.vn', role: 'teacher', joinedDate: '08/05/2024', status: 'blocked' }
 ];
 
 export const DashboardScreen = () => {
   const router = useRouter();
+  const { logout } = useAuthStore();
   const [activeFilter, setActiveFilter] = useState('Tuần');
 
   const filters = ['Tháng', 'Tuần', 'Ngày'];

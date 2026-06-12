@@ -137,7 +137,6 @@ export const FONT_FAMILY = Platform.select({
   default: { sans: "System" },
 });
 
-<<<<<<< HEAD
 export const theme = {
   colors: {
     primary: '#6366f1', // Indigo
@@ -160,14 +159,6 @@ export const theme = {
     textPrimaryDark: '#f8fafc',
     textSecondaryLight: '#64748b', // Slate 500
     textSecondaryDark: '#94a3b8',
-=======
-export const Fonts = Platform.select({
-  ios: {
-    sans: 'system-ui',
-    serif: 'ui-serif',
-    rounded: 'ui-rounded',
-    mono: 'ui-monospace',
->>>>>>> dev
   },
   shadows: {
     soft: {
@@ -185,7 +176,6 @@ export const Fonts = Platform.select({
       elevation: 4,
     },
   },
-<<<<<<< HEAD
   borderRadius: {
     sm: 8,
     md: 12,
@@ -195,7 +185,13 @@ export const Fonts = Platform.select({
   }
 };
 
-=======
+export const Fonts = Platform.select({
+  ios: {
+    sans: 'system-ui',
+    serif: 'ui-serif',
+    rounded: 'ui-rounded',
+    mono: 'ui-monospace',
+  },
   web: {
     sans: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
     serif: "Georgia, 'Times New Roman', serif",
@@ -222,4 +218,3 @@ export const Colors = {
     tabIconSelected: "#fff",
   },
 };
->>>>>>> dev

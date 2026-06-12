@@ -10,13 +10,15 @@ import {
   ActivityIndicator
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ChevronLeft, Save, Globe, Mail, Shield, Brain, Settings as SettingsIcon } from 'lucide-react-native';
+import { ChevronLeft, Save, Globe, Mail, Shield, Brain, Settings as SettingsIcon, LogOut } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
+import { useAuthStore } from '@/features/auth/store/authStore';
 import * as Haptics from 'expo-haptics';
 import { theme } from '@/constants/theme';
 
 export const SettingsScreen = () => {
   const router = useRouter();
+  const { logout } = useAuthStore();
   const [isSaving, setIsSaving] = useState(false);
   const [showToast, setShowToast] = useState(false);
 
@@ -87,6 +89,19 @@ export const SettingsScreen = () => {
                 <Brain size={20} color="#8b5cf6" />
               </View>
               <Text style={styles.menuLabel}>Cấu hình AI & Training</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={styles.menuItem}
+              onPress={() => {
+                logout();
+                router.replace('/login');
+              }}
+            >
+              <View style={[styles.menuIcon, { backgroundColor: '#fee2e2' }]}>
+                <LogOut size={20} color="#ef4444" />
+              </View>
+              <Text style={[styles.menuLabel, { color: '#ef4444' }]}>Đăng xuất khỏi hệ thống</Text>
             </TouchableOpacity>
           </View>
         </View>

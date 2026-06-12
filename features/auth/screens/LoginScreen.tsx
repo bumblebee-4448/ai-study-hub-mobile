@@ -19,6 +19,7 @@ import { BORDER_RADIUS, COLORS, SPACING, TYPOGRAPHY } from "@/constants/theme";
 import { useAuthStore } from "../store/authStore";
 import { useProfileStore } from "@/features/profile/store/profileStore";
 import { LoginSchema, LoginFormType } from "../schemas/authSchema";
+import { UserRole } from "../types";
 
 interface LoginScreenProps {
   onSignUpPress?: () => void;
@@ -50,27 +51,35 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
         // Mock authentication delay
         await new Promise<void>((resolve) => setTimeout(resolve, 1200));
 
+        // Logic to determine role based on email for testing
+        let determinedRole: UserRole = "student";
+        if (data.email.toLowerCase().includes("admin")) {
+          determinedRole = "admin";
+        } else if (data.email.toLowerCase().includes("teacher")) {
+          determinedRole = "teacher";
+        }
+
         // Set state in Zustand store
         setAuth(
           "mock-access-token-xyz",
-          "user",
+          determinedRole,
           {
             id: "user-001",
-            name: "Nguyễn Văn A",
+            name: determinedRole === 'admin' ? "Quản trị viên" : (determinedRole === 'teacher' ? "Giảng viên A" : "Nguyễn Văn A"),
             email: data.email,
             avatarUrl:
               "https://lh3.googleusercontent.com/aida-public/AB6AXuByChcQ0XwJZE7ksDTDKK-d6leBoSCIpKJxnQGdxZX9s1Ai_dywhkwWtVXxQ67QZVEDBVwOIymfGb8dteXSO5w_L3S3NXtPl-DG6rWfCYFJWKQr-IJhRH7LrI2MejDxLUeSGX3eYrwFuboLtXR-rLII6GQvJ-Ln2lFUM3hgldUii1oCouxPVqTcIyiETtvwO61CT-qUBGle-Lca3bCK6mRSaMotdAi_2wOOgPB6xy-Ab7uJcXNrKX1brKh6rqCbsrSI81BQTvUIB50",
-            university: "Sinh viên Đại học Khoa học",
-            major: "Công nghệ thông tin",
+            university: "Đại học Công nghệ thông tin",
+            major: "Công nghệ phần mềm",
           },
           "mock-refresh-token-xyz"
         );
 
         setProfile({
           id: "user-001",
-          name: "Nguyễn Văn A",
-          university: "Sinh viên Đại học Khoa học",
-          yearMajor: "Năm 3 - Công nghệ thông tin",
+          name: determinedRole === 'admin' ? "Quản trị viên" : (determinedRole === 'teacher' ? "Giảng viên A" : "Nguyễn Văn A"),
+          university: "Đại học Công nghệ thông tin",
+          yearMajor: "Năm 3 - Công nghệ phần mềm",
           avatarUrl:
             "https://lh3.googleusercontent.com/aida-public/AB6AXuByChcQ0XwJZE7ksDTDKK-d6leBoSCIpKJxnQGdxZX9s1Ai_dywhkwWtVXxQ67QZVEDBVwOIymfGb8dteXSO5w_L3S3NXtPl-DG6rWfCYFJWKQr-IJhRH7LrI2MejDxLUeSGX3eYrwFuboLtXR-rLII6GQvJ-Ln2lFUM3hgldUii1oCouxPVqTcIyiETtvwO61CT-qUBGle-Lca3bCK6mRSaMotdAi_2wOOgPB6xy-Ab7uJcXNrKX1brKh6rqCbsrSI81BQTvUIB50",
           documentCount: 12,
@@ -85,7 +94,11 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
               if (onSuccess) {
                 onSuccess();
               } else {
-                router.replace("/(tabs)/profile");
+                // Navigate to the corresponding role flow
+                const target = determinedRole === 'admin' 
+                  ? "/(admin-tabs)" 
+                  : (determinedRole === 'teacher' ? "/(teacher-tabs)" : "/(student-tabs)");
+                router.replace(target as any);
               }
             },
           },
