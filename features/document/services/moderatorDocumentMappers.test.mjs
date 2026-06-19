@@ -1,22 +1,21 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-let moderatorMappers = {};
-
-try {
-  moderatorMappers = await import("./moderatorDocumentMappers.ts");
-} catch {
-  moderatorMappers = {};
-}
+import {
+  formatModeratorDocumentSize,
+  getModeratorStatusLabel,
+  mapBackendDocumentToModeratorDocument,
+  mapBackendModeratorDocumentList,
+} from "./moderatorDocumentMappers.ts";
 
 test("maps backend moderator document detail into supported UI fields", () => {
   assert.equal(
-    typeof moderatorMappers.mapBackendDocumentToModeratorDocument,
+    typeof mapBackendDocumentToModeratorDocument,
     "function",
     "mapBackendDocumentToModeratorDocument should be exported"
   );
 
-  const mapped = moderatorMappers.mapBackendDocumentToModeratorDocument({
+  const mapped = mapBackendDocumentToModeratorDocument({
     id: "doc-1",
     title: "Giải tích 1 - Đề cương ôn tập",
     description: "Tài liệu ôn tập cuối kỳ.",
@@ -71,13 +70,13 @@ test("maps backend moderator document detail into supported UI fields", () => {
 
 test("maps fallback labels for missing optional document fields", () => {
   assert.equal(
-    typeof moderatorMappers.mapBackendDocumentToModeratorDocument,
+    typeof mapBackendDocumentToModeratorDocument,
     "function",
     "mapBackendDocumentToModeratorDocument should be exported"
   );
 
   assert.deepEqual(
-    moderatorMappers.mapBackendDocumentToModeratorDocument({
+    mapBackendDocumentToModeratorDocument({
       id: "doc-2",
       title: "Tài liệu chưa đủ metadata",
       status: "REJECTED",
@@ -109,56 +108,48 @@ test("maps fallback labels for missing optional document fields", () => {
 
 test("formats file size through KB MB and GB", () => {
   assert.equal(
-    typeof moderatorMappers.formatModeratorDocumentSize,
+    typeof formatModeratorDocumentSize,
     "function",
     "formatModeratorDocumentSize should be exported"
   );
 
   assert.equal(
-    moderatorMappers.formatModeratorDocumentSize(undefined),
+    formatModeratorDocumentSize(undefined),
     "Không rõ dung lượng"
   );
-  assert.equal(moderatorMappers.formatModeratorDocumentSize(512), "512 B");
-  assert.equal(moderatorMappers.formatModeratorDocumentSize(2048), "2.0 KB");
-  assert.equal(
-    moderatorMappers.formatModeratorDocumentSize(1572864),
-    "1.5 MB"
-  );
-  assert.equal(
-    moderatorMappers.formatModeratorDocumentSize(3221225472),
-    "3.0 GB"
-  );
+  assert.equal(formatModeratorDocumentSize(512), "512 B");
+  assert.equal(formatModeratorDocumentSize(2048), "2.0 KB");
+  assert.equal(formatModeratorDocumentSize(1572864), "1.5 MB");
+  assert.equal(formatModeratorDocumentSize(3221225472), "3.0 GB");
 });
 
 test("maps moderator status labels in Vietnamese", () => {
   assert.equal(
-    typeof moderatorMappers.getModeratorStatusLabel,
+    typeof getModeratorStatusLabel,
     "function",
     "getModeratorStatusLabel should be exported"
   );
 
-  assert.equal(moderatorMappers.getModeratorStatusLabel("PENDING"), "Chờ duyệt");
-  assert.equal(moderatorMappers.getModeratorStatusLabel("ACTIVE"), "Đã duyệt");
-  assert.equal(moderatorMappers.getModeratorStatusLabel("REJECTED"), "Từ chối");
-  assert.equal(moderatorMappers.getModeratorStatusLabel("DELETED"), "Đã xóa");
+  assert.equal(getModeratorStatusLabel("PENDING"), "Chờ duyệt");
+  assert.equal(getModeratorStatusLabel("ACTIVE"), "Đã duyệt");
+  assert.equal(getModeratorStatusLabel("REJECTED"), "Từ chối");
+  assert.equal(getModeratorStatusLabel("DELETED"), "Đã xóa");
 });
 
 test("maps backend list response and preserves pagination", () => {
   assert.equal(
-    typeof moderatorMappers.mapBackendModeratorDocumentList,
+    typeof mapBackendModeratorDocumentList,
     "function",
     "mapBackendModeratorDocumentList should be exported"
   );
 
-  const result = moderatorMappers.mapBackendModeratorDocumentList({
+  const result = mapBackendModeratorDocumentList({
     documents: [
       {
         id: "doc-3",
         title: "Cơ sở dữ liệu",
         status: "ACTIVE",
         createdAt: "2026-06-19T10:00:00.000Z",
-        format: "docx",
-        sizeInBytes: 2048,
         author: { id: "user-2", name: "Trần Thị B", avatarUrl: null },
         subject: { id: "subject-2", name: "Cơ sở dữ liệu", code: "DBI202" },
       },
@@ -173,6 +164,8 @@ test("maps backend list response and preserves pagination", () => {
 
   assert.equal(result.documents.length, 1);
   assert.equal(result.documents[0].statusLabel, "Đã duyệt");
+  assert.equal(result.documents[0].formatLabel, "FILE");
+  assert.equal(result.documents[0].sizeLabel, "Không rõ dung lượng");
   assert.deepEqual(result.pagination, {
     page: 1,
     limit: 20,
