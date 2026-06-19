@@ -49,58 +49,9 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
 
   const onSubmit = useCallback(
     async (data: RegisterFormType) => {
-      setIsSubmitting(true);
-      try {
-        // Mock registration delay
-        await new Promise<void>((resolve) => setTimeout(resolve, 1500));
-
-        // Auto-login after register
-        setAuth(
-          "mock-access-token-xyz",
-          "user",
-          {
-            id: "user-001",
-            name: data.fullname,
-            email: data.email,
-            avatarUrl:
-              "https://lh3.googleusercontent.com/aida-public/AB6AXuByChcQ0XwJZE7ksDTDKK-d6leBoSCIpKJxnQGdxZX9s1Ai_dywhkwWtVXxQ67QZVEDBVwOIymfGb8dteXSO5w_L3S3NXtPl-DG6rWfCYFJWKQr-IJhRH7LrI2MejDxLUeSGX3eYrwFuboLtXR-rLII6GQvJ-Ln2lFUM3hgldUii1oCouxPVqTcIyiETtvwO61CT-qUBGle-Lca3bCK6mRSaMotdAi_2wOOgPB6xy-Ab7uJcXNrKX1brKh6rqCbsrSI81BQTvUIB50",
-            university: "Sinh viên Đại học Khoa học",
-            major: "Công nghệ thông tin",
-          },
-          "mock-refresh-token-xyz"
-        );
-
-        setProfile({
-          id: "user-001",
-          name: data.fullname,
-          university: "Sinh viên Đại học Khoa học",
-          yearMajor: "Năm 3 - Công nghệ thông tin",
-          avatarUrl:
-            "https://lh3.googleusercontent.com/aida-public/AB6AXuByChcQ0XwJZE7ksDTDKK-d6leBoSCIpKJxnQGdxZX9s1Ai_dywhkwWtVXxQ67QZVEDBVwOIymfGb8dteXSO5w_L3S3NXtPl-DG6rWfCYFJWKQr-IJhRH7LrI2MejDxLUeSGX3eYrwFuboLtXR-rLII6GQvJ-Ln2lFUM3hgldUii1oCouxPVqTcIyiETtvwO61CT-qUBGle-Lca3bCK6mRSaMotdAi_2wOOgPB6xy-Ab7uJcXNrKX1brKh6rqCbsrSI81BQTvUIB50",
-          documentCount: 0,
-          savedCount: 0,
-          points: 10, // Starting bonus points
-        });
-
-        Alert.alert("Thành công", "Đăng ký tài khoản thành công!", [
-          {
-            text: "OK",
-            onPress: () => {
-              if (onSuccess) {
-                onSuccess();
-              } else {
-                router.replace("/(tabs)/profile");
-              }
-            },
-          },
-        ]);
-      } catch {
-        Alert.alert("Lỗi", "Đăng ký thất bại. Vui lòng thử lại.");
-      } finally {
-        setIsSubmitting(false);
-      }
+      Alert.alert("Thông báo", "Hệ thống đăng ký đang được tích hợp.");
     },
-    [router, setAuth, setProfile, onSuccess]
+    []
   );
 
   const handleGoogleRegister = useCallback(() => {

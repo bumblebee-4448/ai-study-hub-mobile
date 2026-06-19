@@ -1,17 +1,5 @@
-import { UploadScreen } from "@/features/document";
-import { useRouter } from "expo-router";
+import { UserContributeScreen } from "@/features/user";
 
 export default function UploadRoute() {
-  const router = useRouter();
-
-  return (
-    <UploadScreen
-      onCancel={() => {
-        router.push("/");
-      }}
-      onSuccess={() => {
-        router.push("/");
-      }}
-    />
-  );
+  return <UserContributeScreen />;
 }

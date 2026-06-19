@@ -1,5 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import React, { useCallback, useState } from "react";
+import { Camera, ChevronLeft, Link, Save, User } from "lucide-react-native";
+import React, { useCallback, useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
   ActivityIndicator,
@@ -13,13 +14,13 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { ChevronLeft, Camera, User, School, BookOpen, GraduationCap, Save } from 'lucide-react-native';
 
-import { COLORS, SPACING } from "@/constants/theme";
-import { EditProfileFormSchema, EditProfileFormType } from "../schemas/profileSchema";
+import {
+  EditProfileFormSchema,
+  EditProfileFormType,
+} from "../schemas/profileSchema";
+import { getProfileErrorMessage } from "../services/profileService";
 import { useProfile } from "../hooks/useProfile";
-
-const BIO_MAX_LENGTH = 150;
 
 interface EditProfileScreenProps {
   onBack?: () => void;
@@ -30,206 +31,168 @@ export const EditProfileScreen: React.FC<EditProfileScreenProps> = ({
   onBack,
   onSaved,
 }) => {
-  const { profile, setProfile } = useProfile();
+  const { profile, isLoading, saveProfile } = useProfile();
   const [isSaving, setIsSaving] = useState(false);
-  const [bioLength, setBioLength] = useState(profile?.bio?.length ?? 0);
 
-  const { control, handleSubmit, formState: { errors } } = useForm<EditProfileFormType>({
+  const {
+    control,
+    handleSubmit,
+    reset,
+    watch,
+    formState: { errors },
+  } = useForm<EditProfileFormType>({
     resolver: zodResolver(EditProfileFormSchema),
     defaultValues: {
       name: profile?.name ?? "",
-      university: profile?.university ?? "",
-      major: "",
-      cohort: "",
-      bio: "",
+      avatarUrl: profile?.avatarUrl ?? "",
     },
   });
 
+  const avatarUrl = watch("avatarUrl");
+
+  useEffect(() => {
+    if (profile) {
+      reset({
+        name: profile.name,
+        avatarUrl: profile.avatarUrl ?? "",
+      });
+    }
+  }, [profile, reset]);
+
   const onSubmit = useCallback(
     async (data: EditProfileFormType) => {
-      if (!profile) return;
       setIsSaving(true);
+
       try {
-        await new Promise<void>((resolve) => setTimeout(resolve, 1000));
-        setProfile({ ...profile, name: data.name, university: data.university ?? profile.university });
-        Alert.alert("Thành công", "Hồ sơ đã được cập nhật!", [
+        await saveProfile(data);
+        Alert.alert("Thành công", "Hồ sơ đã được cập nhật.", [
           { text: "OK", onPress: onSaved ?? onBack },
         ]);
-      } catch {
-        Alert.alert("Lỗi", "Không thể cập nhật hồ sơ. Vui lòng thử lại.");
+      } catch (error) {
+        Alert.alert("Lỗi", getProfileErrorMessage(error));
       } finally {
         setIsSaving(false);
       }
     },
-    [profile, setProfile, onSaved, onBack]
+    [onBack, onSaved, saveProfile]
   );
+
+  if (isLoading && !profile) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.stateBox}>
+          <ActivityIndicator size="small" color="#004ac6" />
+          <Text style={styles.stateText}>Đang tải hồ sơ...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.content}
       >
-        <View style={styles.topHeader}>
+        <View style={styles.header}>
           <TouchableOpacity onPress={onBack} style={styles.backButton}>
             <ChevronLeft size={24} color="#0f172a" />
           </TouchableOpacity>
-          <View>
-            <Text style={styles.welcomeText}>Cài đặt tài khoản</Text>
-            <Text style={styles.pageTitleSmall}>Chỉnh sửa thông tin</Text>
+          <View style={styles.headerText}>
+            <Text style={styles.eyebrow}>Cài đặt tài khoản</Text>
+            <Text style={styles.title}>Chỉnh sửa hồ sơ</Text>
           </View>
         </View>
 
-        {/* Change Avatar - Premium Design */}
-        <View style={styles.avatarSection}>
-          <TouchableOpacity style={styles.avatarWrapper} activeOpacity={0.8}>
-            {profile?.avatarUrl ? (
-              <Image source={{ uri: profile.avatarUrl }} style={styles.avatar} />
+        <View style={styles.avatarPreview}>
+          <View style={styles.avatarBox}>
+            {avatarUrl ? (
+              <Image source={{ uri: avatarUrl }} style={styles.avatarImage} />
+            ) : profile?.avatarUrl ? (
+              <Image
+                source={{ uri: profile.avatarUrl }}
+                style={styles.avatarImage}
+              />
             ) : (
-              <View style={styles.avatarDefault}>
-                <User size={40} color="#94a3b8" />
-              </View>
+              <User size={38} color="#004ac6" />
             )}
             <View style={styles.cameraIcon}>
-              <Camera size={20} color="white" />
+              <Camera size={18} color="#fff" />
             </View>
-          </TouchableOpacity>
-          <Text style={styles.changeAvatarText}>Nhấn để thay đổi ảnh</Text>
+          </View>
+          <Text style={styles.avatarHint}>Dán liên kết ảnh đại diện bên dưới.</Text>
         </View>
 
-        {/* Form Fields */}
         <View style={styles.form}>
-          <View style={styles.inputGroup}>
+          <View style={styles.fieldBlock}>
             <Text style={styles.label}>Họ và tên</Text>
             <Controller
               control={control}
               name="name"
-              render={({ field: { onChange, onBlur, value } }) => (
-                <View style={styles.inputContainer}>
-                  <User size={18} color="#94a3b8" style={styles.inputIcon} />
+              render={({ field: { onBlur, onChange, value } }) => (
+                <View style={styles.inputShell}>
+                  <User size={18} color="#64748b" />
                   <TextInput
                     style={styles.input}
+                    value={value}
+                    onBlur={onBlur}
+                    onChangeText={onChange}
                     placeholder="VD: Nguyễn Văn A"
-                    value={value}
-                    onChangeText={onChange}
-                    onBlur={onBlur}
                     placeholderTextColor="#94a3b8"
+                    editable={!isSaving}
                   />
                 </View>
               )}
             />
-            {errors.name && <Text style={styles.errorText}>{errors.name.message}</Text>}
+            {errors.name ? (
+              <Text style={styles.errorText}>{errors.name.message}</Text>
+            ) : null}
           </View>
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Trường Đại học</Text>
+          <View style={styles.fieldBlock}>
+            <Text style={styles.label}>Liên kết ảnh đại diện</Text>
             <Controller
               control={control}
-              name="university"
-              render={({ field: { onChange, onBlur, value } }) => (
-                <View style={styles.inputContainer}>
-                  <School size={18} color="#94a3b8" style={styles.inputIcon} />
+              name="avatarUrl"
+              render={({ field: { onBlur, onChange, value } }) => (
+                <View style={styles.inputShell}>
+                  <Link size={18} color="#64748b" />
                   <TextInput
                     style={styles.input}
-                    placeholder="VD: ĐH Bách Khoa"
                     value={value}
-                    onChangeText={onChange}
                     onBlur={onBlur}
+                    onChangeText={onChange}
+                    placeholder="https://example.com/avatar.png"
                     placeholderTextColor="#94a3b8"
+                    editable={!isSaving}
+                    autoCapitalize="none"
+                    keyboardType="url"
                   />
                 </View>
               )}
             />
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Chuyên ngành</Text>
-            <Controller
-              control={control}
-              name="major"
-              render={({ field: { onChange, onBlur, value } }) => (
-                <View style={styles.inputContainer}>
-                  <BookOpen size={18} color="#94a3b8" style={styles.inputIcon} />
-                  <TextInput
-                    style={styles.input}
-                    placeholder="VD: Khoa học máy tính"
-                    value={value}
-                    onChangeText={onChange}
-                    onBlur={onBlur}
-                    placeholderTextColor="#94a3b8"
-                  />
-                </View>
-              )}
-            />
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Khóa / Niên khóa</Text>
-            <Controller
-              control={control}
-              name="cohort"
-              render={({ field: { onChange, onBlur, value } }) => (
-                <View style={styles.inputContainer}>
-                  <GraduationCap size={18} color="#94a3b8" style={styles.inputIcon} />
-                  <TextInput
-                    style={styles.input}
-                    placeholder="VD: K64"
-                    value={value}
-                    onChangeText={onChange}
-                    onBlur={onBlur}
-                    placeholderTextColor="#94a3b8"
-                  />
-                </View>
-              )}
-            />
-          </View>
-
-          <View style={styles.inputGroup}>
-            <View style={styles.labelRow}>
-              <Text style={styles.label}>Mô tả bản thân</Text>
-              <Text style={styles.charCount}>{bioLength}/{BIO_MAX_LENGTH}</Text>
-            </View>
-            <Controller
-              control={control}
-              name="bio"
-              render={({ field: { onChange, onBlur, value } }) => (
-                <TextInput
-                  style={[styles.input, styles.textArea]}
-                  placeholder="Giới thiệu ngắn về bản thân..."
-                  value={value}
-                  onChangeText={(text) => {
-                    onChange(text);
-                    setBioLength(text.length);
-                  }}
-                  onBlur={onBlur}
-                  multiline
-                  numberOfLines={4}
-                  placeholderTextColor="#94a3b8"
-                  maxLength={BIO_MAX_LENGTH}
-                />
-              )}
-            />
+            {errors.avatarUrl ? (
+              <Text style={styles.errorText}>{errors.avatarUrl.message}</Text>
+            ) : null}
           </View>
 
           <TouchableOpacity
             style={[styles.saveButton, isSaving && styles.saveButtonDisabled]}
             onPress={handleSubmit(onSubmit)}
             disabled={isSaving}
+            activeOpacity={0.82}
           >
             {isSaving ? (
-              <ActivityIndicator color="white" />
+              <ActivityIndicator color="#fff" />
             ) : (
               <>
-                <Save size={20} color="white" />
+                <Save size={20} color="#fff" />
                 <Text style={styles.saveButtonText}>Lưu thay đổi</Text>
               </>
             )}
           </TouchableOpacity>
         </View>
-
-        <View style={{ height: 40 }} />
       </ScrollView>
     </SafeAreaView>
   );
@@ -238,165 +201,137 @@ export const EditProfileScreen: React.FC<EditProfileScreenProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'white',
+    backgroundColor: "#fff",
   },
-  scroll: { flex: 1 },
-  scrollContent: {
+  content: {
     paddingHorizontal: 24,
-    paddingTop: 32,
+    paddingTop: 28,
+    paddingBottom: 80,
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 28,
+    gap: 14,
   },
   backButton: {
     width: 44,
     height: 44,
-    borderRadius: 22,
-    backgroundColor: '#f8fafc',
-    alignItems: 'center',
-    justifyContent: 'center',
+    borderRadius: 8,
+    backgroundColor: "#f8fafc",
+    alignItems: "center",
+    justifyContent: "center",
   },
-  topHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
-    marginBottom: 32,
+  headerText: {
+    flex: 1,
+    minWidth: 0,
   },
-  headerSection: {
-    marginBottom: 32,
+  eyebrow: {
+    fontSize: 13,
+    color: "#64748b",
   },
-  welcomeText: {
-    fontSize: 14,
-    color: '#94a3b8',
-    marginBottom: 4,
+  title: {
+    marginTop: 2,
+    fontSize: 24,
+    fontWeight: "800",
+    color: "#0f172a",
   },
-  pageTitle: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#0f172a',
+  avatarPreview: {
+    alignItems: "center",
+    marginBottom: 28,
   },
-  pageTitleSmall: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#0f172a',
-  },
-  avatarSection: {
-    alignItems: 'center',
-    marginBottom: 32,
-  },
-  avatarWrapper: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: '#f1f5f9',
-    justifyContent: 'center',
-    alignItems: 'center',
-    position: 'relative',
+  avatarBox: {
+    width: 104,
+    height: 104,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#eff6ff",
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: "#dbeafe",
   },
-  avatar: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 50,
-  },
-  avatarDefault: {
-    width: '100%',
-    height: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
+  avatarImage: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 8,
   },
   cameraIcon: {
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
-    backgroundColor: '#0f172a',
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
+    position: "absolute",
+    right: -7,
+    bottom: -7,
+    width: 34,
+    height: 34,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#004ac6",
     borderWidth: 2,
-    borderColor: 'white',
+    borderColor: "#fff",
   },
-  changeAvatarText: {
+  avatarHint: {
     marginTop: 12,
     fontSize: 13,
-    fontWeight: '600',
-    color: '#3b82f6',
+    color: "#64748b",
   },
   form: {
-    gap: 20,
+    gap: 18,
   },
-  inputGroup: {
+  fieldBlock: {
     gap: 8,
   },
-  labelRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
   label: {
-    fontSize: 13,
-    fontWeight: 'bold',
-    color: '#64748b',
-    marginLeft: 4,
+    fontSize: 14,
+    fontWeight: "800",
+    color: "#0f172a",
   },
-  charCount: {
-    fontSize: 11,
-    color: '#94a3b8',
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f8fafc',
+  inputShell: {
+    height: 52,
     borderWidth: 1,
-    borderColor: '#f1f5f9',
-    borderRadius: 16,
-    paddingHorizontal: 16,
-    height: 56,
-  },
-  inputIcon: {
-    marginRight: 12,
+    borderColor: "#cbd5e1",
+    borderRadius: 8,
+    paddingHorizontal: 13,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    backgroundColor: "#fff",
   },
   input: {
     flex: 1,
+    minWidth: 0,
     fontSize: 15,
-    color: '#0f172a',
-    fontWeight: '500',
-  },
-  textArea: {
-    backgroundColor: '#f8fafc',
-    borderWidth: 1,
-    borderColor: '#f1f5f9',
-    borderRadius: 16,
-    padding: 16,
-    height: 120,
-    textAlignVertical: 'top',
+    color: "#0f172a",
   },
   errorText: {
-    fontSize: 12,
-    color: '#ef4444',
-    marginLeft: 4,
+    fontSize: 13,
+    lineHeight: 18,
+    color: "#dc2626",
   },
   saveButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 12,
-    backgroundColor: '#0f172a',
-    height: 56,
-    borderRadius: 16,
-    marginTop: 12,
-    shadowColor: '#0f172a',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 4,
+    height: 52,
+    borderRadius: 8,
+    marginTop: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+    backgroundColor: "#004ac6",
   },
   saveButtonDisabled: {
-    opacity: 0.6,
+    opacity: 0.7,
   },
   saveButtonText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: 'white',
-  }
+    fontSize: 15,
+    fontWeight: "800",
+    color: "#fff",
+  },
+  stateBox: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 12,
+  },
+  stateText: {
+    fontSize: 14,
+    color: "#64748b",
+  },
 });

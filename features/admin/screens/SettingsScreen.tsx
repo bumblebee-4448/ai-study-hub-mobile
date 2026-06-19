@@ -12,13 +12,13 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ChevronLeft, Save, Globe, Mail, Shield, Brain, Settings as SettingsIcon, LogOut } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
-import { useAuthStore } from '@/features/auth/store/authStore';
+import { useLogout } from '@/features/auth';
 import * as Haptics from 'expo-haptics';
 import { theme } from '@/constants/theme';
 
 export const SettingsScreen = () => {
   const router = useRouter();
-  const { logout } = useAuthStore();
+  const logout = useLogout();
   const [isSaving, setIsSaving] = useState(false);
   const [showToast, setShowToast] = useState(false);
 
@@ -93,10 +93,7 @@ export const SettingsScreen = () => {
 
             <TouchableOpacity 
               style={styles.menuItem}
-              onPress={() => {
-                logout();
-                router.replace('/login');
-              }}
+              onPress={logout}
             >
               <View style={[styles.menuIcon, { backgroundColor: '#fee2e2' }]}>
                 <LogOut size={20} color="#ef4444" />

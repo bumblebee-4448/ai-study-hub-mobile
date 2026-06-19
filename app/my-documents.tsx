@@ -7,7 +7,7 @@ export default function MyDocumentsRoute() {
   return (
     <MyDocumentScreen
       onBack={() => router.back()}
-      onUpload={() => router.push("/(tabs)/upload")}
+      onUpload={() => router.push("/(student-tabs)/upload")}
       onEdit={(id) => {
         router.push({ pathname: "/document/[id]/edit", params: { id } });
       }}

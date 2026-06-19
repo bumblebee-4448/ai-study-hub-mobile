@@ -31,9 +31,8 @@ export default function ModeratorReview() {
       {/* Override header options từ trong component để chắc chắn nhất */}
       <Stack.Screen
         options={{
-          title: "Document Review",
+          title: "Duyệt tài liệu",
           headerBackTitle: " ",
-          headerBackTitleVisible: false,
           headerLeft: () => (
             <TouchableOpacity
               onPress={() => router.back()}

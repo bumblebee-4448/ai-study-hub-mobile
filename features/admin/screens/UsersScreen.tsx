@@ -11,17 +11,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Filter, Search, MoreVertical } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 
-const MOCK_USERS = [
-  { id: '1', name: 'Nguyễn Văn Anh', email: 'nguyenvan@example.com', role: 'Member', date: '21 Th05, 2024', status: 'Hoạt động', initial: 'NA' },
-  { id: '2', name: 'Trần Minh Quân', email: 'dan.t@academy.vn', role: 'Admin', date: '21 Th05, 2024', status: 'Hoạt động', initial: 'MQ' },
-  { id: '3', name: 'Lê Thị Lan', email: 'lan.h@academy.vn', role: 'Guest', date: '20 Th05, 2024', status: 'Khóa', initial: 'LL' },
-  { id: '4', name: 'Phạm Gia Bảo', email: 'phamminh@example.com', role: 'Member', date: '19 Th05, 2024', status: 'Hoạt động', initial: 'GB' }
-];
-
 export const UsersScreen = () => {
   const router = useRouter();
   const [activeRange, setActiveRange] = useState('Tuần');
   const ranges = ['Năm', 'Tháng', 'Tuần', 'Ngày'];
+  const [users, setUsers] = useState<any[]>([]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -73,7 +67,7 @@ export const UsersScreen = () => {
             <Text style={styles.headerText}>TRẠNG THÁI</Text>
           </View>
 
-          {MOCK_USERS.map((user) => (
+          {users.map((user) => (
             <TouchableOpacity 
               key={user.id} 
               style={styles.userCard}

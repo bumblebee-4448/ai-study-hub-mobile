@@ -31,6 +31,9 @@ export {
   useDocumentSearch,
   useQuickPrompts,
   useUploadDocument,
+  useModeratorDocuments,
+  useModeratorDashboard,
+  useModeratorDocumentDetail,
 } from "./hooks";
 
 // Store
@@ -49,6 +52,16 @@ export type {
   UploadCategory,
   UploadFormData,
   UploadStatus,
+  BackendDocumentStatus,
+  ModeratorDocumentStatusFilter,
+  BackendModeratorDocumentAuthor,
+  BackendModeratorDocumentSubject,
+  BackendModeratorDocument,
+  ModeratorDocumentPagination,
+  BackendModeratorDocumentListResponse,
+  ModeratorDocument,
+  ModeratorDocumentListResult,
+  ModeratorDashboardSummary,
 } from "./types";
 
 // Schemas

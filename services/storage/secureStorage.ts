@@ -6,7 +6,10 @@ export const secureStorageService: StateStorage = {
   getItem: async (name: string): Promise<string | null> => {
     if (Platform.OS === 'web') {
       try {
-        return localStorage.getItem(name);
+        if (typeof localStorage !== 'undefined') {
+          return localStorage.getItem(name);
+        }
+        return null;
       } catch (e) {
         console.error('Failed to get item from localStorage:', e);
         return null;
@@ -22,7 +25,9 @@ export const secureStorageService: StateStorage = {
   setItem: async (name: string, value: string): Promise<void> => {
     if (Platform.OS === 'web') {
       try {
-        localStorage.setItem(name, value);
+        if (typeof localStorage !== 'undefined') {
+          localStorage.setItem(name, value);
+        }
       } catch (e) {
         console.error('Failed to set item in localStorage:', e);
       }
@@ -37,7 +42,9 @@ export const secureStorageService: StateStorage = {
   removeItem: async (name: string): Promise<void> => {
     if (Platform.OS === 'web') {
       try {
-        localStorage.removeItem(name);
+        if (typeof localStorage !== 'undefined') {
+          localStorage.removeItem(name);
+        }
       } catch (e) {
         console.error('Failed to remove item from localStorage:', e);
       }

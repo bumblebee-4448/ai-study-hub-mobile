@@ -218,3 +218,27 @@ export const Colors = {
     tabIconSelected: "#fff",
   },
 };
+
+export const COMMON_TAB_BAR_OPTIONS = {
+  tabBarActiveTintColor: theme.colors.primary,
+  tabBarInactiveTintColor: "#94a3b8",
+  headerShown: false,
+  tabBarStyle: {
+    backgroundColor: theme.colors.cardLight,
+    borderTopColor: theme.colors.borderLight,
+    borderTopWidth: 1,
+    height: 70,
+    paddingBottom: 12,
+    paddingTop: 8,
+    shadowColor: "#0f172a",
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.02,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  tabBarLabelStyle: {
+    fontSize: 10,
+    fontWeight: "600" as const,
+    marginTop: 2,
+  },
+};

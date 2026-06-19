@@ -1,4 +1,5 @@
 export type UserRole = 'student' | 'admin' | 'moderator';
+export type AccountStatus = 'ACTIVE' | 'BANNED' | 'UNVERIFIED' | 'DELETED';
 
 export interface User {
   id: string;
@@ -7,6 +8,7 @@ export interface User {
   avatarUrl?: string;
   university?: string;
   major?: string;
+  status?: AccountStatus;
 }
 
 export interface AuthState {
