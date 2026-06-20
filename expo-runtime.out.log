@@ -1,0 +1,19 @@
+env: load .env.local
+env: export EXPO_PUBLIC_API_URL
+Starting project at D:\FPT\ky7\MMA\project\ai-study-hub-mobile
+Starting Metro Bundler
+warning: Bundler cache is empty, rebuilding (this may take a minute)
+Waiting on http://localhost:8081
+Logs for your project will appear below.
+Android node_modules\expo-router\entry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Android node_modules\expo-router\entry.js ▓▓░░░░░░░░░░░░░░ 16.0% ( 34/182)
+Android node_modules\expo-router\entry.js ▓▓░░░░░░░░░░░░░░ 16.0% (140/354)
+Android node_modules\expo-router\entry.js ▓▓▓▓░░░░░░░░░░░░ 29.1% (316/586)
+Android node_modules\expo-router\entry.js ▓▓▓▓▓▓▓▓░░░░░░░░ 51.3% (570/796)
+Android node_modules\expo-router\entry.js ▓▓▓▓▓▓▓▓▓▓░░░░░░ 68.0% ( 756/2683)
+Android node_modules\expo-router\entry.js ▓▓▓▓▓▓▓▓▓▓░░░░░░ 68.0% (1255/2903)
+Android node_modules\expo-router\entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓░░░ 86.5% (2729/2940)
+Android node_modules\expo-router\entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░ 92.4% (2982/3110)
+Android node_modules\expo-router\entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 94.1% (3160/3435)
+Android node_modules\expo-router\entry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 96.7% (3516/3576)
+Android Bundled 38297ms node_modules\expo-router\entry.js (3608 modules)

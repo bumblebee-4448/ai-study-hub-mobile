@@ -1,10 +1,24 @@
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useCallback } from "react";
 import {
+  CalendarDays,
+  ChevronRight,
+  FileText,
+  Globe,
+  LogOut,
+  Mail,
+  Monitor,
+  Moon,
+  Pencil,
+  RefreshCw,
+  ShieldCheck,
+  Sun,
+  User,
+} from "lucide-react-native";
+import React, { useCallback, useMemo } from "react";
+import {
+  ActivityIndicator,
   Alert,
   Image,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
@@ -12,22 +26,60 @@ import {
   View,
 } from "react-native";
 
+import { ScreenSafeAreaView } from "@/components/screen-safe-area-view";
+import { SCREEN_CONTENT_TOP_PADDING } from "@/constants/safeArea";
 import { useAuthStore } from "@/features/auth";
-import { BORDER_RADIUS, COLORS, SPACING, TYPOGRAPHY } from "@/constants/theme";
-import { MenuItem, MenuItemData, ProfileHeader, StatsRow } from "../components";
+import {
+  THEME_PREFERENCE_LABELS,
+  useAppTheme,
+  type AppThemeColors,
+  type ThemePreference,
+} from "@/features/theme";
 import { useProfile } from "../hooks/useProfile";
-import { User, Settings, ShieldCheck, LogOut, FileText, Bookmark, Upload, Globe, Moon, Pencil } from 'lucide-react-native';
 
-const PRIMARY_MENU: MenuItemData[] = [
-  { key: "my-documents", label: "Tài liệu của tôi", iconLib: "material-community", iconName: "file-document-outline" },
-  { key: "saved", label: "Đã lưu", iconLib: "ionicons", iconName: "bookmark-outline" },
-  { key: "contribute", label: "Đóng góp", iconLib: "material-community", iconName: "file-upload-outline" },
+const ROLE_LABELS: Record<string, string> = {
+  USER: "Sinh viên",
+  MODERATOR: "Kiểm duyệt viên",
+  ADMIN: "Quản trị viên",
+};
+
+const STATUS_LABELS: Record<string, string> = {
+  ACTIVE: "Đã xác minh",
+  UNVERIFIED: "Chưa xác minh",
+  BANNED: "Đã khóa",
+  DELETED: "Đã xóa",
+};
+
+const THEME_OPTIONS: Array<{
+  value: ThemePreference;
+  label: string;
+  Icon: typeof Monitor;
+}> = [
+  { value: "system", label: "Hệ thống", Icon: Monitor },
+  { value: "light", label: "Sáng", Icon: Sun },
+  { value: "dark", label: "Tối", Icon: Moon },
 ];
+
+const formatDate = (value?: string) => {
+  if (!value) {
+    return "Chưa có dữ liệu";
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "Chưa có dữ liệu";
+  }
+
+  return date.toLocaleDateString("vi-VN");
+};
 
 export const ProfileScreen = () => {
   const router = useRouter();
-  const { profile, handleLogout } = useProfile();
+  const { profile, isLoading, error, loadProfile, handleLogout } = useProfile();
   const { role } = useAuthStore();
+  const { colors, preference, setThemePreference } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   const handleMenuPress = useCallback(
     (key: string) => {
@@ -38,318 +90,556 @@ export const ProfileScreen = () => {
         ]);
         return;
       }
+
       if (key === "profile-edit") {
         router.push("/profile-edit" as any);
         return;
       }
+
       if (key === "my-documents") {
         router.push("/my-documents" as any);
         return;
       }
+
       if (key === "moderator-review") {
         router.push("/moderator-review" as any);
-        return;
       }
     },
     [handleLogout, router]
   );
 
-  if (!profile) return null;
+  if (isLoading && !profile) {
+    return (
+      <ScreenSafeAreaView style={styles.container}>
+        <View style={styles.stateBox}>
+          <ActivityIndicator size="small" color={colors.primary} />
+          <Text style={styles.stateText}>Đang tải hồ sơ...</Text>
+        </View>
+      </ScreenSafeAreaView>
+    );
+  }
+
+  if (error && !profile) {
+    return (
+      <ScreenSafeAreaView style={styles.container}>
+        <View style={styles.stateBox}>
+          <Text style={styles.stateText}>{error}</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={loadProfile}>
+            <RefreshCw size={16} color={colors.primary} />
+            <Text style={styles.retryText}>Tải lại</Text>
+          </TouchableOpacity>
+        </View>
+      </ScreenSafeAreaView>
+    );
+  }
+
+  if (!profile) {
+    return null;
+  }
+
+  const roleLabel = ROLE_LABELS[profile.role] ?? profile.role;
+  const statusLabel = profile.status
+    ? STATUS_LABELS[profile.status] ?? profile.status
+    : "Chưa có dữ liệu";
 
   return (
-    <SafeAreaView style={styles.container}>
+    <ScreenSafeAreaView style={styles.container}>
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Simple Name Header built into ScrollView */}
-        <View style={styles.topSection}>
-          <Text style={styles.welcomeText}>Cài đặt tài khoản</Text>
-          <Text style={styles.pageTitle}>Hồ sơ cá nhân</Text>
+        <View style={styles.header}>
+          <Text style={styles.eyebrow}>AcademicShare</Text>
+          <Text style={styles.pageTitle}>Hồ sơ</Text>
+          <Text style={styles.pageSubtitle}>
+            Quản lý tài khoản và cài đặt cá nhân.
+          </Text>
         </View>
 
-        {/* Profile Card - Premium Flat Design */}
         <View style={styles.profileCard}>
-          <View style={styles.avatarLarge}>
+          <View style={styles.avatarContainer}>
             {profile.avatarUrl ? (
-              <Image source={{ uri: profile.avatarUrl }} style={styles.avatarImage} />
+              <Image
+                source={{ uri: profile.avatarUrl }}
+                style={styles.avatarImage}
+              />
             ) : (
-              <View style={styles.avatarDefault}>
-                <User size={32} color="#64748b" />
-              </View>
+              <User size={30} color={colors.primary} />
             )}
           </View>
+
           <View style={styles.profileInfo}>
-            <Text style={styles.userName}>{profile.name}</Text>
-            <Text style={styles.userSub}>{profile.university}</Text>
-            <View style={styles.roleBadge}>
-              <Text style={styles.roleText}>{role?.toUpperCase() || 'STUDENT'}</Text>
+            <Text style={styles.userName} numberOfLines={1}>
+              {profile.name}
+            </Text>
+            <Text style={styles.userEmail} numberOfLines={1}>
+              {profile.email}
+            </Text>
+            <View style={styles.badgeRow}>
+              <View style={styles.roleBadge}>
+                <Text style={styles.roleText}>{roleLabel}</Text>
+              </View>
+              <View style={styles.statusBadge}>
+                <Text style={styles.statusText}>{statusLabel}</Text>
+              </View>
             </View>
           </View>
+
+          <TouchableOpacity
+            style={styles.iconButton}
+            onPress={() => handleMenuPress("profile-edit")}
+            activeOpacity={0.75}
+          >
+            <Pencil size={18} color={colors.primary} />
+          </TouchableOpacity>
         </View>
 
-        {/* Statistics integrated like Admin Cards */}
-        <View style={styles.statsRow}>
-          <View style={styles.statBox}>
-            <Text style={styles.statValue}>{profile.documentCount}</Text>
-            <Text style={styles.statLabel}>Tài liệu</Text>
+        <View style={styles.infoGroup}>
+          <View style={styles.infoRow}>
+            <View style={styles.infoIcon}>
+              <Mail size={18} color={colors.icon} />
+            </View>
+            <View style={styles.infoText}>
+              <Text style={styles.infoLabel}>Email</Text>
+              <Text style={styles.infoValue} numberOfLines={1}>
+                {profile.email}
+              </Text>
+            </View>
           </View>
-          <View style={[styles.statBox, styles.statBorder]}>
-            <Text style={styles.statValue}>{profile.savedCount}</Text>
-            <Text style={styles.statLabel}>Đã lưu</Text>
+
+          <View style={styles.divider} />
+
+          <View style={styles.infoRow}>
+            <View style={styles.infoIcon}>
+              <ShieldCheck size={18} color={colors.icon} />
+            </View>
+            <View style={styles.infoText}>
+              <Text style={styles.infoLabel}>Trạng thái</Text>
+              <Text style={styles.infoValue}>{statusLabel}</Text>
+            </View>
           </View>
-          <View style={styles.statBox}>
-            <Text style={styles.statValue}>{profile.points}</Text>
-            <Text style={styles.statLabel}>Điểm thưởng</Text>
+
+          <View style={styles.divider} />
+
+          <View style={styles.infoRow}>
+            <View style={styles.infoIcon}>
+              <CalendarDays size={18} color={colors.icon} />
+            </View>
+            <View style={styles.infoText}>
+              <Text style={styles.infoLabel}>Ngày tham gia</Text>
+              <Text style={styles.infoValue}>{formatDate(profile.createdAt)}</Text>
+            </View>
           </View>
         </View>
 
         <View style={styles.menuSection}>
-          <Text style={styles.menuTitle}>QUẢN LÝ</Text>
-          
-          <TouchableOpacity style={styles.menuItem} onPress={() => handleMenuPress('profile-edit')}>
-            <View style={[styles.iconBox, { backgroundColor: '#eff6ff' }]}>
-              <Pencil size={20} color="#3b82f6" />
-            </View>
-            <Text style={styles.menuLabel}>Chỉnh sửa thông tin</Text>
-            <Ionicons name="chevron-forward" size={20} color="#cbd5e1" />
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.menuItem} onPress={() => handleMenuPress('my-documents')}>
-            <View style={[styles.iconBox, { backgroundColor: '#f0fdf4' }]}>
-              <FileText size={20} color="#10b981" />
-            </View>
-            <Text style={styles.menuLabel}>Tài liệu của tôi</Text>
-            <Ionicons name="chevron-forward" size={20} color="#cbd5e1" />
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.menuItem} onPress={() => handleMenuPress('saved')}>
-            <View style={[styles.iconBox, { backgroundColor: '#fffbeb' }]}>
-              <Bookmark size={20} color="#f59e0b" />
-            </View>
-            <Text style={styles.menuLabel}>Đã lưu</Text>
-            <Ionicons name="chevron-forward" size={20} color="#cbd5e1" />
-          </TouchableOpacity>
-
-          {role === 'moderator' && (
-            <TouchableOpacity style={styles.menuItem} onPress={() => handleMenuPress('moderator-review')}>
-              <View style={[styles.iconBox, { backgroundColor: '#f5f3ff' }]}>
-                <ShieldCheck size={20} color="#8b5cf6" />
+          <Text style={styles.sectionTitle}>QUẢN LÝ</Text>
+          <View style={styles.menuGroup}>
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => handleMenuPress("profile-edit")}
+              activeOpacity={0.75}
+            >
+              <View style={styles.menuIcon}>
+                <Pencil size={18} color={colors.primary} />
               </View>
-              <Text style={styles.menuLabel}>Duyệt tài liệu (Mod)</Text>
-              <Ionicons name="chevron-forward" size={20} color="#cbd5e1" />
+              <Text style={styles.menuLabel}>Chỉnh sửa thông tin</Text>
+              <ChevronRight size={18} color={colors.textSubtle} />
             </TouchableOpacity>
-          )}
 
-          <Text style={[styles.menuTitle, { marginTop: 24 }]}>CÀI ĐẶT</Text>
+            <View style={styles.divider} />
 
-          <TouchableOpacity style={styles.menuItem}>
-            <View style={[styles.iconBox, { backgroundColor: '#f8fafc' }]}>
-              <Globe size={20} color="#64748b" />
-            </View>
-            <Text style={styles.menuLabel}>Ngôn ngữ</Text>
-            <Text style={styles.menuValue}>Tiếng Việt</Text>
-            <Ionicons name="chevron-forward" size={20} color="#cbd5e1" />
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => handleMenuPress("my-documents")}
+              activeOpacity={0.75}
+            >
+              <View style={styles.menuIcon}>
+                <FileText size={18} color={colors.primary} />
+              </View>
+              <Text style={styles.menuLabel}>Tài liệu của tôi</Text>
+              <ChevronRight size={18} color={colors.textSubtle} />
+            </TouchableOpacity>
 
-          <TouchableOpacity style={styles.menuItem}>
-            <View style={[styles.iconBox, { backgroundColor: '#f8fafc' }]}>
-              <Moon size={20} color="#64748b" />
-            </View>
-            <Text style={styles.menuLabel}>Chế độ tối</Text>
-            <View style={styles.switchPlaceholder} />
-          </TouchableOpacity>
-
-          <View style={styles.divider} />
-
-          <TouchableOpacity style={styles.logoutButton} onPress={() => handleMenuPress('logout')}>
-            <LogOut size={20} color="#ef4444" />
-            <Text style={styles.logoutText}>Đăng xuất</Text>
-          </TouchableOpacity>
+            {role === "moderator" ? (
+              <>
+                <View style={styles.divider} />
+                <TouchableOpacity
+                  style={styles.menuItem}
+                  onPress={() => handleMenuPress("moderator-review")}
+                  activeOpacity={0.75}
+                >
+                  <View style={styles.menuIcon}>
+                    <ShieldCheck size={18} color={colors.primary} />
+                  </View>
+                  <Text style={styles.menuLabel}>Duyệt tài liệu</Text>
+                  <ChevronRight size={18} color={colors.textSubtle} />
+                </TouchableOpacity>
+              </>
+            ) : null}
+          </View>
         </View>
 
-        <View style={{ height: 40 }} />
+        <View style={styles.menuSection}>
+          <Text style={styles.sectionTitle}>CÀI ĐẶT</Text>
+          <View style={styles.menuGroup}>
+            <View style={styles.themeSetting}>
+              <View style={styles.themeHeader}>
+                <View style={styles.menuIconMuted}>
+                  <Moon size={18} color={colors.icon} />
+                </View>
+                <View style={styles.themeTextRow}>
+                  <Text style={styles.menuLabel}>Giao diện</Text>
+                  <Text style={styles.menuValue}>
+                    {THEME_PREFERENCE_LABELS[preference]}
+                  </Text>
+                </View>
+              </View>
+
+              <View style={styles.themeSegmented}>
+                {THEME_OPTIONS.map(({ value, label, Icon }) => {
+                  const isSelected = preference === value;
+
+                  return (
+                    <TouchableOpacity
+                      key={value}
+                      style={[
+                        styles.themeOption,
+                        isSelected && styles.themeOptionActive,
+                      ]}
+                      onPress={() => setThemePreference(value)}
+                      activeOpacity={0.82}
+                    >
+                      <Icon
+                        size={14}
+                        color={isSelected ? colors.onPrimary : colors.icon}
+                      />
+                      <Text
+                        style={[
+                          styles.themeOptionText,
+                          isSelected && styles.themeOptionTextActive,
+                        ]}
+                        numberOfLines={1}
+                      >
+                        {label}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </View>
+
+            <View style={styles.divider} />
+
+            <View style={styles.menuItem}>
+              <View style={styles.menuIconMuted}>
+                <Globe size={18} color={colors.icon} />
+              </View>
+              <Text style={styles.menuLabel}>Ngôn ngữ</Text>
+              <Text style={styles.menuValue}>Tiếng Việt</Text>
+            </View>
+          </View>
+        </View>
+
+        <TouchableOpacity
+          style={styles.logoutButton}
+          onPress={() => handleMenuPress("logout")}
+          activeOpacity={0.75}
+        >
+          <LogOut size={18} color={colors.danger} />
+          <Text style={styles.logoutText}>Đăng xuất</Text>
+        </TouchableOpacity>
       </ScrollView>
-    </SafeAreaView>
+    </ScreenSafeAreaView>
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: AppThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'white',
+    backgroundColor: colors.background,
   },
-  scroll: { flex: 1 },
+  scroll: {
+    flex: 1,
+  },
   scrollContent: {
     paddingHorizontal: 24,
-    paddingTop: 32,
+    paddingTop: SCREEN_CONTENT_TOP_PADDING,
+    paddingBottom: 110,
   },
-  topSection: {
-    marginBottom: 24,
+  header: {
+    marginBottom: 22,
+    gap: 4,
   },
-  welcomeText: {
-    fontSize: 14,
-    color: '#94a3b8',
-    marginBottom: 4,
+  eyebrow: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: colors.textSubtle,
   },
   pageTitle: {
     fontSize: 28,
-    fontWeight: 'bold',
-    color: '#0f172a',
+    fontWeight: "800",
+    color: colors.text,
+  },
+  pageSubtitle: {
+    fontSize: 14,
+    lineHeight: 20,
+    color: colors.textSubtle,
   },
   profileCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f8fafc',
-    padding: 20,
-    borderRadius: 24,
+    minHeight: 108,
+    borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#f1f5f9',
-    marginBottom: 24,
+    borderColor: colors.border,
+    padding: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: colors.surface,
   },
-  avatarLarge: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    backgroundColor: '#e2e8f0',
-    overflow: 'hidden',
-    justifyContent: 'center',
-    alignItems: 'center',
+  avatarContainer: {
+    width: 64,
+    height: 64,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.primaryMuted,
+    overflow: "hidden",
   },
   avatarImage: {
-    width: '100%',
-    height: '100%',
-  },
-  avatarDefault: {
-    width: '100%',
-    height: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
+    width: "100%",
+    height: "100%",
   },
   profileInfo: {
-    marginLeft: 16,
     flex: 1,
+    minWidth: 0,
+    marginLeft: 12,
+    gap: 4,
   },
   userName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#0f172a',
-    marginBottom: 2,
+    fontSize: 17,
+    fontWeight: "800",
+    color: colors.text,
   },
-  userSub: {
+  userEmail: {
     fontSize: 13,
-    color: '#64748b',
-    marginBottom: 8,
+    color: colors.textSubtle,
+  },
+  badgeRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 6,
+    marginTop: 2,
   },
   roleBadge: {
-    alignSelf: 'flex-start',
-    backgroundColor: '#0f172a',
+    borderRadius: 8,
     paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 6,
+    paddingVertical: 4,
+    backgroundColor: colors.inverseSurface,
   },
   roleText: {
     fontSize: 10,
-    fontWeight: '800',
-    color: 'white',
+    fontWeight: "800",
+    color: colors.inverseText,
   },
-  statsRow: {
-    flexDirection: 'row',
-    backgroundColor: 'white',
+  statusBadge: {
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    backgroundColor: colors.surfaceSubtle,
+  },
+  statusText: {
+    fontSize: 10,
+    fontWeight: "800",
+    color: colors.textMuted,
+  },
+  iconButton: {
+    width: 38,
+    height: 38,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.primaryMuted,
+  },
+  infoGroup: {
+    marginTop: 14,
+    borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#f1f5f9',
-    borderRadius: 20,
-    paddingVertical: 16,
-    marginBottom: 32,
-    // Shadow like Admin cards
-    shadowColor: '#0f172a',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 3,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
   },
-  statBox: {
+  infoRow: {
+    minHeight: 64,
+    paddingHorizontal: 14,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  infoIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.surfaceMuted,
+    marginRight: 12,
+  },
+  infoText: {
     flex: 1,
-    alignItems: 'center',
+    minWidth: 0,
   },
-  statBorder: {
-    borderLeftWidth: 1,
-    borderRightWidth: 1,
-    borderColor: '#f1f5f9',
-  },
-  statValue: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#0f172a',
-  },
-  statLabel: {
+  infoLabel: {
     fontSize: 12,
-    color: '#94a3b8',
+    color: colors.textSubtle,
+  },
+  infoValue: {
     marginTop: 2,
+    fontSize: 14,
+    fontWeight: "700",
+    color: colors.text,
   },
   menuSection: {
-    gap: 12,
+    marginTop: 24,
   },
-  menuTitle: {
+  sectionTitle: {
+    marginBottom: 10,
     fontSize: 12,
-    fontWeight: '800',
-    color: '#94a3b8',
-    letterSpacing: 1.5,
-    marginBottom: 8,
+    fontWeight: "800",
+    color: colors.textSubtle,
+  },
+  menuGroup: {
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
   },
   menuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 12,
-    backgroundColor: 'white',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#f1f5f9',
+    minHeight: 58,
+    paddingHorizontal: 14,
+    flexDirection: "row",
+    alignItems: "center",
   },
-  iconBox: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
+  themeSetting: {
+    paddingVertical: 12,
+  },
+  themeHeader: {
+    minHeight: 34,
+    paddingHorizontal: 14,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  themeTextRow: {
+    flex: 1,
+    minWidth: 0,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+  themeSegmented: {
+    minHeight: 48,
+    marginHorizontal: 14,
+    marginTop: 12,
+    borderRadius: 8,
+    padding: 4,
+    flexDirection: "row",
+    gap: 4,
+    backgroundColor: colors.surfaceMuted,
+  },
+  themeOption: {
+    flex: 1,
+    minHeight: 40,
+    borderRadius: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+  },
+  themeOptionActive: {
+    backgroundColor: colors.primary,
+  },
+  themeOptionText: {
+    flexShrink: 1,
+    fontSize: 11,
+    fontWeight: "800",
+    color: colors.textMuted,
+  },
+  themeOptionTextActive: {
+    color: colors.onPrimary,
+  },
+  menuIcon: {
+    width: 34,
+    height: 34,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.primaryMuted,
+    marginRight: 12,
+  },
+  menuIconMuted: {
+    width: 34,
+    height: 34,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.surfaceMuted,
     marginRight: 12,
   },
   menuLabel: {
     flex: 1,
     fontSize: 15,
-    fontWeight: '600',
-    color: '#334155',
+    fontWeight: "700",
+    color: colors.textMuted,
   },
   menuValue: {
-    fontSize: 14,
-    color: '#94a3b8',
-    marginRight: 8,
-  },
-  switchPlaceholder: {
-    width: 44,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: '#e2e8f0',
+    fontSize: 13,
+    color: colors.textSubtle,
   },
   divider: {
     height: 1,
-    backgroundColor: '#f1f5f9',
-    marginVertical: 12,
+    backgroundColor: colors.border,
+    marginLeft: 60,
   },
   logoutButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 12,
-    padding: 16,
-    backgroundColor: '#fef2f2',
-    borderRadius: 16,
-    marginTop: 8,
+    height: 52,
+    borderRadius: 8,
+    marginTop: 24,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+    backgroundColor: colors.dangerMuted,
+    borderWidth: 1,
+    borderColor: colors.danger,
   },
   logoutText: {
     fontSize: 15,
-    fontWeight: 'bold',
-    color: '#ef4444',
-  }
+    fontWeight: "800",
+    color: colors.danger,
+  },
+  stateBox: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 24,
+    gap: 12,
+  },
+  stateText: {
+    fontSize: 14,
+    textAlign: "center",
+    color: colors.textSubtle,
+  },
+  retryButton: {
+    minHeight: 42,
+    borderRadius: 8,
+    paddingHorizontal: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    backgroundColor: colors.primaryMuted,
+  },
+  retryText: {
+    fontSize: 14,
+    fontWeight: "800",
+    color: colors.primary,
+  },
 });

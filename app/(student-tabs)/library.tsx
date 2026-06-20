@@ -1,9 +1,5 @@
-import { View, Text } from 'react-native';
+import { UserLibraryScreen } from "@/features/user";
 
 export default function LibraryTab() {
-  return (
-    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-      <Text>Thư viện</Text>
-    </View>
-  );
+  return <UserLibraryScreen />;
 }

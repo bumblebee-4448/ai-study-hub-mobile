@@ -15,67 +15,28 @@ import { DocumentItem } from "../components/DocumentItem";
 import { StatsCard, StatsCardData } from "../components/StatsCard";
 import { MyDocument } from "../types";
 
-const MOCK_DOCUMENTS: MyDocument[] = [
-  {
-    id: "d1",
-    title: "Giải tích 2 - Đề cương ôn tập kỳ 2023.2",
-    subject: "Toán học",
-    size: "4.2 MB",
-    uploadedAt: "12/05/2024",
-    status: "public",
-    format: "pdf",
-  },
-  {
-    id: "d2",
-    title: "Tiểu luận Triết học Mác-Lênin",
-    subject: "Lý luận chính trị",
-    size: "1.8 MB",
-    uploadedAt: "08/05/2024",
-    status: "pending",
-    format: "docx",
-  },
-  {
-    id: "d3",
-    title: "Source code đồ án Cơ sở dữ liệu",
-    subject: "CNTT",
-    size: "15.6 MB",
-    uploadedAt: "01/05/2024",
-    status: "public",
-    format: "zip",
-  },
-  {
-    id: "d4",
-    title: "Giáo trình Vật lý đại cương A1",
-    subject: "Vật lý",
-    size: "22.4 MB",
-    uploadedAt: "25/04/2024",
-    status: "public",
-    format: "pdf",
-  },
-];
-
 const STATS_DATA: StatsCardData[] = [
   {
     label: "Tổng tài liệu",
-    value: "124",
+    value: "0",
     iconBg: COLORS["primary-fixed"],
     icon: <MaterialCommunityIcons name="file-document-outline" size={22} color={COLORS.primary} />,
   },
   {
     label: "Lượt xem",
-    value: "2,850",
+    value: "0",
     iconBg: COLORS["secondary-fixed"],
     icon: <Ionicons name="eye-outline" size={22} color={COLORS.secondary} />,
   },
   {
     label: "Lượt tải",
-    value: "842",
+    value: "0",
     iconBg: COLORS["tertiary-fixed"],
     icon: <Ionicons name="download-outline" size={22} color={COLORS.tertiary} />,
   },
   {
     label: "Đóng góp",
-    value: "Level 4",
+    value: "N/A",
     iconBg: COLORS["secondary-container"],
     icon: <Ionicons name="trophy-outline" size={22} color={COLORS["on-secondary-container"]} />,
   },
@@ -92,7 +53,7 @@ export const MyDocumentScreen: React.FC<MyDocumentScreenProps> = ({
   onUpload,
   onEdit,
 }) => {
-  const [documents, setDocuments] = useState<MyDocument[]>(MOCK_DOCUMENTS);
+  const [documents, setDocuments] = useState<MyDocument[]>([]);
 
   const handleDelete = useCallback((id: string) => {
     setDocuments((prev) => prev.filter((d) => d.id !== id));

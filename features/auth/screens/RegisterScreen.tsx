@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
   ActivityIndicator,
@@ -15,7 +15,8 @@ import {
   View,
 } from "react-native";
 
-import { BORDER_RADIUS, COLORS, SPACING, TYPOGRAPHY } from "@/constants/theme";
+import { BORDER_RADIUS, SPACING, TYPOGRAPHY } from "@/constants/theme";
+import { useAppTheme, type AppThemeColors } from "@/features/theme";
 import { useAuthStore } from "../store/authStore";
 import { useProfileStore } from "@/features/profile/store/profileStore";
 import { RegisterSchema, RegisterFormType } from "../schemas/authSchema";
@@ -32,6 +33,8 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
   onBackPress,
 }) => {
   const router = useRouter();
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const { setAuth } = useAuthStore();
   const { setProfile } = useProfileStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -49,58 +52,9 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
 
   const onSubmit = useCallback(
     async (data: RegisterFormType) => {
-      setIsSubmitting(true);
-      try {
-        // Mock registration delay
-        await new Promise<void>((resolve) => setTimeout(resolve, 1500));
-
-        // Auto-login after register
-        setAuth(
-          "mock-access-token-xyz",
-          "user",
-          {
-            id: "user-001",
-            name: data.fullname,
-            email: data.email,
-            avatarUrl:
-              "https://lh3.googleusercontent.com/aida-public/AB6AXuByChcQ0XwJZE7ksDTDKK-d6leBoSCIpKJxnQGdxZX9s1Ai_dywhkwWtVXxQ67QZVEDBVwOIymfGb8dteXSO5w_L3S3NXtPl-DG6rWfCYFJWKQr-IJhRH7LrI2MejDxLUeSGX3eYrwFuboLtXR-rLII6GQvJ-Ln2lFUM3hgldUii1oCouxPVqTcIyiETtvwO61CT-qUBGle-Lca3bCK6mRSaMotdAi_2wOOgPB6xy-Ab7uJcXNrKX1brKh6rqCbsrSI81BQTvUIB50",
-            university: "Sinh viên Đại học Khoa học",
-            major: "Công nghệ thông tin",
-          },
-          "mock-refresh-token-xyz"
-        );
-
-        setProfile({
-          id: "user-001",
-          name: data.fullname,
-          university: "Sinh viên Đại học Khoa học",
-          yearMajor: "Năm 3 - Công nghệ thông tin",
-          avatarUrl:
-            "https://lh3.googleusercontent.com/aida-public/AB6AXuByChcQ0XwJZE7ksDTDKK-d6leBoSCIpKJxnQGdxZX9s1Ai_dywhkwWtVXxQ67QZVEDBVwOIymfGb8dteXSO5w_L3S3NXtPl-DG6rWfCYFJWKQr-IJhRH7LrI2MejDxLUeSGX3eYrwFuboLtXR-rLII6GQvJ-Ln2lFUM3hgldUii1oCouxPVqTcIyiETtvwO61CT-qUBGle-Lca3bCK6mRSaMotdAi_2wOOgPB6xy-Ab7uJcXNrKX1brKh6rqCbsrSI81BQTvUIB50",
-          documentCount: 0,
-          savedCount: 0,
-          points: 10, // Starting bonus points
-        });
-
-        Alert.alert("Thành công", "Đăng ký tài khoản thành công!", [
-          {
-            text: "OK",
-            onPress: () => {
-              if (onSuccess) {
-                onSuccess();
-              } else {
-                router.replace("/(tabs)/profile");
-              }
-            },
-          },
-        ]);
-      } catch {
-        Alert.alert("Lỗi", "Đăng ký thất bại. Vui lòng thử lại.");
-      } finally {
-        setIsSubmitting(false);
-      }
+      Alert.alert("Thông báo", "Hệ thống đăng ký đang được tích hợp.");
     },
-    [router, setAuth, setProfile, onSuccess]
+    []
   );
 
   const handleGoogleRegister = useCallback(() => {
@@ -120,15 +74,15 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
           onPress={onBackPress || (() => router.back())}
           activeOpacity={0.7}
         >
-          <Ionicons name="arrow-back" size={20} color={COLORS["on-surface-variant"]} />
+          <Ionicons name="arrow-back" size={20} color={colors.textSubtle} />
           <Text style={styles.backBtnText}>Quay lại</Text>
         </TouchableOpacity>
 
         {/* Header App Brand */}
         <View style={styles.header}>
           <View style={styles.brandRow}>
-            <Ionicons name="school" size={28} color={COLORS.primary} />
-            <Text style={styles.brandText}>AcademiShare</Text>
+            <Ionicons name="school" size={28} color={colors.primary} />
+            <Text style={styles.brandText}>AcademicShare</Text>
           </View>
           <Text style={styles.title}>Đăng ký</Text>
           <Text style={styles.subtitle}>
@@ -154,7 +108,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
                         errors.fullname && styles.inputError,
                       ]}
                       placeholder="Nguyễn Văn A"
-                      placeholderTextColor={COLORS.outline}
+                      placeholderTextColor={colors.textSubtle}
                       value={value}
                       onChangeText={onChange}
                       onBlur={onBlur}
@@ -164,7 +118,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
                     <Ionicons
                       name="person-outline"
                       size={20}
-                      color={COLORS["on-surface-variant"]}
+                      color={colors.icon}
                       style={styles.leftIcon}
                     />
                   </View>
@@ -190,7 +144,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
                         errors.email && styles.inputError,
                       ]}
                       placeholder="example@email.com"
-                      placeholderTextColor={COLORS.outline}
+                      placeholderTextColor={colors.textSubtle}
                       value={value}
                       onChangeText={onChange}
                       onBlur={onBlur}
@@ -201,7 +155,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
                     <Ionicons
                       name="mail-outline"
                       size={20}
-                      color={COLORS["on-surface-variant"]}
+                      color={colors.icon}
                       style={styles.leftIcon}
                     />
                   </View>
@@ -228,7 +182,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
                         errors.password && styles.inputError,
                       ]}
                       placeholder="••••••••"
-                      placeholderTextColor={COLORS.outline}
+                      placeholderTextColor={colors.textSubtle}
                       value={value}
                       onChangeText={onChange}
                       onBlur={onBlur}
@@ -239,7 +193,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
                     <Ionicons
                       name="lock-closed-outline"
                       size={20}
-                      color={COLORS["on-surface-variant"]}
+                      color={colors.icon}
                       style={styles.leftIcon}
                     />
                     <TouchableOpacity
@@ -250,7 +204,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
                       <Ionicons
                         name={passwordVisible ? "eye-outline" : "eye-off-outline"}
                         size={20}
-                        color={COLORS["on-surface-variant"]}
+                        color={colors.icon}
                       />
                     </TouchableOpacity>
                   </View>
@@ -276,7 +230,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
                         errors.confirmPassword && styles.inputError,
                       ]}
                       placeholder="••••••••"
-                      placeholderTextColor={COLORS.outline}
+                      placeholderTextColor={colors.textSubtle}
                       value={value}
                       onChangeText={onChange}
                       onBlur={onBlur}
@@ -287,7 +241,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
                     <MaterialCommunityIcons
                       name="lock-reset"
                       size={20}
-                      color={COLORS["on-surface-variant"]}
+                      color={colors.icon}
                       style={styles.leftIcon}
                     />
                   </View>
@@ -306,11 +260,11 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
               disabled={isSubmitting}
             >
               {isSubmitting ? (
-                <ActivityIndicator color={COLORS["on-primary"]} size="small" />
+                <ActivityIndicator color={colors.onPrimary} size="small" />
               ) : (
                 <>
                   <Text style={styles.submitBtnText}>Đăng ký</Text>
-                  <Ionicons name="arrow-forward" size={18} color={COLORS["on-primary"]} />
+                  <Ionicons name="arrow-forward" size={18} color={colors.onPrimary} />
                 </>
               )}
             </TouchableOpacity>
@@ -353,10 +307,10 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: AppThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.background,
   },
   scrollContent: {
     paddingHorizontal: SPACING["margin-mobile"],
@@ -373,7 +327,7 @@ const styles = StyleSheet.create({
   },
   backBtnText: {
     ...TYPOGRAPHY["label-md"],
-    color: COLORS["on-surface-variant"],
+    color: colors.textSubtle,
   },
   header: {
     alignItems: "center",
@@ -388,29 +342,29 @@ const styles = StyleSheet.create({
   },
   brandText: {
     ...TYPOGRAPHY["headline-md"],
-    color: COLORS.primary,
+    color: colors.primary,
     fontWeight: "700",
   },
   title: {
     ...TYPOGRAPHY["headline-lg-mobile"],
-    color: COLORS["on-surface"],
+    color: colors.text,
     fontWeight: "700",
   },
   subtitle: {
     ...TYPOGRAPHY["body-md"],
-    color: COLORS["on-surface-variant"],
+    color: colors.textSubtle,
     textAlign: "center",
     paddingHorizontal: SPACING.lg,
   },
   card: {
-    backgroundColor: COLORS["surface-container-lowest"],
-    borderColor: COLORS["outline-variant"],
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
     borderWidth: 1,
     borderRadius: BORDER_RADIUS.xl,
     padding: SPACING.xl,
     gap: SPACING.xl,
     elevation: 2,
-    shadowColor: "#191b23",
+    shadowColor: colors.shadow,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 8,
@@ -423,7 +377,7 @@ const styles = StyleSheet.create({
   },
   label: {
     ...TYPOGRAPHY["label-md"],
-    color: COLORS["on-surface-variant"],
+    color: colors.textSubtle,
     fontWeight: "500",
   },
   inputWrapper: {
@@ -432,10 +386,10 @@ const styles = StyleSheet.create({
   },
   input: {
     ...TYPOGRAPHY["body-md"],
-    color: COLORS["on-surface"],
-    backgroundColor: COLORS.surface,
+    color: colors.text,
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: COLORS["outline-variant"],
+    borderColor: colors.border,
     borderRadius: BORDER_RADIUS.md,
     paddingVertical: SPACING.md,
   },
@@ -447,7 +401,7 @@ const styles = StyleSheet.create({
     paddingRight: 44,
   },
   inputError: {
-    borderColor: COLORS.error,
+    borderColor: colors.danger,
     borderWidth: 1.5,
   },
   leftIcon: {
@@ -464,7 +418,7 @@ const styles = StyleSheet.create({
   },
   submitBtn: {
     flexDirection: "row",
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
     borderRadius: BORDER_RADIUS.md,
     paddingVertical: SPACING.md,
     alignItems: "center",
@@ -474,14 +428,14 @@ const styles = StyleSheet.create({
   },
   submitBtnText: {
     ...TYPOGRAPHY["label-md"],
-    color: COLORS["on-primary"],
+    color: colors.onPrimary,
   },
   btnDisabled: {
     opacity: 0.65,
   },
   fieldError: {
     ...TYPOGRAPHY["label-sm"],
-    color: COLORS.error,
+    color: colors.danger,
   },
   dividerRow: {
     flexDirection: "row",
@@ -492,26 +446,26 @@ const styles = StyleSheet.create({
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: COLORS["outline-variant"],
+    backgroundColor: colors.border,
   },
   dividerText: {
     ...TYPOGRAPHY["label-sm"],
-    color: COLORS["on-surface-variant"],
+    color: colors.textSubtle,
   },
   socialBtn: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: SPACING.base,
-    backgroundColor: COLORS.surface,
-    borderColor: COLORS["outline-variant"],
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
     borderWidth: 1,
     borderRadius: BORDER_RADIUS.md,
     paddingVertical: SPACING.md,
   },
   socialBtnText: {
     ...TYPOGRAPHY["label-md"],
-    color: COLORS["on-surface"],
+    color: colors.text,
   },
   footer: {
     alignItems: "center",
@@ -519,11 +473,11 @@ const styles = StyleSheet.create({
   },
   footerText: {
     ...TYPOGRAPHY["body-md"],
-    color: COLORS["on-surface-variant"],
+    color: colors.textSubtle,
   },
   loginLink: {
     ...TYPOGRAPHY["label-md"],
-    color: COLORS.primary,
+    color: colors.primary,
     fontWeight: "700",
   },
 });

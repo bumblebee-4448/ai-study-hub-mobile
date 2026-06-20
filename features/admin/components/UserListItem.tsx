@@ -3,6 +3,7 @@ import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { UserAdmin } from '../types';
 import { MoreHorizontal, Edit2, Trash2, Eye } from 'lucide-react-native';
 import { theme } from '@/constants/theme';
+import { useAppTheme } from '@/features/theme';
 
 interface UserListItemProps {
   user: UserAdmin;
@@ -10,12 +11,14 @@ interface UserListItemProps {
 }
 
 export const UserListItem: React.FC<UserListItemProps> = ({ user, onPress }) => {
+  const { colors } = useAppTheme();
+
   const getStatusStyles = (status: string) => {
     switch (status) {
-      case 'active': return { color: theme.colors.success, backgroundColor: theme.colors.successBg };
-      case 'blocked': return { color: theme.colors.danger, backgroundColor: theme.colors.dangerBg };
-      case 'pending': return { color: theme.colors.warning, backgroundColor: theme.colors.warningBg };
-      default: return { color: theme.colors.textSecondaryLight, backgroundColor: theme.colors.backgroundLight };
+      case 'active': return { color: colors.successText, backgroundColor: colors.successMuted };
+      case 'blocked': return { color: colors.dangerText, backgroundColor: colors.dangerMuted };
+      case 'pending': return { color: colors.warningText, backgroundColor: colors.warningMuted };
+      default: return { color: colors.textSubtle, backgroundColor: colors.surfaceSubtle };
     }
   };
 
@@ -33,21 +36,28 @@ export const UserListItem: React.FC<UserListItemProps> = ({ user, onPress }) => 
   return (
     <TouchableOpacity 
       onPress={onPress}
-      style={styles.container}
+      style={[
+        styles.container,
+        {
+          backgroundColor: colors.surface,
+          borderColor: colors.border,
+          shadowColor: colors.shadow,
+        },
+      ]}
     >
-      <View style={styles.avatarContainer}>
+      <View style={[styles.avatarContainer, { backgroundColor: colors.surfaceMuted }]}>
         {user.avatar ? (
           <Image source={{ uri: user.avatar }} style={styles.avatar} />
         ) : (
-          <Text style={styles.avatarText}>
+          <Text style={[styles.avatarText, { color: colors.textSubtle }]}>
             {user.fullName.split(' ').map(n => n[0]).join('').slice(0, 2)}
           </Text>
         )}
       </View>
       
       <View style={styles.info}>
-        <Text style={styles.name}>{user.fullName}</Text>
-        <Text style={styles.email}>{user.email}</Text>
+        <Text style={[styles.name, { color: colors.text }]}>{user.fullName}</Text>
+        <Text style={[styles.email, { color: colors.textSubtle }]}>{user.email}</Text>
       </View>
       
       <View style={styles.actionsBox}>
@@ -58,10 +68,10 @@ export const UserListItem: React.FC<UserListItemProps> = ({ user, onPress }) => 
         </View>
         <View style={styles.iconRow}>
           <TouchableOpacity style={styles.iconButton}>
-            <Edit2 size={14} color="#64748b" />
+            <Edit2 size={14} color={colors.icon} />
           </TouchableOpacity>
           <TouchableOpacity style={styles.iconButton}>
-            <Trash2 size={14} color="#f43f5e" />
+            <Trash2 size={14} color={colors.danger} />
           </TouchableOpacity>
         </View>
       </View>
@@ -73,19 +83,16 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: theme.colors.cardLight,
     padding: 16,
     marginBottom: 12,
     borderRadius: theme.borderRadius.lg,
     ...theme.shadows.soft,
     borderWidth: 1,
-    borderColor: theme.colors.borderLight,
   },
   avatarContainer: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: theme.colors.backgroundLight,
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
@@ -96,7 +103,6 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   avatarText: {
-    color: theme.colors.textSecondaryLight,
     fontWeight: 'bold',
     fontSize: 18,
   },
@@ -104,12 +110,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   name: {
-    color: theme.colors.textPrimaryLight,
     fontWeight: 'bold',
     fontSize: 16,
   },
   email: {
-    color: theme.colors.textSecondaryLight,
     fontSize: 12,
   },
   actionsBox: {

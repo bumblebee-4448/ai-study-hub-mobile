@@ -19,10 +19,10 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({ profile }) => (
 
     <View style={styles.nameBlock}>
       <Text style={styles.userName}>{profile.name}</Text>
-      <Text style={styles.university}>{profile.university}</Text>
+      <Text style={styles.university}>{profile.email}</Text>
       <View style={styles.yearRow}>
         <Ionicons name="school-outline" size={14} color={COLORS.secondary} />
-        <Text style={styles.yearText}>{profile.yearMajor}</Text>
+        <Text style={styles.yearText}>{profile.role}</Text>
       </View>
     </View>
   </View>

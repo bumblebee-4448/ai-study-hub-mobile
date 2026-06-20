@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { useAppTheme } from '@/features/theme';
 
 interface GrowthChartProps {
   data: number[];
@@ -12,15 +13,25 @@ export const GrowthChart: React.FC<GrowthChartProps> = ({
   labels,
   maxHeight = 150 
 }) => {
+  const { colors } = useAppTheme();
   const maxValue = Math.max(...data);
   
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        {
+          backgroundColor: colors.surface,
+          borderColor: colors.border,
+          shadowColor: colors.shadow,
+        },
+      ]}
+    >
       <View style={styles.header}>
-        <Text style={styles.title}>Phát triển</Text>
+        <Text style={[styles.title, { color: colors.text }]}>Phát triển</Text>
         <View style={styles.tabContainer}>
-          <Text style={styles.tabInactive}>Tháng</Text>
-          <Text style={styles.tabActive}>Tuần</Text>
+          <Text style={[styles.tabInactive, { color: colors.textSubtle }]}>Tháng</Text>
+          <Text style={[styles.tabActive, { color: colors.primary }]}>Tuần</Text>
         </View>
       </View>
       
@@ -30,9 +41,9 @@ export const GrowthChart: React.FC<GrowthChartProps> = ({
           return (
             <View key={index} style={styles.barWrapper}>
               <View 
-                style={[styles.bar, { height: barHeight }]} 
+                style={[styles.bar, { height: barHeight, backgroundColor: colors.primary }]} 
               />
-              <Text style={styles.label}>{labels[index]}</Text>
+              <Text style={[styles.label, { color: colors.textSubtle }]}>{labels[index]}</Text>
             </View>
           );
         })}
@@ -43,12 +54,9 @@ export const GrowthChart: React.FC<GrowthChartProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: 'white',
     padding: 20,
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: '#f8fafc',
-    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 10,
@@ -61,7 +69,6 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   title: {
-    color: '#0f172a',
     fontWeight: 'bold',
     fontSize: 18,
   },
@@ -70,11 +77,9 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   tabInactive: {
-    color: '#94a3b8',
     fontSize: 12,
   },
   tabActive: {
-    color: '#3b82f6',
     fontSize: 12,
     fontWeight: 'bold',
   },
@@ -91,11 +96,9 @@ const styles = StyleSheet.create({
     width: 32,
     borderTopLeftRadius: 8,
     borderTopRightRadius: 8,
-    backgroundColor: '#3b82f6',
   },
   label: {
     fontSize: 10,
-    color: '#94a3b8',
     marginTop: 8,
   },
 });

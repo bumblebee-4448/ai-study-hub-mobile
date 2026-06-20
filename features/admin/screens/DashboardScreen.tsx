@@ -1,261 +1,437 @@
-import React, { useState } from 'react';
-import { ScrollView, View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { StatsCard } from '../components/StatsCard';
-import { UserListItem } from '../components/UserListItem';
-import { UserAdmin } from '../types';
-import { useRouter } from 'expo-router';
-import { useAuthStore } from '@/features/auth/store/authStore';
-import { LogOut } from 'lucide-react-native';
+import { useRouter } from "expo-router";
+import { RefreshCw, UserCircle } from "lucide-react-native";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  ActivityIndicator,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
-const RECENT_USERS: UserAdmin[] = [
-  { id: '1', fullName: 'Nguyên Anh', email: 'anh.n@academy.vn', role: 'student', joinedDate: '12/05/2024', status: 'active' },
-  { id: '2', fullName: 'Trần Thế Dân', email: 'dan.t@academy.vn', role: 'admin', joinedDate: '10/05/2024', status: 'active' },
-  { id: '3', fullName: 'Hoàng Lan', email: 'lan.h@academy.vn', role: 'teacher', joinedDate: '08/05/2024', status: 'blocked' }
-];
+import { ScreenSafeAreaView } from "@/components/screen-safe-area-view";
+import { SCREEN_HEADER_TOP_PADDING } from "@/constants/safeArea";
+import {
+  fetchAdminAccounts,
+  fetchAdminDashboardStats,
+} from "../services/adminApi";
+import { mapAdminDashboardStats } from "../services/adminMappers";
+import type { AdminAccountItem, AdminDashboardStats } from "../types";
+import { StatsCard } from "../components/StatsCard";
+import { useAppTheme, type AppThemeColors } from "@/features/theme";
+
+const getErrorMessage = (error: unknown, fallback: string) => {
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+
+  return fallback;
+};
+
+const ratio = (value: number, total: number) => {
+  if (total <= 0) {
+    return 0;
+  }
+
+  return Math.min(1, value / total);
+};
 
 export const DashboardScreen = () => {
   const router = useRouter();
-  const { logout } = useAuthStore();
-  const [activeFilter, setActiveFilter] = useState('Tuần');
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+  const [stats, setStats] = useState<AdminDashboardStats>(() =>
+    mapAdminDashboardStats(null)
+  );
+  const [recentUsers, setRecentUsers] = useState<AdminAccountItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
 
-  const filters = ['Tháng', 'Tuần', 'Ngày'];
+  const loadDashboard = useCallback(async () => {
+    setIsLoading(true);
+    setErrorMessage("");
+
+    try {
+      const [dashboardStats, accounts] = await Promise.all([
+        fetchAdminDashboardStats(),
+        fetchAdminAccounts(),
+      ]);
+
+      setStats(dashboardStats);
+      setRecentUsers(accounts.slice(0, 4));
+    } catch (error) {
+      setErrorMessage(
+        getErrorMessage(error, "Không thể tải dữ liệu trang chủ.")
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadDashboard();
+  }, [loadDashboard]);
+
+  const cards = useMemo(
+    () => [
+      {
+        title: "Tổng người dùng",
+        value: stats.accounts.total.toLocaleString("vi-VN"),
+        progress: ratio(stats.accounts.active, stats.accounts.total),
+        isDark: true,
+        onPress: () => router.push("/users" as any),
+      },
+      {
+        title: "Môn học",
+        value: stats.subjects.total.toLocaleString("vi-VN"),
+        progress: stats.subjects.total > 0 ? 1 : 0,
+        color: colors.secondary,
+        onPress: () => router.push("/subjects" as any),
+      },
+      {
+        title: "Tài liệu chờ duyệt",
+        value: stats.documents.pending.toLocaleString("vi-VN"),
+        progress: ratio(stats.documents.pending, stats.documents.total),
+        color: colors.warning,
+      },
+      {
+        title: "Tài liệu đã duyệt",
+        value: stats.documents.active.toLocaleString("vi-VN"),
+        progress: ratio(stats.documents.active, stats.documents.total),
+        color: colors.success,
+      },
+    ],
+    [colors, router, stats]
+  );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <ScreenSafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <View>
-          <Text style={styles.welcomeText}>Chào mừng trở lại,</Text>
-          <Text style={styles.title}>Quản trị viên</Text>
+        <View style={styles.headerText}>
+          <Text style={styles.welcomeText}>Quản trị hệ thống</Text>
+          <Text style={styles.title}>Trang chủ</Text>
         </View>
-        <TouchableOpacity 
-          onPress={() => router.push('/settings')} 
-          style={styles.avatarContainer}
-          activeOpacity={0.7}
+        <TouchableOpacity
+          onPress={() => router.push("/profile" as any)}
+          style={styles.profileButton}
+          activeOpacity={0.75}
         >
-          <Image 
-            source={{ uri: 'https://i.pravatar.cc/100?img=5' }} 
-            style={styles.avatar} 
-          />
+          <UserCircle size={24} color={colors.text} />
         </TouchableOpacity>
       </View>
-      
-      <ScrollView 
+
+      <ScrollView
         style={styles.content}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
-        {/* Stats Grid - Follow Original Content */}
-        <View style={styles.statsGrid}>
-          <StatsCard 
-            title="Người dùng mới" 
-            value="1,284" 
-            progress={0.4} 
-            isDark={true}
-            onPress={() => router.push('/users')}
-          />
-          <StatsCard 
-            title="Tài liệu mới" 
-            value="4,562" 
-            progress={0.6} 
-            color="#3b82f6"
-            onPress={() => router.push('/analytics')}
-          />
-          <StatsCard 
-            title="Bài thảo luận" 
-            value="892" 
-            progress={0.25} 
-            color="#94a3b8"
-            onPress={() => router.push('/analytics')}
-          />
-          <StatsCard 
-            title="Lượt xem" 
-            value="12.5k" 
-            progress={0.88} 
-            color="#f43f5e"
-            onPress={() => router.push('/analytics')}
-          />
-        </View>
-        
-        {/* Development Chart - "Phát triển hệ thống" */}
-        <View style={styles.chartSection}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Phát triển hệ thống</Text>
+        {isLoading ? (
+          <View style={styles.stateBox}>
+            <ActivityIndicator color={colors.primary} size="small" />
+            <Text style={styles.stateText}>Đang tải dữ liệu trang chủ...</Text>
           </View>
-          
-          <View style={styles.placeholderChart}>
-            <View style={styles.chartLinesRow}>
-              {[15, 45, 25, 65, 30, 80, 40].map((h, i) => (
-                <View key={i} style={styles.chartColumn}>
-                  <View style={[styles.chartBar, { height: h * 1.5 }]} />
-                  <Text style={styles.chartLabel}>{['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'][i]}</Text>
-                </View>
-              ))}
-            </View>
-          </View>
-        </View>
+        ) : null}
 
-        {/* Recently Registered Users */}
-        <View style={styles.listSection}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Người dùng gần đây</Text>
-            <TouchableOpacity onPress={() => router.push('/users')}>
-              <Text style={styles.seeAll}>Xem tất cả</Text>
+        {!isLoading && errorMessage ? (
+          <View style={styles.errorBox}>
+            <Text style={styles.errorText}>{errorMessage}</Text>
+            <TouchableOpacity
+              style={styles.retryButton}
+              onPress={loadDashboard}
+              activeOpacity={0.75}
+            >
+              <RefreshCw size={16} color={colors.primary} />
+              <Text style={styles.retryText}>Tải lại</Text>
             </TouchableOpacity>
           </View>
-          
-          <View style={styles.userList}>
-            {RECENT_USERS.map(user => (
-              <UserListItem 
-                key={user.id} 
-                user={user} 
-                onPress={() => router.push({
-                  pathname: '/modal',
-                  params: {
-                    id: user.id,
-                    fullName: user.fullName,
-                    email: user.email,
-                    role: user.role,
-                    status: user.status,
-                    joinedDate: user.joinedDate
-                  }
-                })}
-              />
-            ))}
-          </View>
-        </View>
+        ) : null}
+
+        {!isLoading && !errorMessage ? (
+          <>
+            <View style={styles.statsGrid}>
+              {cards.map((card) => (
+                <StatsCard key={card.title} {...card} />
+              ))}
+            </View>
+
+            <View style={styles.summarySection}>
+              <Text style={styles.sectionTitle}>Tình trạng tài khoản</Text>
+              <View style={styles.summaryGrid}>
+                <SummaryItem
+                  label="Đang hoạt động"
+                  value={stats.accounts.active}
+                  color={colors.success}
+                  styles={styles}
+                />
+                <SummaryItem
+                  label="Chưa xác thực"
+                  value={stats.accounts.unverified}
+                  color={colors.warning}
+                  styles={styles}
+                />
+                <SummaryItem
+                  label="Đã khóa"
+                  value={stats.accounts.banned}
+                  color={colors.danger}
+                  styles={styles}
+                />
+              </View>
+            </View>
+
+            <View style={styles.listSection}>
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>Người dùng gần đây</Text>
+                <TouchableOpacity onPress={() => router.push("/users" as any)}>
+                  <Text style={styles.seeAll}>Xem tất cả</Text>
+                </TouchableOpacity>
+              </View>
+
+              {recentUsers.length > 0 ? (
+                recentUsers.map((user) => (
+                  <TouchableOpacity
+                    key={user.id}
+                    style={styles.userRow}
+                    onPress={() => router.push("/users" as any)}
+                    activeOpacity={0.75}
+                  >
+                    <View style={styles.avatar}>
+                      <Text style={styles.avatarText}>{user.initials}</Text>
+                    </View>
+                    <View style={styles.userInfo}>
+                      <Text style={styles.userName} numberOfLines={1}>
+                        {user.name}
+                      </Text>
+                      <Text style={styles.userEmail} numberOfLines={1}>
+                        {user.email}
+                      </Text>
+                    </View>
+                    <View style={styles.statusBadge}>
+                      <Text style={styles.statusText}>{user.statusLabel}</Text>
+                    </View>
+                  </TouchableOpacity>
+                ))
+              ) : (
+                <Text style={styles.emptyText}>Chưa có người dùng để hiển thị.</Text>
+              )}
+            </View>
+          </>
+        ) : null}
       </ScrollView>
-    </SafeAreaView>
+    </ScreenSafeAreaView>
   );
 };
 
-const styles = StyleSheet.create({
+function SummaryItem({
+  label,
+  value,
+  color,
+  styles,
+}: {
+  label: string;
+  value: number;
+  color: string;
+  styles: ReturnType<typeof createStyles>;
+}) {
+  return (
+    <View style={styles.summaryItem}>
+      <View style={[styles.summaryDot, { backgroundColor: color }]} />
+      <Text style={styles.summaryValue}>{value.toLocaleString("vi-VN")}</Text>
+      <Text style={styles.summaryLabel}>{label}</Text>
+    </View>
+  );
+}
+
+const createStyles = (colors: AppThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'white',
+    backgroundColor: colors.background,
   },
   header: {
     paddingHorizontal: 24,
-    paddingTop: 20,
+    paddingTop: SCREEN_HEADER_TOP_PADDING,
     paddingBottom: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  headerText: {
+    flex: 1,
+    minWidth: 0,
   },
   welcomeText: {
     fontSize: 14,
-    color: '#94a3b8',
+    color: colors.textSubtle,
   },
   title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#0f172a',
+    fontSize: 28,
+    fontWeight: "800",
+    color: colors.text,
   },
-  avatarContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    overflow: 'hidden',
-    borderWidth: 2,
-    borderColor: '#f1f5f9',
-    backgroundColor: '#f8fafc',
-  },
-  avatar: {
-    width: '100%',
-    height: '100%',
+  profileButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.surfaceMuted,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   content: {
     flex: 1,
   },
   scrollContent: {
     paddingHorizontal: 24,
-    paddingBottom: 40,
+    paddingBottom: 110,
   },
   statsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
     marginBottom: 24,
   },
-  chartSection: {
-    marginTop: 10,
-    marginBottom: 30,
+  stateBox: {
+    minHeight: 260,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 12,
   },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 24,
+  stateText: {
+    fontSize: 14,
+    color: colors.textSubtle,
   },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#0f172a',
+  errorBox: {
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.danger,
+    backgroundColor: colors.dangerMuted,
+    padding: 16,
+    gap: 14,
   },
-  tabSelector: {
-    flexDirection: 'row',
-    backgroundColor: '#f8fafc',
-    padding: 2,
-    borderRadius: 10,
-    alignItems: 'center',
+  errorText: {
+    fontSize: 14,
+    lineHeight: 20,
+    color: colors.dangerText,
   },
-  tabItem: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-  },
-  tabItemActive: {
-    backgroundColor: 'black',
+  retryButton: {
+    alignSelf: "flex-start",
+    minHeight: 40,
     borderRadius: 8,
     paddingHorizontal: 12,
-    paddingVertical: 6,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    backgroundColor: colors.primaryMuted,
   },
-  tabItemText: {
-    fontSize: 11,
-    color: '#94a3b8',
-    fontWeight: '500',
+  retryText: {
+    fontSize: 14,
+    fontWeight: "800",
+    color: colors.primary,
   },
-  tabItemTextActive: {
-    fontSize: 11,
-    color: 'white',
-    fontWeight: 'bold',
+  summarySection: {
+    marginBottom: 28,
   },
-  placeholderChart: {
-    height: 180,
-    paddingTop: 20,
+  sectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 14,
   },
-  chartLinesRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-end',
-    height: '100%',
-    paddingBottom: 20,
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "800",
+    color: colors.text,
+  },
+  summaryGrid: {
+    marginTop: 14,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+  },
+  summaryItem: {
+    minHeight: 58,
+    paddingHorizontal: 14,
+    flexDirection: "row",
+    alignItems: "center",
     borderBottomWidth: 1,
-    borderBottomColor: '#f1f5f9',
+    borderBottomColor: colors.border,
   },
-  chartColumn: {
-    alignItems: 'center',
-    width: 35,
+  summaryDot: {
+    width: 9,
+    height: 9,
+    borderRadius: 5,
+    marginRight: 10,
   },
-  chartBar: {
-    width: 14,
-    backgroundColor: '#3b82f6',
-    borderRadius: 4,
-    opacity: 0.8,
+  summaryValue: {
+    width: 52,
+    fontSize: 16,
+    fontWeight: "800",
+    color: colors.text,
   },
-  chartLabel: {
-    fontSize: 10,
-    color: '#94a3b8',
-    marginTop: 8,
+  summaryLabel: {
+    flex: 1,
+    fontSize: 14,
+    color: colors.textMuted,
   },
   listSection: {
-    marginTop: 10,
+    marginTop: 2,
   },
   seeAll: {
     fontSize: 13,
-    color: '#3b82f6',
-    fontWeight: 'bold',
+    color: colors.primary,
+    fontWeight: "800",
   },
-  userList: {
-    marginTop: 8,
-  }
+  userRow: {
+    minHeight: 64,
+    flexDirection: "row",
+    alignItems: "center",
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  avatar: {
+    width: 42,
+    height: 42,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.primaryMuted,
+    marginRight: 12,
+  },
+  avatarText: {
+    fontSize: 13,
+    fontWeight: "800",
+    color: colors.primary,
+  },
+  userInfo: {
+    flex: 1,
+    minWidth: 0,
+  },
+  userName: {
+    fontSize: 14,
+    fontWeight: "800",
+    color: colors.text,
+  },
+  userEmail: {
+    marginTop: 2,
+    fontSize: 12,
+    color: colors.textSubtle,
+  },
+  statusBadge: {
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    backgroundColor: colors.surfaceSubtle,
+    marginLeft: 8,
+  },
+  statusText: {
+    fontSize: 10,
+    fontWeight: "800",
+    color: colors.textMuted,
+  },
+  emptyText: {
+    fontSize: 14,
+    color: colors.textSubtle,
+  },
 });

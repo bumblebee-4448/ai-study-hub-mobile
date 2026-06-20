@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
   ActivityIndicator,
@@ -15,11 +15,12 @@ import {
   View,
 } from "react-native";
 
-import { BORDER_RADIUS, COLORS, SPACING, TYPOGRAPHY } from "@/constants/theme";
+import { BORDER_RADIUS, SPACING, TYPOGRAPHY } from "@/constants/theme";
+import { useAppTheme, type AppThemeColors } from "@/features/theme";
 import { useAuthStore } from "../store/authStore";
 import { useProfileStore } from "@/features/profile/store/profileStore";
 import { LoginSchema, LoginFormType } from "../schemas/authSchema";
-import { UserRole } from "../types";
+import { getAuthErrorMessage, loginWithEmail } from "../services/authService";
 
 interface LoginScreenProps {
   onSignUpPress?: () => void;
@@ -31,6 +32,8 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
   onSuccess,
 }) => {
   const router = useRouter();
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const { setAuth } = useAuthStore();
   const { setProfile } = useProfileStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -48,104 +51,29 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
     async (data: LoginFormType) => {
       setIsSubmitting(true);
       try {
-        // Mock authentication delay
-        await new Promise<void>((resolve) => setTimeout(resolve, 1200));
+        const result = await loginWithEmail(data);
 
-        // Logic to determine role for testing
-        let determinedRole: UserRole = "student";
-        const emailLower = data.email.toLowerCase();
-        
-        const isStrictModerator =
-          emailLower === "moderator@academishare.com" &&
-          data.password === "Moderator@123";
-        
-        const isFlexibleModerator = emailLower.includes("moderator");
+        setAuth(
+          result.accessToken,
+          result.role,
+          result.user,
+          result.refreshToken
+        );
+        setProfile(result.profile);
 
-        if (isStrictModerator || isFlexibleModerator) {
-          determinedRole = "moderator";
-        } else if (emailLower.includes("admin")) {
-          determinedRole = "admin";
+        if (onSuccess) {
+          onSuccess();
+          return;
         }
 
-        // Set state in Zustand store
-        if (determinedRole === "moderator") {
-          setAuth(
-            "mock-access-token-mod",
-            "moderator",
-            {
-              id: "mod-001",
-              name: isStrictModerator ? "Moderator AcademiShare" : "Moderator",
-              email: data.email,
-              avatarUrl:
-                "https://lh3.googleusercontent.com/aida-public/AB6AXuAOdq3b_ELYMC3GxquZ7RauzvzJ1pHpMfQQrorUfffyd_17r085qf5-VDo_tbKXmF7wHmykjJTozbpZ1TVNWoFmCwhZDY1dnPGSwk2XO-8bo-kYFGg-_BZqDhSl37KgNuJRR8jaqk4y-7pWYY09g8q--SUumhwSPTxLbMb5m84GyF68wDcKUE1AsUixdGwr9QeL4zaC2sAvFTWbPk0oMt2v9Rd-qCdCDR0sJUgAjYmwtjT5NJnGazypV9ma9i_j8OnIIMkdTuQ34E0",
-              university: "AcademiShare Platform",
-              major: "Content Moderation",
-            },
-            "mock-refresh-token-mod"
-          );
-
-          setProfile({
-            id: "mod-001",
-            name: isStrictModerator ? "Moderator AcademiShare" : "Moderator",
-            university: "AcademiShare Platform",
-            yearMajor: "Moderator",
-            avatarUrl:
-              "https://lh3.googleusercontent.com/aida-public/AB6AXuAOdq3b_ELYMC3GxquZ7RauzvzJ1pHpMfQQrorUfffyd_17r085qf5-VDo_tbKXmF7wHmykjJTozbpZ1TVNWoFmCwhZDY1dnPGSwk2XO-8bo-kYFGg-_BZqDhSl37KgNuJRR8jaqk4y-7pWYY09g8q--SUumhwSPTxLbMb5m84GyF68wDcKUE1AsUixdGwr9QeL4zaC2sAvFTWbPk0oMt2v9Rd-qCdCDR0sJUgAjYmwtjT5NJnGazypV9ma9i_j8OnIIMkdTuQ34E0",
-            documentCount: 0,
-            savedCount: 0,
-            points: 0,
-          });
-        } else {
-          setAuth(
-            "mock-access-token-xyz",
-            determinedRole,
-            {
-              id: "user-001",
-              name: determinedRole === 'admin' ? "Quản trị viên" : "Nguyễn Văn A",
-              email: data.email,
-              avatarUrl:
-                "https://lh3.googleusercontent.com/aida-public/AB6AXuByChcQ0XwJZE7ksDTDKK-d6leBoSCIpKJxnQGdxZX9s1Ai_dywhkwWtVXxQ67QZVEDBVwOIymfGb8dteXSO5w_L3S3NXtPl-DG6rWfCYFJWKQr-IJhRH7LrI2MejDxLUeSGX3eYrwFuboLtXR-rLII6GQvJ-Ln2lFUM3hgldUii1oCouxPVqTcIyiETtvwO61CT-qUBGle-Lca3bCK6mRSaMotdAi_2wOOgPB6xy-Ab7uJcXNrKX1brKh6rqCbsrSI81BQTvUIB50",
-              university: "Đại học Công nghệ thông tin",
-              major: "Công nghệ phần mềm",
-            },
-            "mock-refresh-token-xyz"
-          );
-
-          setProfile({
-            id: "user-001",
-            name: determinedRole === 'admin' ? "Quản trị viên" : "Nguyễn Văn A",
-            university: "Đại học Công nghệ thông tin",
-            yearMajor: "Năm 3 - Công nghệ phần mềm",
-            avatarUrl:
-              "https://lh3.googleusercontent.com/aida-public/AB6AXuByChcQ0XwJZE7ksDTDKK-d6leBoSCIpKJxnQGdxZX9s1Ai_dywhkwWtVXxQ67QZVEDBVwOIymfGb8dteXSO5w_L3S3NXtPl-DG6rWfCYFJWKQr-IJhRH7LrI2MejDxLUeSGX3eYrwFuboLtXR-rLII6GQvJ-Ln2lFUM3hgldUii1oCouxPVqTcIyiETtvwO61CT-qUBGle-Lca3bCK6mRSaMotdAi_2wOOgPB6xy-Ab7uJcXNrKX1brKh6rqCbsrSI81BQTvUIB50",
-            documentCount: 12,
-            savedCount: 48,
-            points: 156,
-          });
-        }
-
-        Alert.alert("Thành công", "Đăng nhập thành công!", [
-          {
-            text: "OK",
-            onPress: () => {
-              if (onSuccess) {
-                onSuccess();
-              } else {
-                const target = determinedRole === 'admin' 
-                  ? "/(admin-tabs)" 
-                  : (determinedRole === 'moderator' ? "/(moderator-tabs)" : "/(student-tabs)");
-                router.replace(target as any);
-              }
-            },
-          },
-        ]);
-      } catch {
-        Alert.alert("Lỗi", "Đăng nhập thất bại. Vui lòng thử lại.");
+        router.replace(result.homeRoute as any);
+      } catch (error) {
+        Alert.alert("Đăng nhập thất bại", getAuthErrorMessage(error));
       } finally {
         setIsSubmitting(false);
       }
     },
-    [router, setAuth, setProfile, onSuccess]
+    [onSuccess, router, setAuth, setProfile]
   );
 
   const handleGoogleLogin = useCallback(() => {
@@ -165,7 +93,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
       >
         <View style={styles.card}>
           <View style={styles.header}>
-            <Text style={styles.title}>AcademiShare</Text>
+            <Text style={styles.title}>AcademicShare</Text>
             <Text style={styles.subtitle}>Hệ thống học liệu</Text>
           </View>
 
@@ -179,8 +107,8 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
                 render={({ field: { onChange, onBlur, value } }) => (
                   <TextInput
                     style={[styles.input, errors.email && styles.inputError]}
-                    placeholder="Enter your email"
-                    placeholderTextColor={COLORS.outline}
+                    placeholder="Nhập email của bạn"
+                    placeholderTextColor={colors.textSubtle}
                     value={value}
                     onChangeText={onChange}
                     onBlur={onBlur}
@@ -198,7 +126,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
 
             {/* Password Field */}
             <View style={styles.fieldBlock}>
-              <Text style={styles.label}>Password</Text>
+              <Text style={styles.label}>Mật khẩu</Text>
               <Controller
                 control={control}
                 name="password"
@@ -210,8 +138,8 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
                         styles.inputWithIcon,
                         errors.password && styles.inputError,
                       ]}
-                      placeholder="Enter your password"
-                      placeholderTextColor={COLORS.outline}
+                      placeholder="Nhập mật khẩu của bạn"
+                      placeholderTextColor={colors.textSubtle}
                       value={value}
                       onChangeText={onChange}
                       onBlur={onBlur}
@@ -228,7 +156,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
                       <Ionicons
                         name={passwordVisible ? "eye-outline" : "eye-off-outline"}
                         size={20}
-                        color={COLORS.outline}
+                        color={colors.icon}
                       />
                     </TouchableOpacity>
                   </View>
@@ -239,7 +167,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
               )}
               <View style={styles.forgotPasswordRow}>
                 <TouchableOpacity activeOpacity={0.7}>
-                  <Text style={styles.forgotPasswordText}>Forgot password?</Text>
+                  <Text style={styles.forgotPasswordText}>Quên mật khẩu?</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -252,9 +180,9 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
               disabled={isSubmitting}
             >
               {isSubmitting ? (
-                <ActivityIndicator color={COLORS["on-primary"]} size="small" />
+                <ActivityIndicator color={colors.onPrimary} size="small" />
               ) : (
-                <Text style={styles.signInBtnText}>Sign In</Text>
+                <Text style={styles.signInBtnText}>Đăng nhập</Text>
               )}
             </TouchableOpacity>
           </View>
@@ -262,7 +190,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
           {/* Divider */}
           <View style={styles.dividerRow}>
             <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>or continue with</Text>
+            <Text style={styles.dividerText}>Hoặc tiếp tục bằng</Text>
             <View style={styles.dividerLine} />
           </View>
 
@@ -290,12 +218,12 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
           {/* Footer */}
           <View style={styles.footer}>
             <Text style={styles.footerText}>
-              Don't have an account?{" "}
+              Chưa có tài khoản?{" "}
               <Text
                 style={styles.signUpLink}
                 onPress={onSignUpPress || (() => router.push("/register"))}
               >
-                Sign up
+                Đăng ký
               </Text>
             </Text>
           </View>
@@ -305,10 +233,10 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: AppThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.background,
   },
   scrollContent: {
     flexGrow: 1,
@@ -317,14 +245,14 @@ const styles = StyleSheet.create({
     paddingVertical: SPACING.xl,
   },
   card: {
-    backgroundColor: COLORS["surface-container-lowest"],
-    borderColor: COLORS["outline-variant"],
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
     borderWidth: 1,
     borderRadius: BORDER_RADIUS.md,
     padding: SPACING.xl,
     gap: SPACING.xl,
     elevation: 2,
-    shadowColor: "#191b23",
+    shadowColor: colors.shadow,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 8,
@@ -336,12 +264,12 @@ const styles = StyleSheet.create({
   },
   title: {
     ...TYPOGRAPHY["headline-lg-mobile"],
-    color: COLORS.primary,
+    color: colors.primary,
     fontWeight: "700",
   },
   subtitle: {
     ...TYPOGRAPHY["body-md"],
-    color: COLORS["on-surface-variant"],
+    color: colors.textSubtle,
   },
   form: {
     gap: SPACING.lg,
@@ -351,21 +279,21 @@ const styles = StyleSheet.create({
   },
   label: {
     ...TYPOGRAPHY["label-sm"],
-    color: COLORS["on-surface"],
+    color: colors.text,
     fontWeight: "500",
   },
   input: {
     ...TYPOGRAPHY["body-md"],
-    color: COLORS["on-surface"],
-    backgroundColor: COLORS.surface,
+    color: colors.text,
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: COLORS["outline-variant"],
+    borderColor: colors.border,
     borderRadius: BORDER_RADIUS.sm,
     paddingHorizontal: SPACING.lg,
     paddingVertical: SPACING.md,
   },
   inputError: {
-    borderColor: COLORS.error,
+    borderColor: colors.danger,
     borderWidth: 1.5,
   },
   inputWrapper: {
@@ -390,10 +318,10 @@ const styles = StyleSheet.create({
   },
   forgotPasswordText: {
     ...TYPOGRAPHY["label-sm"],
-    color: COLORS.primary,
+    color: colors.primary,
   },
   signInBtn: {
-    backgroundColor: COLORS["primary-container"],
+    backgroundColor: colors.primary,
     borderRadius: BORDER_RADIUS.sm,
     paddingVertical: SPACING.md,
     alignItems: "center",
@@ -402,14 +330,14 @@ const styles = StyleSheet.create({
   },
   signInBtnText: {
     ...TYPOGRAPHY["label-md"],
-    color: COLORS["on-primary-container"],
+    color: colors.onPrimary,
   },
   btnDisabled: {
     opacity: 0.65,
   },
   fieldError: {
     ...TYPOGRAPHY["label-sm"],
-    color: COLORS.error,
+    color: colors.danger,
   },
   dividerRow: {
     flexDirection: "row",
@@ -420,11 +348,11 @@ const styles = StyleSheet.create({
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: COLORS["outline-variant"],
+    backgroundColor: colors.border,
   },
   dividerText: {
     ...TYPOGRAPHY["label-sm"],
-    color: COLORS["on-surface-variant"],
+    color: colors.textSubtle,
   },
   socialContainer: {
     gap: SPACING.md,
@@ -434,15 +362,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: SPACING.base,
-    backgroundColor: COLORS["surface-container-lowest"],
-    borderColor: COLORS["outline-variant"],
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
     borderWidth: 1,
     borderRadius: BORDER_RADIUS.sm,
     paddingVertical: SPACING.md,
   },
   socialBtnText: {
     ...TYPOGRAPHY["label-md"],
-    color: COLORS["on-surface"],
+    color: colors.text,
   },
   footer: {
     alignItems: "center",
@@ -450,11 +378,11 @@ const styles = StyleSheet.create({
   },
   footerText: {
     ...TYPOGRAPHY["body-md"],
-    color: COLORS["on-surface-variant"],
+    color: colors.textSubtle,
   },
   signUpLink: {
     ...TYPOGRAPHY["label-md"],
-    color: COLORS.primary,
+    color: colors.primary,
     fontWeight: "600",
   },
 });

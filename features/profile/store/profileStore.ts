@@ -5,23 +5,26 @@
 
 import { create } from "zustand";
 import { ProfileState, UserProfile } from "../types";
-
-const DEMO_PROFILE: UserProfile = {
-  id: "user-001",
-  name: "Nguyễn Văn A",
-  university: "Sinh viên Đại học Khoa học",
-  yearMajor: "Năm 3 - Công nghệ thông tin",
-  avatarUrl:
-    "https://lh3.googleusercontent.com/aida-public/AB6AXuByChcQ0XwJZE7ksDTDKK-d6leBoSCIpKJxnQGdxZX9s1Ai_dywhkwWtVXxQ67QZVEDBVwOIymfGb8dteXSO5w_L3S3NXtPl-DG6rWfCYFJWKQr-IJhRH7LrI2MejDxLUeSGX3eYrwFuboLtXR-rLII6GQvJ-Ln2lFUM3hgldUii1oCouxPVqTcIyiETtvwO61CT-qUBGle-Lca3bCK6mRSaMotdAi_2wOOgPB6xy-Ab7uJcXNrKX1brKh6rqCbsrSI81BQTvUIB50",
-  documentCount: 12,
-  savedCount: 48,
-  points: 156,
-};
+import { areProfilesEqual } from "../services/profileMappers";
 
 export const useProfileStore = create<ProfileState>((set) => ({
-  profile: DEMO_PROFILE,
+  profile: null,
   isLoading: false,
   error: null,
-  setProfile: (profile: UserProfile) => set({ profile }),
-  clearProfile: () => set({ profile: null }),
+  setLoading: (isLoading: boolean) =>
+    set((state) => (state.isLoading === isLoading ? state : { isLoading })),
+  setError: (error: string | null) =>
+    set((state) => (state.error === error ? state : { error })),
+  setProfile: (profile: UserProfile) =>
+    set((state) =>
+      areProfilesEqual(state.profile, profile) && state.error === null
+        ? state
+        : { profile, error: null }
+    ),
+  clearProfile: () =>
+    set((state) =>
+      state.profile === null && state.error === null && !state.isLoading
+        ? state
+        : { profile: null, error: null, isLoading: false }
+    ),
 }));

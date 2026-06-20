@@ -107,3 +107,84 @@ export interface UploadFormData {
   category: string;
   description?: string;
 }
+
+// Moderator document API integration
+
+export type BackendDocumentStatus = "PENDING" | "ACTIVE" | "REJECTED" | "DELETED";
+
+export type ModeratorDocumentStatusFilter = Extract<
+  BackendDocumentStatus,
+  "PENDING" | "ACTIVE" | "REJECTED"
+>;
+
+export interface BackendModeratorDocumentAuthor {
+  id: string;
+  name?: string | null;
+  email?: string | null;
+  avatarUrl?: string | null;
+}
+
+export interface BackendModeratorDocumentSubject {
+  id: string;
+  name?: string | null;
+  code?: string | null;
+}
+
+export interface BackendModeratorDocument {
+  id: string;
+  title: string;
+  description?: string | null;
+  fileUrl?: string | null;
+  publicId?: string | null;
+  status: BackendDocumentStatus;
+  isPublic?: boolean;
+  createdAt: string;
+  updatedAt?: string | null;
+  reviewedAt?: string | null;
+  rejectionReason?: string | null;
+  format?: string | null;
+  sizeInBytes?: number | null;
+  author?: BackendModeratorDocumentAuthor | null;
+  subject?: BackendModeratorDocumentSubject | null;
+}
+
+export interface ModeratorDocumentPagination {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
+export interface BackendModeratorDocumentListResponse {
+  documents: BackendModeratorDocument[];
+  pagination: ModeratorDocumentPagination;
+}
+
+export interface ModeratorDocument {
+  id: string;
+  title: string;
+  description: string;
+  status: BackendDocumentStatus;
+  statusLabel: string;
+  authorName: string;
+  subjectName: string;
+  formatLabel: string;
+  sizeLabel: string;
+  fileUrl?: string;
+  createdAtLabel: string;
+  updatedAtLabel: string;
+  rejectionReason: string | null;
+  canReview: boolean;
+}
+
+export interface ModeratorDocumentListResult {
+  documents: ModeratorDocument[];
+  pagination: ModeratorDocumentPagination;
+}
+
+export interface ModeratorDashboardSummary {
+  pendingCount: number;
+  activeCount: number;
+  rejectedCount: number;
+  recentDocuments: ModeratorDocument[];
+}

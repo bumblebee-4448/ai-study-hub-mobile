@@ -3,7 +3,7 @@
  * Converts HTML upload page to React Native.
  *
  * UI:
- *  - Sticky header: AcademiShare logo + avatar
+ *  - Sticky header: AcademicShare logo + avatar
  *  - Upload zone: dashed border, cloud-upload icon, format/size hint
  *  - File error banner (format mismatch or > 50 MB)
  *  - Form: Title (TextInput), Category (inline picker), Description (TextArea)
@@ -120,7 +120,7 @@ export const UploadScreen: React.FC<UploadScreenProps> = ({
     <SafeAreaView style={styles.safeArea}>
       {/* ── Sticky Header ─────────────────────────────────────────── */}
       <View style={styles.header}>
-        <Text style={styles.logo}>AcademiShare</Text>
+        <Text style={styles.logo}>AcademicShare</Text>
         <Image
           source={{
             uri: "https://lh3.googleusercontent.com/aida-public/AB6AXuD0WHyA_G4bjXLc_4wiWyt39AIrIQqf-s9q1OJF8Lu6MT2ixy89pL7VcdhP3WEtcHRG0UpAm55ztMsVmDa-slgyf2EWtaC-AJRE5U-Dw7oLRzei3DSkSTv3uNIjyCXP_6xbaMVTyE3UROBawmr5sIrB1sT4aTQaCCAuR6o17MxZhodtsC8ShQqu7MPF87B5brcTul4NqMWx_tmxIf0f5oGhY1OD3WBud7gs-uvYiQ3MifA1r4-Kq1b04e94V-Lu9R5ptFL2C6pCDRs",

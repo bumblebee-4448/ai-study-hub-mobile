@@ -1,24 +1,43 @@
-/**
- * Profile Feature — Type Definitions
- */
+import type { AccountStatus } from "@/features/auth/types";
+
+export type BackendProfileRole = "USER" | "ADMIN" | "MODERATOR" | string;
+
+export interface BackendProfile {
+  id: string;
+  email: string;
+  name: string;
+  avatarUrl?: string | null;
+  role: BackendProfileRole;
+  status?: AccountStatus;
+  createdAt?: string;
+}
 
 export interface UserProfile {
   id: string;
+  email: string;
   name: string;
-  university: string;
-  /** e.g. "Năm 3 - Công nghệ thông tin" */
-  yearMajor: string;
-  avatarUrl: string;
-  bio?: string;
-  documentCount: number;
-  savedCount: number;
-  points: number;
+  avatarUrl?: string;
+  role: BackendProfileRole;
+  status?: AccountStatus;
+  createdAt?: string;
+}
+
+export interface UpdateProfileFormValues {
+  name: string;
+  avatarUrl?: string;
+}
+
+export interface UpdateProfilePayload {
+  name: string;
+  avatarUrl?: string;
 }
 
 export interface ProfileState {
   profile: UserProfile | null;
   isLoading: boolean;
   error: string | null;
+  setLoading: (isLoading: boolean) => void;
+  setError: (error: string | null) => void;
   setProfile: (profile: UserProfile) => void;
   clearProfile: () => void;
 }

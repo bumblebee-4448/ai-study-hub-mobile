@@ -7,7 +7,7 @@ export const LoginSchema = z.object({
     .email("Email không hợp lệ"),
   password: z
     .string()
-    .min(6, "Mật khẩu phải từ 6 ký tự trở lên"),
+    .min(8, "Mật khẩu phải từ 8 ký tự trở lên"),
 });
 
 export const RegisterSchema = z
@@ -22,7 +22,7 @@ export const RegisterSchema = z
       .email("Email không hợp lệ"),
     password: z
       .string()
-      .min(6, "Mật khẩu phải từ 6 ký tự trở lên"),
+      .min(8, "Mật khẩu phải từ 8 ký tự trở lên"),
     confirmPassword: z
       .string()
       .min(1, "Xác nhận mật khẩu không được để trống"),

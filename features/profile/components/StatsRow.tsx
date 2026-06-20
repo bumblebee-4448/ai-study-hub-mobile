@@ -2,12 +2,11 @@ import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 
 import { COLORS, SPACING, TYPOGRAPHY } from "@/constants/theme";
-import { UserProfile } from "../types";
 
 interface StatsRowProps {
-  documentCount: UserProfile["documentCount"];
-  savedCount: UserProfile["savedCount"];
-  points: UserProfile["points"];
+  documentCount: number;
+  savedCount: number;
+  points: number;
 }
 
 interface StatCellProps {
