@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
   ActivityIndicator,
@@ -15,7 +15,8 @@ import {
   View,
 } from "react-native";
 
-import { BORDER_RADIUS, COLORS, SPACING, TYPOGRAPHY } from "@/constants/theme";
+import { BORDER_RADIUS, SPACING, TYPOGRAPHY } from "@/constants/theme";
+import { useAppTheme, type AppThemeColors } from "@/features/theme";
 import { useAuthStore } from "../store/authStore";
 import { useProfileStore } from "@/features/profile/store/profileStore";
 import { LoginSchema, LoginFormType } from "../schemas/authSchema";
@@ -31,6 +32,8 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
   onSuccess,
 }) => {
   const router = useRouter();
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const { setAuth } = useAuthStore();
   const { setProfile } = useProfileStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -90,7 +93,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
       >
         <View style={styles.card}>
           <View style={styles.header}>
-            <Text style={styles.title}>AcademiShare</Text>
+            <Text style={styles.title}>AcademicShare</Text>
             <Text style={styles.subtitle}>Hệ thống học liệu</Text>
           </View>
 
@@ -105,7 +108,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
                   <TextInput
                     style={[styles.input, errors.email && styles.inputError]}
                     placeholder="Nhập email của bạn"
-                    placeholderTextColor={COLORS.outline}
+                    placeholderTextColor={colors.textSubtle}
                     value={value}
                     onChangeText={onChange}
                     onBlur={onBlur}
@@ -136,7 +139,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
                         errors.password && styles.inputError,
                       ]}
                       placeholder="Nhập mật khẩu của bạn"
-                      placeholderTextColor={COLORS.outline}
+                      placeholderTextColor={colors.textSubtle}
                       value={value}
                       onChangeText={onChange}
                       onBlur={onBlur}
@@ -153,7 +156,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
                       <Ionicons
                         name={passwordVisible ? "eye-outline" : "eye-off-outline"}
                         size={20}
-                        color={COLORS.outline}
+                        color={colors.icon}
                       />
                     </TouchableOpacity>
                   </View>
@@ -177,7 +180,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
               disabled={isSubmitting}
             >
               {isSubmitting ? (
-                <ActivityIndicator color={COLORS["on-primary"]} size="small" />
+                <ActivityIndicator color={colors.onPrimary} size="small" />
               ) : (
                 <Text style={styles.signInBtnText}>Đăng nhập</Text>
               )}
@@ -230,10 +233,10 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: AppThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.background,
   },
   scrollContent: {
     flexGrow: 1,
@@ -242,14 +245,14 @@ const styles = StyleSheet.create({
     paddingVertical: SPACING.xl,
   },
   card: {
-    backgroundColor: COLORS["surface-container-lowest"],
-    borderColor: COLORS["outline-variant"],
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
     borderWidth: 1,
     borderRadius: BORDER_RADIUS.md,
     padding: SPACING.xl,
     gap: SPACING.xl,
     elevation: 2,
-    shadowColor: "#191b23",
+    shadowColor: colors.shadow,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 8,
@@ -261,12 +264,12 @@ const styles = StyleSheet.create({
   },
   title: {
     ...TYPOGRAPHY["headline-lg-mobile"],
-    color: COLORS.primary,
+    color: colors.primary,
     fontWeight: "700",
   },
   subtitle: {
     ...TYPOGRAPHY["body-md"],
-    color: COLORS["on-surface-variant"],
+    color: colors.textSubtle,
   },
   form: {
     gap: SPACING.lg,
@@ -276,21 +279,21 @@ const styles = StyleSheet.create({
   },
   label: {
     ...TYPOGRAPHY["label-sm"],
-    color: COLORS["on-surface"],
+    color: colors.text,
     fontWeight: "500",
   },
   input: {
     ...TYPOGRAPHY["body-md"],
-    color: COLORS["on-surface"],
-    backgroundColor: COLORS.surface,
+    color: colors.text,
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: COLORS["outline-variant"],
+    borderColor: colors.border,
     borderRadius: BORDER_RADIUS.sm,
     paddingHorizontal: SPACING.lg,
     paddingVertical: SPACING.md,
   },
   inputError: {
-    borderColor: COLORS.error,
+    borderColor: colors.danger,
     borderWidth: 1.5,
   },
   inputWrapper: {
@@ -315,10 +318,10 @@ const styles = StyleSheet.create({
   },
   forgotPasswordText: {
     ...TYPOGRAPHY["label-sm"],
-    color: COLORS.primary,
+    color: colors.primary,
   },
   signInBtn: {
-    backgroundColor: COLORS["primary-container"],
+    backgroundColor: colors.primary,
     borderRadius: BORDER_RADIUS.sm,
     paddingVertical: SPACING.md,
     alignItems: "center",
@@ -327,14 +330,14 @@ const styles = StyleSheet.create({
   },
   signInBtnText: {
     ...TYPOGRAPHY["label-md"],
-    color: COLORS["on-primary-container"],
+    color: colors.onPrimary,
   },
   btnDisabled: {
     opacity: 0.65,
   },
   fieldError: {
     ...TYPOGRAPHY["label-sm"],
-    color: COLORS.error,
+    color: colors.danger,
   },
   dividerRow: {
     flexDirection: "row",
@@ -345,11 +348,11 @@ const styles = StyleSheet.create({
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: COLORS["outline-variant"],
+    backgroundColor: colors.border,
   },
   dividerText: {
     ...TYPOGRAPHY["label-sm"],
-    color: COLORS["on-surface-variant"],
+    color: colors.textSubtle,
   },
   socialContainer: {
     gap: SPACING.md,
@@ -359,15 +362,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: SPACING.base,
-    backgroundColor: COLORS["surface-container-lowest"],
-    borderColor: COLORS["outline-variant"],
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
     borderWidth: 1,
     borderRadius: BORDER_RADIUS.sm,
     paddingVertical: SPACING.md,
   },
   socialBtnText: {
     ...TYPOGRAPHY["label-md"],
-    color: COLORS["on-surface"],
+    color: colors.text,
   },
   footer: {
     alignItems: "center",
@@ -375,11 +378,11 @@ const styles = StyleSheet.create({
   },
   footerText: {
     ...TYPOGRAPHY["body-md"],
-    color: COLORS["on-surface-variant"],
+    color: colors.textSubtle,
   },
   signUpLink: {
     ...TYPOGRAPHY["label-md"],
-    color: COLORS.primary,
+    color: colors.primary,
     fontWeight: "600",
   },
 });

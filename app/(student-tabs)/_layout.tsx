@@ -1,5 +1,6 @@
-import { COMMON_TAB_BAR_OPTIONS } from "@/constants/theme";
+import { getCommonTabBarOptions } from "@/constants/theme";
 import { RoleGate } from "@/features/auth";
+import { useAppTheme } from "@/features/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 import React from "react";
@@ -24,9 +25,11 @@ const TAB_CONFIG: TabConfig[] = [
 const HIDDEN_TABS = ["explore"];
 
 export default function TabLayout() {
+  const { colors } = useAppTheme();
+
   return (
     <RoleGate allowedRoles={["student"]}>
-      <Tabs screenOptions={COMMON_TAB_BAR_OPTIONS}>
+      <Tabs screenOptions={getCommonTabBarOptions(colors)}>
         {TAB_CONFIG.map(({ name, title, icon, activeIcon }) => (
           <Tabs.Screen
             key={name}

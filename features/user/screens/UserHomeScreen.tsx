@@ -8,11 +8,10 @@ import {
   Plus,
   Upload,
 } from "lucide-react-native";
-import React from "react";
+import React, { useMemo } from "react";
 import {
   ActivityIndicator,
   RefreshControl,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
@@ -20,11 +19,16 @@ import {
   View,
 } from "react-native";
 
+import { ScreenSafeAreaView } from "@/components/screen-safe-area-view";
+import { SCREEN_HEADER_TOP_PADDING } from "@/constants/safeArea";
 import { MyDocumentItem } from "../components/MyDocumentItem";
 import { useMyDocuments, useRecentDocuments } from "../hooks/useUserDocuments";
+import { useAppTheme, type AppThemeColors } from "@/features/theme";
 
 export const UserHomeScreen = () => {
   const router = useRouter();
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const recent = useRecentDocuments(5);
   const mine = useMyDocuments();
 
@@ -43,20 +47,20 @@ export const UserHomeScreen = () => {
   const QUICK_ACTIONS = [
     {
       label: "Tải lên",
-      icon: <Upload size={20} color="#6366f1" />,
-      bg: "#eef2ff",
+      icon: <Upload size={20} color={colors.primary} />,
+      bg: colors.primaryMuted,
       onPress: () => router.push("/(student-tabs)/upload" as any),
     },
     {
       label: "Thư viện",
-      icon: <BookMarked size={20} color="#06b6d4" />,
-      bg: "#ecfeff",
+      icon: <BookMarked size={20} color={colors.secondary} />,
+      bg: colors.surfaceSubtle,
       onPress: () => router.push("/(student-tabs)/library" as any),
     },
     {
       label: "Tài liệu",
-      icon: <FileText size={20} color="#f59e0b" />,
-      bg: "#fffbeb",
+      icon: <FileText size={20} color={colors.warning} />,
+      bg: colors.warningMuted,
       onPress: () => router.push("/(student-tabs)/my-documents" as any),
     },
   ];
@@ -85,14 +89,14 @@ export const UserHomeScreen = () => {
             activeOpacity={0.7}
           >
             <Text style={styles.seeAllText}>Xem tất cả</Text>
-            <ChevronRight size={14} color="#6366f1" />
+            <ChevronRight size={14} color={colors.primary} />
           </TouchableOpacity>
         )}
       </View>
 
       {isLoading ? (
         <View style={styles.stateBox}>
-          <ActivityIndicator size="small" color="#6366f1" />
+          <ActivityIndicator size="small" color={colors.primary} />
           <Text style={styles.stateText}>Đang tải...</Text>
         </View>
       ) : error ? (
@@ -121,7 +125,7 @@ export const UserHomeScreen = () => {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <ScreenSafeAreaView style={styles.container}>
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
@@ -129,14 +133,14 @@ export const UserHomeScreen = () => {
           <RefreshControl
             refreshing={isRefreshing}
             onRefresh={handleRefresh}
-            colors={["#6366f1"]}
-            tintColor="#6366f1"
+            colors={[colors.primary]}
+            tintColor={colors.primary}
           />
         }
       >
         {/* ── Header ── */}
         <View style={styles.header}>
-          <Text style={styles.eyebrow}>ACADEMISHARE</Text>
+          <Text style={styles.eyebrow}>ACADEMICSHARE</Text>
           <Text style={styles.pageTitle}>Trang chủ</Text>
           <Text style={styles.pageSubtitle}>
             Theo dõi tài liệu mới và truy cập nhanh thư viện cá nhân
@@ -163,7 +167,7 @@ export const UserHomeScreen = () => {
         {/* ── Recent Documents ── */}
         {renderDocumentSection(
           "Tài liệu gần đây",
-          <Clock size={18} color="#6366f1" />,
+          <Clock size={18} color={colors.primary} />,
           recent.documents,
           recent.isLoading,
           recent.error,
@@ -175,7 +179,7 @@ export const UserHomeScreen = () => {
         {/* ── My Documents ── */}
         {renderDocumentSection(
           "Thư viện của tôi",
-          <BookOpen size={18} color="#10b981" />,
+          <BookOpen size={18} color={colors.success} />,
           mine.documents.slice(0, 4),
           mine.isLoading,
           mine.error,
@@ -185,22 +189,15 @@ export const UserHomeScreen = () => {
         )}
       </ScrollView>
 
-      {/* ── Floating Upload Button ── */}
-      <TouchableOpacity
-        style={styles.fab}
-        onPress={() => router.push("/(student-tabs)/upload" as any)}
-        activeOpacity={0.8}
-      >
-        <Plus size={22} color="#ffffff" />
-      </TouchableOpacity>
-    </SafeAreaView>
+
+    </ScreenSafeAreaView>
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: AppThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f8fafc",
+    backgroundColor: colors.background,
   },
   scrollContent: {
     paddingBottom: 100,
@@ -208,34 +205,26 @@ const styles = StyleSheet.create({
 
   /* ── Header ── */
   header: {
-    paddingHorizontal: 20,
-    paddingTop: 24,
+    paddingHorizontal: 24,
+    paddingTop: SCREEN_HEADER_TOP_PADDING,
     paddingBottom: 20,
-    backgroundColor: "#ffffff",
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
-    shadowColor: "#0f172a",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.03,
-    shadowRadius: 8,
-    elevation: 2,
   },
   eyebrow: {
     fontSize: 12,
     fontWeight: "700",
-    color: "#6366f1",
+    color: colors.primary,
     letterSpacing: 0.5,
   },
   pageTitle: {
-    fontSize: 26,
+    fontSize: 28,
     fontWeight: "800",
-    color: "#0f172a",
+    color: colors.text,
     letterSpacing: -0.5,
     marginTop: 4,
   },
   pageSubtitle: {
     fontSize: 13,
-    color: "#94a3b8",
+    color: colors.textSubtle,
     lineHeight: 18,
     marginTop: 4,
   },
@@ -244,7 +233,7 @@ const styles = StyleSheet.create({
   quickActionsRow: {
     flexDirection: "row",
     gap: 10,
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
     paddingTop: 20,
     paddingBottom: 6,
   },
@@ -252,11 +241,11 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     paddingVertical: 16,
-    backgroundColor: "#ffffff",
+    backgroundColor: colors.surface,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: "#f1f5f9",
-    shadowColor: "#0f172a",
+    borderColor: colors.border,
+    shadowColor: colors.shadow,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.03,
     shadowRadius: 6,
@@ -273,12 +262,12 @@ const styles = StyleSheet.create({
   quickActionLabel: {
     fontSize: 12,
     fontWeight: "600",
-    color: "#64748b",
+    color: colors.textSubtle,
   },
 
   /* ── Sections ── */
   section: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
     marginTop: 20,
   },
   sectionHeader: {
@@ -295,7 +284,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 17,
     fontWeight: "700",
-    color: "#0f172a",
+    color: colors.text,
   },
   seeAllBtn: {
     flexDirection: "row",
@@ -305,7 +294,7 @@ const styles = StyleSheet.create({
   seeAllText: {
     fontSize: 13,
     fontWeight: "600",
-    color: "#6366f1",
+    color: colors.primary,
   },
 
   /* ── Document List ── */
@@ -319,44 +308,28 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingVertical: 32,
     paddingHorizontal: 20,
-    backgroundColor: "#ffffff",
+    backgroundColor: colors.surface,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: "#f1f5f9",
+    borderColor: colors.border,
     gap: 10,
   },
   stateText: {
     fontSize: 14,
-    color: "#94a3b8",
+    color: colors.textSubtle,
     textAlign: "center",
   },
   retryBtn: {
     paddingHorizontal: 16,
     paddingVertical: 8,
-    backgroundColor: "#f1f5f9",
+    backgroundColor: colors.surfaceMuted,
     borderRadius: 10,
   },
   retryBtnText: {
     fontSize: 13,
     fontWeight: "600",
-    color: "#0f172a",
+    color: colors.text,
   },
 
-  /* ── FAB ── */
-  fab: {
-    position: "absolute",
-    right: 20,
-    bottom: 90,
-    width: 52,
-    height: 52,
-    borderRadius: 16,
-    backgroundColor: "#6366f1",
-    alignItems: "center",
-    justifyContent: "center",
-    shadowColor: "#6366f1",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
-  },
+
 });

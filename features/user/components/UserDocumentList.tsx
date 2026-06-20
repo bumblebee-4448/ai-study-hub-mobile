@@ -8,6 +8,7 @@ import {
 } from "react-native";
 import { FileText, RefreshCcw } from "lucide-react-native";
 
+import { useAppTheme } from "@/features/theme";
 import type { UserDocument } from "../types";
 
 interface UserDocumentListProps {
@@ -27,22 +28,41 @@ export const UserDocumentList: React.FC<UserDocumentListProps> = ({
   onRetry,
   onDocumentPress,
 }) => {
+  const { colors } = useAppTheme();
+
   if (isLoading) {
     return (
-      <View style={styles.stateBox}>
-        <ActivityIndicator size="small" color="#0f172a" />
-        <Text style={styles.stateText}>Đang tải tài liệu...</Text>
+      <View
+        style={[
+          styles.stateBox,
+          { backgroundColor: colors.surface, borderColor: colors.border },
+        ]}
+      >
+        <ActivityIndicator size="small" color={colors.primary} />
+        <Text style={[styles.stateText, { color: colors.textSubtle }]}>
+          Đang tải tài liệu...
+        </Text>
       </View>
     );
   }
 
   if (error) {
     return (
-      <View style={styles.stateBox}>
-        <Text style={styles.stateText}>{error}</Text>
-        <TouchableOpacity style={styles.retryButton} onPress={onRetry}>
-          <RefreshCcw size={16} color="#0f172a" />
-          <Text style={styles.retryText}>Thử lại</Text>
+      <View
+        style={[
+          styles.stateBox,
+          { backgroundColor: colors.surface, borderColor: colors.border },
+        ]}
+      >
+        <Text style={[styles.stateText, { color: colors.textSubtle }]}>
+          {error}
+        </Text>
+        <TouchableOpacity
+          style={[styles.retryButton, { backgroundColor: colors.surfaceMuted }]}
+          onPress={onRetry}
+        >
+          <RefreshCcw size={16} color={colors.text} />
+          <Text style={[styles.retryText, { color: colors.text }]}>Thử lại</Text>
         </TouchableOpacity>
       </View>
     );
@@ -50,8 +70,15 @@ export const UserDocumentList: React.FC<UserDocumentListProps> = ({
 
   if (documents.length === 0) {
     return (
-      <View style={styles.stateBox}>
-        <Text style={styles.stateText}>{emptyText}</Text>
+      <View
+        style={[
+          styles.stateBox,
+          { backgroundColor: colors.surface, borderColor: colors.border },
+        ]}
+      >
+        <Text style={[styles.stateText, { color: colors.textSubtle }]}>
+          {emptyText}
+        </Text>
       </View>
     );
   }
@@ -61,28 +88,33 @@ export const UserDocumentList: React.FC<UserDocumentListProps> = ({
       {documents.map((document) => (
         <TouchableOpacity
           key={document.id}
-          style={styles.item}
+          style={[
+            styles.item,
+            { backgroundColor: colors.surface, borderColor: colors.border },
+          ]}
           onPress={() => onDocumentPress?.(document.id)}
           activeOpacity={0.75}
         >
-          <View style={styles.iconBox}>
-            <FileText size={20} color="#0f172a" />
+          <View style={[styles.iconBox, { backgroundColor: colors.surfaceMuted }]}>
+            <FileText size={20} color={colors.text} />
           </View>
           <View style={styles.itemContent}>
-            <Text style={styles.itemTitle} numberOfLines={2}>
+            <Text style={[styles.itemTitle, { color: colors.text }]} numberOfLines={2}>
               {document.title}
             </Text>
-            <Text style={styles.itemMeta} numberOfLines={1}>
+            <Text style={[styles.itemMeta, { color: colors.textSubtle }]} numberOfLines={1}>
               {document.subjectLabel} • {document.authorLabel}
             </Text>
-            <Text style={styles.itemSubMeta} numberOfLines={1}>
+            <Text style={[styles.itemSubMeta, { color: colors.textSubtle }]} numberOfLines={1}>
               {document.formatLabel}
               {document.sizeLabel ? ` • ${document.sizeLabel}` : ""} •{" "}
               {document.createdAtLabel}
             </Text>
           </View>
-          <View style={styles.statusBadge}>
-            <Text style={styles.statusText}>{document.statusLabel}</Text>
+          <View style={[styles.statusBadge, { backgroundColor: colors.surfaceSubtle }]}>
+            <Text style={[styles.statusText, { color: colors.textMuted }]}>
+              {document.statusLabel}
+            </Text>
           </View>
         </TouchableOpacity>
       ))}
@@ -98,10 +130,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     padding: 14,
-    backgroundColor: "#fff",
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: "#e2e8f0",
   },
   iconBox: {
     width: 42,
@@ -109,7 +139,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#f8fafc",
     marginRight: 12,
   },
   itemContent: {
@@ -119,19 +148,15 @@ const styles = StyleSheet.create({
   itemTitle: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#0f172a",
   },
   itemMeta: {
     fontSize: 12,
-    color: "#64748b",
   },
   itemSubMeta: {
     fontSize: 11,
-    color: "#94a3b8",
   },
   statusBadge: {
     alignSelf: "flex-start",
-    backgroundColor: "#f1f5f9",
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 8,
@@ -140,22 +165,18 @@ const styles = StyleSheet.create({
   statusText: {
     fontSize: 10,
     fontWeight: "800",
-    color: "#334155",
   },
   stateBox: {
     minHeight: 140,
     alignItems: "center",
     justifyContent: "center",
     padding: 20,
-    backgroundColor: "#fff",
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: "#e2e8f0",
     gap: 12,
   },
   stateText: {
     fontSize: 14,
-    color: "#64748b",
     textAlign: "center",
   },
   retryButton: {
@@ -165,11 +186,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 10,
-    backgroundColor: "#f8fafc",
   },
   retryText: {
     fontSize: 13,
     fontWeight: "700",
-    color: "#0f172a",
   },
 });

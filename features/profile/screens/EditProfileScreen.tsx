@@ -1,12 +1,11 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Camera, ChevronLeft, Link, Save, User } from "lucide-react-native";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
   ActivityIndicator,
   Alert,
   Image,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
@@ -15,6 +14,9 @@ import {
   View,
 } from "react-native";
 
+import { ScreenSafeAreaView } from "@/components/screen-safe-area-view";
+import { SCREEN_CONTENT_TOP_PADDING } from "@/constants/safeArea";
+import { useAppTheme, type AppThemeColors } from "@/features/theme";
 import {
   EditProfileFormSchema,
   EditProfileFormType,
@@ -32,6 +34,8 @@ export const EditProfileScreen: React.FC<EditProfileScreenProps> = ({
   onSaved,
 }) => {
   const { profile, isLoading, saveProfile } = useProfile();
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [isSaving, setIsSaving] = useState(false);
 
   const {
@@ -79,17 +83,17 @@ export const EditProfileScreen: React.FC<EditProfileScreenProps> = ({
 
   if (isLoading && !profile) {
     return (
-      <SafeAreaView style={styles.container}>
+      <ScreenSafeAreaView style={styles.container}>
         <View style={styles.stateBox}>
-          <ActivityIndicator size="small" color="#004ac6" />
+          <ActivityIndicator size="small" color={colors.primary} />
           <Text style={styles.stateText}>Đang tải hồ sơ...</Text>
         </View>
-      </SafeAreaView>
+      </ScreenSafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <ScreenSafeAreaView style={styles.container}>
       <ScrollView
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
@@ -97,7 +101,7 @@ export const EditProfileScreen: React.FC<EditProfileScreenProps> = ({
       >
         <View style={styles.header}>
           <TouchableOpacity onPress={onBack} style={styles.backButton}>
-            <ChevronLeft size={24} color="#0f172a" />
+            <ChevronLeft size={24} color={colors.text} />
           </TouchableOpacity>
           <View style={styles.headerText}>
             <Text style={styles.eyebrow}>Cài đặt tài khoản</Text>
@@ -115,10 +119,10 @@ export const EditProfileScreen: React.FC<EditProfileScreenProps> = ({
                 style={styles.avatarImage}
               />
             ) : (
-              <User size={38} color="#004ac6" />
+              <User size={38} color={colors.primary} />
             )}
             <View style={styles.cameraIcon}>
-              <Camera size={18} color="#fff" />
+              <Camera size={18} color={colors.onPrimary} />
             </View>
           </View>
           <Text style={styles.avatarHint}>Dán liên kết ảnh đại diện bên dưới.</Text>
@@ -132,14 +136,14 @@ export const EditProfileScreen: React.FC<EditProfileScreenProps> = ({
               name="name"
               render={({ field: { onBlur, onChange, value } }) => (
                 <View style={styles.inputShell}>
-                  <User size={18} color="#64748b" />
+                  <User size={18} color={colors.icon} />
                   <TextInput
                     style={styles.input}
                     value={value}
                     onBlur={onBlur}
                     onChangeText={onChange}
                     placeholder="VD: Nguyễn Văn A"
-                    placeholderTextColor="#94a3b8"
+                    placeholderTextColor={colors.textSubtle}
                     editable={!isSaving}
                   />
                 </View>
@@ -157,14 +161,14 @@ export const EditProfileScreen: React.FC<EditProfileScreenProps> = ({
               name="avatarUrl"
               render={({ field: { onBlur, onChange, value } }) => (
                 <View style={styles.inputShell}>
-                  <Link size={18} color="#64748b" />
+                  <Link size={18} color={colors.icon} />
                   <TextInput
                     style={styles.input}
                     value={value}
                     onBlur={onBlur}
                     onChangeText={onChange}
                     placeholder="https://example.com/avatar.png"
-                    placeholderTextColor="#94a3b8"
+                    placeholderTextColor={colors.textSubtle}
                     editable={!isSaving}
                     autoCapitalize="none"
                     keyboardType="url"
@@ -184,28 +188,28 @@ export const EditProfileScreen: React.FC<EditProfileScreenProps> = ({
             activeOpacity={0.82}
           >
             {isSaving ? (
-              <ActivityIndicator color="#fff" />
+              <ActivityIndicator color={colors.onPrimary} />
             ) : (
               <>
-                <Save size={20} color="#fff" />
+                <Save size={20} color={colors.onPrimary} />
                 <Text style={styles.saveButtonText}>Lưu thay đổi</Text>
               </>
             )}
           </TouchableOpacity>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </ScreenSafeAreaView>
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: AppThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: colors.background,
   },
   content: {
     paddingHorizontal: 24,
-    paddingTop: 28,
+    paddingTop: SCREEN_CONTENT_TOP_PADDING,
     paddingBottom: 80,
   },
   header: {
@@ -218,7 +222,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 8,
-    backgroundColor: "#f8fafc",
+    backgroundColor: colors.surfaceMuted,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -228,13 +232,13 @@ const styles = StyleSheet.create({
   },
   eyebrow: {
     fontSize: 13,
-    color: "#64748b",
+    color: colors.textSubtle,
   },
   title: {
     marginTop: 2,
     fontSize: 24,
     fontWeight: "800",
-    color: "#0f172a",
+    color: colors.text,
   },
   avatarPreview: {
     alignItems: "center",
@@ -246,9 +250,9 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#eff6ff",
+    backgroundColor: colors.primaryMuted,
     borderWidth: 1,
-    borderColor: "#dbeafe",
+    borderColor: colors.border,
   },
   avatarImage: {
     width: "100%",
@@ -264,14 +268,14 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#004ac6",
+    backgroundColor: colors.primary,
     borderWidth: 2,
-    borderColor: "#fff",
+    borderColor: colors.surface,
   },
   avatarHint: {
     marginTop: 12,
     fontSize: 13,
-    color: "#64748b",
+    color: colors.textSubtle,
   },
   form: {
     gap: 18,
@@ -282,29 +286,29 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: "800",
-    color: "#0f172a",
+    color: colors.text,
   },
   inputShell: {
     height: 52,
     borderWidth: 1,
-    borderColor: "#cbd5e1",
+    borderColor: colors.borderStrong,
     borderRadius: 8,
     paddingHorizontal: 13,
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
   },
   input: {
     flex: 1,
     minWidth: 0,
     fontSize: 15,
-    color: "#0f172a",
+    color: colors.text,
   },
   errorText: {
     fontSize: 13,
     lineHeight: 18,
-    color: "#dc2626",
+    color: colors.danger,
   },
   saveButton: {
     height: 52,
@@ -314,7 +318,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 10,
-    backgroundColor: "#004ac6",
+    backgroundColor: colors.primary,
   },
   saveButtonDisabled: {
     opacity: 0.7,
@@ -322,7 +326,7 @@ const styles = StyleSheet.create({
   saveButtonText: {
     fontSize: 15,
     fontWeight: "800",
-    color: "#fff",
+    color: colors.onPrimary,
   },
   stateBox: {
     flex: 1,
@@ -332,6 +336,6 @@ const styles = StyleSheet.create({
   },
   stateText: {
     fontSize: 14,
-    color: "#64748b",
+    color: colors.textSubtle,
   },
 });

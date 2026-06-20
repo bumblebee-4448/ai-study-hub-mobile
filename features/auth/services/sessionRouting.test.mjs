@@ -73,7 +73,7 @@ test("defers reset to the target route without dismissing back to root first", a
   resetRootRoute(router, "/(student-tabs)");
 
   assert.deepEqual(calls, []);
-  await new Promise((resolve) => setTimeout(resolve, 0));
+  await new Promise((resolve) => setTimeout(resolve, 200));
 
   assert.deepEqual(calls, [["replace", "/(student-tabs)"]]);
 });

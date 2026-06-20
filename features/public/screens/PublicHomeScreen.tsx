@@ -1,7 +1,6 @@
 import { usePathname, useRouter } from "expo-router";
 import React, { useEffect, useMemo, useRef } from "react";
 import {
-  SafeAreaView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -9,13 +8,15 @@ import {
 } from "react-native";
 import { BookOpen, LogIn, Search, Upload } from "lucide-react-native";
 
-import { COLORS, SPACING, TYPOGRAPHY } from "@/constants/theme";
+import { ScreenSafeAreaView } from "@/components/screen-safe-area-view";
+import { SPACING, TYPOGRAPHY } from "@/constants/theme";
 import { useAuthStore } from "@/features/auth";
 import {
   getPublicRootRedirectHref,
   type RootRouteHref,
 } from "@/features/auth/services/sessionRouting";
 import { useRootRouteReset } from "@/features/auth/hooks/useRootRouteReset";
+import { useAppTheme, type AppThemeColors } from "@/features/theme";
 
 export const PublicHomeScreen = () => {
   const router = useRouter();
@@ -23,6 +24,9 @@ export const PublicHomeScreen = () => {
   const { accessToken, role, _hasHydrated } = useAuthStore();
   const resetToRootRoute = useRootRouteReset();
   const lastRedirectTargetRef = useRef<RootRouteHref | null>(null);
+
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   const redirectTarget = useMemo<RootRouteHref | null>(() => {
     if (!_hasHydrated) {
@@ -46,14 +50,14 @@ export const PublicHomeScreen = () => {
   }, [redirectTarget, resetToRootRoute]);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <ScreenSafeAreaView style={styles.container}>
       <View style={styles.content}>
         <View style={styles.brandMark}>
-          <BookOpen size={34} color={COLORS.primary} />
+          <BookOpen size={34} color={colors.primary} />
         </View>
 
         <View style={styles.copyBlock}>
-          <Text style={styles.title}>AcademiShare</Text>
+          <Text style={styles.title}>AcademicShare</Text>
           <Text style={styles.subtitle}>
             Không gian chia sẻ tài liệu học tập, tìm kiếm học liệu và đóng góp
             tri thức cho cộng đồng sinh viên.
@@ -62,11 +66,11 @@ export const PublicHomeScreen = () => {
 
         <View style={styles.featureList}>
           <View style={styles.featureRow}>
-            <Search size={18} color={COLORS.primary} />
+            <Search size={18} color={colors.primary} />
             <Text style={styles.featureText}>Khám phá tài liệu theo môn học</Text>
           </View>
           <View style={styles.featureRow}>
-            <Upload size={18} color={COLORS.primary} />
+            <Upload size={18} color={colors.primary} />
             <Text style={styles.featureText}>Quản lý tài liệu cá nhân</Text>
           </View>
         </View>
@@ -76,18 +80,18 @@ export const PublicHomeScreen = () => {
           onPress={() => router.push("/login")}
           activeOpacity={0.85}
         >
-          <LogIn size={20} color={COLORS["on-primary"]} />
+          <LogIn size={20} color={colors.onPrimary} />
           <Text style={styles.loginButtonText}>Đăng nhập</Text>
         </TouchableOpacity>
       </View>
-    </SafeAreaView>
+    </ScreenSafeAreaView>
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: AppThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: colors.background,
   },
   content: {
     flex: 1,
@@ -101,19 +105,19 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: COLORS["primary-container"],
+    backgroundColor: colors.primaryMuted,
   },
   copyBlock: {
     gap: SPACING.md,
   },
   title: {
     ...TYPOGRAPHY["headline-lg-mobile"],
-    color: COLORS.primary,
+    color: colors.primary,
     fontWeight: "800",
   },
   subtitle: {
     ...TYPOGRAPHY["body-lg"],
-    color: COLORS["on-surface-variant"],
+    color: colors.textMuted,
     lineHeight: 26,
   },
   featureList: {
@@ -126,20 +130,20 @@ const styles = StyleSheet.create({
   },
   featureText: {
     ...TYPOGRAPHY["body-md"],
-    color: COLORS["on-surface"],
+    color: colors.text,
   },
   loginButton: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: SPACING.base,
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
     borderRadius: 14,
     paddingVertical: SPACING.md,
   },
   loginButtonText: {
     ...TYPOGRAPHY["label-md"],
-    color: COLORS["on-primary"],
+    color: colors.onPrimary,
     fontWeight: "700",
   },
 });

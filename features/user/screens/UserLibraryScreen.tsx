@@ -9,7 +9,6 @@ import {
   ActivityIndicator,
   FlatList,
   RefreshControl,
-  SafeAreaView,
   StyleSheet,
   Text,
   TextInput,
@@ -17,16 +16,23 @@ import {
   View,
 } from "react-native";
 
+import { ScreenSafeAreaView } from "@/components/screen-safe-area-view";
+import { SCREEN_HEADER_TOP_PADDING } from "@/constants/safeArea";
 import { MyDocumentItem } from "../components/MyDocumentItem";
 import { useLibraryDocuments } from "../hooks/useUserDocuments";
 import { fetchUserSubjects } from "../services/userSubjectService";
+import { useAppTheme, type AppThemeColors } from "@/features/theme";
 import type { BackendSubject, UserDocument } from "../types";
 
-const subjectLabel = (subject: BackendSubject) =>
-  subject.code ? `${subject.name} (${subject.code})` : subject.name;
+const subjectLabel = (subject?: BackendSubject) => {
+  if (!subject) return "";
+  return subject.code ? `${subject.name} (${subject.code})` : subject.name;
+};
 
 export const UserLibraryScreen = () => {
   const router = useRouter();
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [subjects, setSubjects] = useState<BackendSubject[]>([]);
   const [selectedSubjectId, setSelectedSubjectId] = useState("");
   const [isLoadingSubjects, setIsLoadingSubjects] = useState(true);
@@ -39,7 +45,7 @@ export const UserLibraryScreen = () => {
     setSubjectsError(null);
     try {
       const result = await fetchUserSubjects();
-      setSubjects(result.subjects);
+      setSubjects(result?.subjects || []);
     } catch {
       setSubjectsError("Không thể tải danh sách môn học.");
     } finally {
@@ -53,17 +59,18 @@ export const UserLibraryScreen = () => {
 
   /* ────────── Filtered documents ────────── */
   const filteredDocuments = useMemo(() => {
-    if (!searchQuery.trim()) return library.documents;
+    const docs = library.documents || [];
+    if (!searchQuery.trim()) return docs;
     const query = searchQuery.toLowerCase().trim();
-    return library.documents.filter(
+    return docs.filter(
       (d) =>
-        d.title.toLowerCase().includes(query) ||
-        d.subjectLabel.toLowerCase().includes(query)
+        d?.title?.toLowerCase()?.includes(query) ||
+        d?.subjectLabel?.toLowerCase()?.includes(query)
     );
   }, [library.documents, searchQuery]);
 
   const selectedSubject = useMemo(
-    () => subjects.find((s) => s.id === selectedSubjectId),
+    () => (subjects || []).find((s) => s && s.id === selectedSubjectId),
     [selectedSubjectId, subjects]
   );
 
@@ -76,7 +83,7 @@ export const UserLibraryScreen = () => {
     <View style={styles.listHeaderWrapper}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.eyebrow}>ACADEMISHARE</Text>
+        <Text style={styles.eyebrow}>ACADEMICSHARE</Text>
         <Text style={styles.pageTitle}>Thư viện</Text>
         <Text style={styles.pageSubtitle}>
           Khám phá tài liệu đang có trên hệ thống
@@ -85,11 +92,11 @@ export const UserLibraryScreen = () => {
 
       {/* Search */}
       <View style={styles.searchContainer}>
-        <Search size={18} color="#94a3b8" />
+        <Search size={18} color={colors.icon} />
         <TextInput
           style={styles.searchInput}
           placeholder="Tìm kiếm tài liệu..."
-          placeholderTextColor="#94a3b8"
+          placeholderTextColor={colors.textSubtle}
           value={searchQuery}
           onChangeText={setSearchQuery}
           returnKeyType="search"
@@ -100,7 +107,7 @@ export const UserLibraryScreen = () => {
       <View style={styles.filterSection}>
         {isLoadingSubjects ? (
           <View style={styles.filterLoadingRow}>
-            <ActivityIndicator size="small" color="#6366f1" />
+            <ActivityIndicator size="small" color={colors.primary} />
             <Text style={styles.filterLoadingText}>Đang tải môn học...</Text>
           </View>
         ) : subjectsError ? (
@@ -110,7 +117,7 @@ export const UserLibraryScreen = () => {
               style={styles.filterRetryBtn}
               onPress={loadSubjects}
             >
-              <RefreshCw size={14} color="#6366f1" />
+              <RefreshCw size={14} color={colors.primary} />
               <Text style={styles.filterRetryText}>Tải lại</Text>
             </TouchableOpacity>
           </View>
@@ -134,7 +141,8 @@ export const UserLibraryScreen = () => {
               </Text>
             </TouchableOpacity>
 
-            {subjects.map((subject) => {
+            {(subjects || []).map((subject) => {
+              if (!subject || !subject.id) return null;
               const isActive = subject.id === selectedSubjectId;
               return (
                 <TouchableOpacity
@@ -177,7 +185,7 @@ export const UserLibraryScreen = () => {
     if (library.isLoading) {
       return (
         <View style={styles.emptyState}>
-          <ActivityIndicator size="large" color="#6366f1" />
+          <ActivityIndicator size="large" color={colors.primary} />
           <Text style={styles.emptyText}>Đang tải tài liệu...</Text>
         </View>
       );
@@ -211,7 +219,7 @@ export const UserLibraryScreen = () => {
     return (
       <View style={styles.emptyState}>
         <View style={styles.emptyIconContainer}>
-          <BookOpen size={36} color="#6366f1" />
+          <BookOpen size={36} color={colors.primary} />
         </View>
         <Text style={styles.emptyTitle}>
           {selectedSubject
@@ -226,7 +234,7 @@ export const UserLibraryScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <ScreenSafeAreaView style={styles.container}>
       <FlatList
         data={filteredDocuments}
         keyExtractor={(item) => item.id}
@@ -246,20 +254,20 @@ export const UserLibraryScreen = () => {
           <RefreshControl
             refreshing={library.isLoading}
             onRefresh={library.refresh}
-            colors={["#6366f1"]}
-            tintColor="#6366f1"
+            colors={[colors.primary]}
+            tintColor={colors.primary}
           />
         }
         ItemSeparatorComponent={() => <View style={styles.separator} />}
       />
-    </SafeAreaView>
+    </ScreenSafeAreaView>
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: AppThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f8fafc",
+    backgroundColor: colors.background,
   },
   listContent: {
     paddingBottom: 100,
@@ -271,34 +279,26 @@ const styles = StyleSheet.create({
 
   /* ── Header ── */
   header: {
-    paddingHorizontal: 20,
-    paddingTop: 24,
+    paddingHorizontal: 24,
+    paddingTop: SCREEN_HEADER_TOP_PADDING,
     paddingBottom: 20,
-    backgroundColor: "#ffffff",
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
-    shadowColor: "#0f172a",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.03,
-    shadowRadius: 8,
-    elevation: 2,
   },
   eyebrow: {
     fontSize: 12,
     fontWeight: "700",
-    color: "#6366f1",
+    color: colors.primary,
     letterSpacing: 0.5,
   },
   pageTitle: {
-    fontSize: 26,
+    fontSize: 28,
     fontWeight: "800",
-    color: "#0f172a",
+    color: colors.text,
     letterSpacing: -0.5,
     marginTop: 4,
   },
   pageSubtitle: {
     fontSize: 13,
-    color: "#94a3b8",
+    color: colors.textSubtle,
     lineHeight: 18,
     marginTop: 4,
   },
@@ -307,16 +307,16 @@ const styles = StyleSheet.create({
   searchContainer: {
     flexDirection: "row",
     alignItems: "center",
-    marginHorizontal: 20,
+    marginHorizontal: 24,
     marginTop: 16,
     paddingHorizontal: 14,
     height: 44,
-    backgroundColor: "#ffffff",
+    backgroundColor: colors.surface,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#f1f5f9",
+    borderColor: colors.border,
     gap: 10,
-    shadowColor: "#0f172a",
+    shadowColor: colors.shadow,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.02,
     shadowRadius: 4,
@@ -325,13 +325,13 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 14,
-    color: "#0f172a",
+    color: colors.text,
     height: 44,
   },
 
   /* ── Filters ── */
   filterSection: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
     marginTop: 14,
   },
   filterRow: {
@@ -343,21 +343,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: "#ffffff",
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: "#e2e8f0",
+    borderColor: colors.border,
   },
   filterTabActive: {
-    backgroundColor: "#6366f1",
-    borderColor: "#6366f1",
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   filterTabText: {
     fontSize: 13,
     fontWeight: "600",
-    color: "#64748b",
+    color: colors.textSubtle,
   },
   filterTabTextActive: {
-    color: "#ffffff",
+    color: colors.onPrimary,
   },
   filterLoadingRow: {
     flexDirection: "row",
@@ -367,7 +367,7 @@ const styles = StyleSheet.create({
   },
   filterLoadingText: {
     fontSize: 13,
-    color: "#94a3b8",
+    color: colors.textSubtle,
   },
   filterErrorRow: {
     flexDirection: "row",
@@ -378,7 +378,7 @@ const styles = StyleSheet.create({
   filterErrorText: {
     flex: 1,
     fontSize: 13,
-    color: "#dc2626",
+    color: colors.danger,
   },
   filterRetryBtn: {
     flexDirection: "row",
@@ -389,24 +389,24 @@ const styles = StyleSheet.create({
   filterRetryText: {
     fontSize: 13,
     fontWeight: "700",
-    color: "#6366f1",
+    color: colors.primary,
   },
 
   /* ── Results Header ── */
   resultsHeader: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
     paddingTop: 16,
     paddingBottom: 8,
   },
   resultsCount: {
     fontSize: 13,
     fontWeight: "600",
-    color: "#94a3b8",
+    color: colors.textSubtle,
   },
 
   /* ── Cards ── */
   cardWrapper: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
   },
   separator: {
     height: 10,
@@ -424,7 +424,7 @@ const styles = StyleSheet.create({
     width: 72,
     height: 72,
     borderRadius: 20,
-    backgroundColor: "#eef2ff",
+    backgroundColor: colors.primaryMuted,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 8,
@@ -436,12 +436,12 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 17,
     fontWeight: "700",
-    color: "#0f172a",
+    color: colors.text,
     textAlign: "center",
   },
   emptyText: {
     fontSize: 14,
-    color: "#94a3b8",
+    color: colors.textSubtle,
     textAlign: "center",
     lineHeight: 20,
   },
@@ -449,12 +449,12 @@ const styles = StyleSheet.create({
     marginTop: 8,
     paddingHorizontal: 20,
     paddingVertical: 10,
-    backgroundColor: "#f1f5f9",
+    backgroundColor: colors.surfaceMuted,
     borderRadius: 10,
   },
   retryBtnText: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#0f172a",
+    color: colors.text,
   },
 });

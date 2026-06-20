@@ -154,7 +154,7 @@ export const DocumentDetailScreen: React.FC<DocumentDetailScreenProps> = ({
   const handleShare = useCallback(async () => {
     try {
       await Share.share({
-        message: `${doc.title} — AcademiShare`,
+        message: `${doc.title} — AcademicShare`,
         title: doc.title,
       });
     } catch {

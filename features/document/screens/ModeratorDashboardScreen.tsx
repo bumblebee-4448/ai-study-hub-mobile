@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import {
   ScrollView,
   View,
@@ -15,16 +15,19 @@ import { useAuthStore } from "@/features/auth/store/authStore";
 import { useProfileStore } from "@/features/profile/store/profileStore";
 import { ChevronRight, Clock, CheckCircle } from "lucide-react-native";
 import { useModeratorDashboard } from "../hooks";
+import { useAppTheme, type AppThemeColors } from "@/features/theme";
 
 export const ModeratorDashboardScreen = () => {
   const router = useRouter();
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const { profile } = useProfileStore();
   const { summary, isLoading, error, refresh } = useModeratorDashboard();
 
   if (isLoading) {
     return (
       <SafeAreaView style={[styles.container, styles.center]}>
-        <ActivityIndicator size="large" color="#3b82f6" />
+        <ActivityIndicator size="large" color={colors.primary} />
         <Text style={styles.loadingText}>Đang tải thông tin bảng điều khiển...</Text>
       </SafeAreaView>
     );
@@ -87,7 +90,7 @@ export const ModeratorDashboardScreen = () => {
             title="Tài liệu đã duyệt"
             value={summary?.activeCount.toString() || "0"}
             progress={0.8}
-            color="#10b981"
+            color={colors.success}
             onPress={() =>
               router.push({
                 pathname: "/(moderator-tabs)/review",
@@ -99,7 +102,7 @@ export const ModeratorDashboardScreen = () => {
             title="Tài liệu bị từ chối"
             value={summary?.rejectedCount.toString() || "0"}
             progress={0.2}
-            color="#f43f5e"
+            color={colors.danger}
             onPress={() =>
               router.push({
                 pathname: "/(moderator-tabs)/review",
@@ -128,7 +131,7 @@ export const ModeratorDashboardScreen = () => {
           <View style={styles.reviewList}>
             {!summary || summary.recentDocuments.length === 0 ? (
               <View style={styles.emptyState}>
-                <CheckCircle size={36} color="#10b981" />
+                <CheckCircle size={36} color={colors.success} />
                 <Text style={styles.emptyText}>
                   Hộp thư sạch! Không có tài liệu nào chờ duyệt.
                 </Text>
@@ -147,7 +150,7 @@ export const ModeratorDashboardScreen = () => {
                   }
                 >
                   <View style={[styles.iconBox, styles.pendingIcon]}>
-                    <Clock size={18} color="#f59e0b" />
+                    <Clock size={18} color={colors.warning} />
                   </View>
                   <View style={styles.itemInfo}>
                     <Text style={styles.itemTitle} numberOfLines={1}>
@@ -157,7 +160,7 @@ export const ModeratorDashboardScreen = () => {
                       {item.authorName} • {item.createdAtLabel}
                     </Text>
                   </View>
-                  <ChevronRight size={18} color="#cbd5e1" />
+                  <ChevronRight size={18} color={colors.textSubtle} />
                 </TouchableOpacity>
               ))
             )}
@@ -168,10 +171,10 @@ export const ModeratorDashboardScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: AppThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "white",
+    backgroundColor: colors.background,
   },
   center: {
     justifyContent: "center",
@@ -181,22 +184,22 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 12,
     fontSize: 14,
-    color: "#64748b",
+    color: colors.textSubtle,
   },
   errorText: {
     fontSize: 15,
-    color: "#ef4444",
+    color: colors.danger,
     textAlign: "center",
     marginBottom: 16,
   },
   retryButton: {
     paddingHorizontal: 20,
     paddingVertical: 10,
-    backgroundColor: "#3b82f6",
+    backgroundColor: colors.primary,
     borderRadius: 8,
   },
   retryText: {
-    color: "white",
+    color: colors.onPrimary,
     fontWeight: "bold",
   },
   header: {
@@ -209,12 +212,12 @@ const styles = StyleSheet.create({
   },
   welcomeText: {
     fontSize: 14,
-    color: "#94a3b8",
+    color: colors.textSubtle,
   },
   title: {
     fontSize: 24,
     fontWeight: "bold",
-    color: "#0f172a",
+    color: colors.text,
   },
   avatarContainer: {
     width: 44,
@@ -222,8 +225,8 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     overflow: "hidden",
     borderWidth: 2,
-    borderColor: "#f1f5f9",
-    backgroundColor: "#f8fafc",
+    borderColor: colors.border,
+    backgroundColor: colors.surfaceMuted,
   },
   avatar: {
     width: "100%",
@@ -254,11 +257,11 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: "bold",
-    color: "#0f172a",
+    color: colors.text,
   },
   seeAll: {
     fontSize: 13,
-    color: "#3b82f6",
+    color: colors.primary,
     fontWeight: "bold",
   },
   reviewList: {
@@ -267,12 +270,12 @@ const styles = StyleSheet.create({
   reviewItem: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#f8fafc",
+    backgroundColor: colors.surface,
     padding: 12,
     borderRadius: 12,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: "#f1f5f9",
+    borderColor: colors.border,
   },
   iconBox: {
     width: 40,
@@ -283,7 +286,7 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   pendingIcon: {
-    backgroundColor: "#fffbeb",
+    backgroundColor: colors.warningMuted,
   },
   itemInfo: {
     flex: 1,
@@ -291,26 +294,26 @@ const styles = StyleSheet.create({
   itemTitle: {
     fontSize: 15,
     fontWeight: "600",
-    color: "#0f172a",
+    color: colors.text,
     marginBottom: 2,
   },
   itemAuthor: {
     fontSize: 12,
-    color: '#64748b',
+    color: colors.textSubtle,
   },
   emptyState: {
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 40,
-    backgroundColor: "#f8fafc",
+    backgroundColor: colors.surface,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: "#f1f5f9",
+    borderColor: colors.border,
     gap: 12,
   },
   emptyText: {
     fontSize: 14,
-    color: "#64748b",
+    color: colors.textSubtle,
     textAlign: "center",
     paddingHorizontal: 24,
   },

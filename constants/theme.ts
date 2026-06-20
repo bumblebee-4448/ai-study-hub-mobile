@@ -1,9 +1,12 @@
 /**
  * Design System - Color Palette, Typography, Spacing
- * Material Design 3 inspired theme for AcademiShare
+ * Material Design 3 inspired theme for AcademicShare
  */
 
 import { Platform } from "react-native";
+
+import { APP_THEME_COLORS } from "@/features/theme/services/themeResolver";
+import type { AppThemeColors } from "@/features/theme/services/themeResolver";
 
 export const COLORS = {
   primary: "#004ac6",
@@ -202,37 +205,37 @@ export const Fonts = Platform.select({
 
 export const Colors = {
   light: {
-    text: COLORS["on-surface"],
-    background: COLORS.background,
-    tint: COLORS.primary,
-    icon: COLORS["on-surface-variant"],
-    tabIconDefault: COLORS["on-surface-variant"],
-    tabIconSelected: COLORS.primary,
+    text: APP_THEME_COLORS.light.text,
+    background: APP_THEME_COLORS.light.background,
+    tint: APP_THEME_COLORS.light.primary,
+    icon: APP_THEME_COLORS.light.icon,
+    tabIconDefault: APP_THEME_COLORS.light.tabInactive,
+    tabIconSelected: APP_THEME_COLORS.light.tabActive,
   },
   dark: {
-    text: "#ECEDEE",
-    background: "#151718",
-    tint: "#fff",
-    icon: "#9BA1A6",
-    tabIconDefault: "#9BA1A6",
-    tabIconSelected: "#fff",
+    text: APP_THEME_COLORS.dark.text,
+    background: APP_THEME_COLORS.dark.background,
+    tint: APP_THEME_COLORS.dark.primary,
+    icon: APP_THEME_COLORS.dark.icon,
+    tabIconDefault: APP_THEME_COLORS.dark.tabInactive,
+    tabIconSelected: APP_THEME_COLORS.dark.tabActive,
   },
 };
 
-export const COMMON_TAB_BAR_OPTIONS = {
-  tabBarActiveTintColor: theme.colors.primary,
-  tabBarInactiveTintColor: "#94a3b8",
+export const getCommonTabBarOptions = (colors: AppThemeColors) => ({
+  tabBarActiveTintColor: colors.tabActive,
+  tabBarInactiveTintColor: colors.tabInactive,
   headerShown: false,
   tabBarStyle: {
-    backgroundColor: theme.colors.cardLight,
-    borderTopColor: theme.colors.borderLight,
+    backgroundColor: colors.surface,
+    borderTopColor: colors.border,
     borderTopWidth: 1,
     height: 70,
     paddingBottom: 12,
     paddingTop: 8,
-    shadowColor: "#0f172a",
+    shadowColor: colors.shadow,
     shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.02,
+    shadowOpacity: 0.08,
     shadowRadius: 8,
     elevation: 4,
   },
@@ -241,4 +244,6 @@ export const COMMON_TAB_BAR_OPTIONS = {
     fontWeight: "600" as const,
     marginTop: 2,
   },
-};
+});
+
+export const COMMON_TAB_BAR_OPTIONS = getCommonTabBarOptions(APP_THEME_COLORS.light);

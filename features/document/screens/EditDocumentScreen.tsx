@@ -16,7 +16,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import React, { useState, useCallback } from "react";
+import React, { useMemo, useState, useCallback } from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
   ActivityIndicator,
@@ -32,7 +32,8 @@ import {
   View,
 } from "react-native";
 
-import { COLORS, SPACING, TYPOGRAPHY, BORDER_RADIUS } from "@/constants/theme";
+import { SPACING, TYPOGRAPHY, BORDER_RADIUS } from "@/constants/theme";
+import { useAppTheme, type AppThemeColors } from "@/features/theme";
 import { EditDocumentFormSchema, EditDocumentFormType } from "../schemas/documentSchema";
 import { EditDocumentParams } from "../types";
 
@@ -72,6 +73,8 @@ export const EditDocumentScreen: React.FC<EditDocumentScreenProps> = ({
   onSave,
   onDelete,
 }) => {
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [categoryModalVisible, setCategoryModalVisible] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -164,7 +167,7 @@ export const EditDocumentScreen: React.FC<EditDocumentScreenProps> = ({
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           accessibilityLabel="Quay lại"
         >
-          <Ionicons name="arrow-back" size={24} color={COLORS["on-surface-variant"]} />
+          <Ionicons name="arrow-back" size={24} color={colors.icon} />
         </TouchableOpacity>
 
         <Text style={styles.headerTitle} numberOfLines={1}>
@@ -188,7 +191,7 @@ export const EditDocumentScreen: React.FC<EditDocumentScreenProps> = ({
             <MaterialCommunityIcons
               name="file-document"
               size={28}
-              color={COLORS["on-primary-container"]}
+              color={colors.onPrimary}
             />
           </View>
           <View style={styles.previewInfo}>
@@ -215,7 +218,7 @@ export const EditDocumentScreen: React.FC<EditDocumentScreenProps> = ({
                 <TextInput
                   style={[styles.input, errors.title && styles.inputError]}
                   placeholder="Nhập tiêu đề..."
-                  placeholderTextColor={COLORS.outline}
+                  placeholderTextColor={colors.textSubtle}
                   value={value}
                   onChangeText={onChange}
                   onBlur={onBlur}
@@ -250,7 +253,7 @@ export const EditDocumentScreen: React.FC<EditDocumentScreenProps> = ({
                     <Text
                       style={[
                         styles.selectText,
-                        !value && { color: COLORS.outline },
+                        !value && { color: colors.textSubtle },
                       ]}
                     >
                       {value
@@ -260,7 +263,7 @@ export const EditDocumentScreen: React.FC<EditDocumentScreenProps> = ({
                     <Ionicons
                       name="chevron-down"
                       size={18}
-                      color={COLORS.outline}
+                      color={colors.icon}
                     />
                   </TouchableOpacity>
 
@@ -306,7 +309,7 @@ export const EditDocumentScreen: React.FC<EditDocumentScreenProps> = ({
                                 <Ionicons
                                   name="checkmark"
                                   size={18}
-                                  color={COLORS.primary}
+                                  color={colors.primary}
                                 />
                               )}
                             </TouchableOpacity>
@@ -333,7 +336,7 @@ export const EditDocumentScreen: React.FC<EditDocumentScreenProps> = ({
                 <TextInput
                   style={[styles.input, styles.textarea]}
                   placeholder="Tóm tắt ngắn gọn nội dung..."
-                  placeholderTextColor={COLORS.outline}
+                  placeholderTextColor={colors.textSubtle}
                   value={value}
                   onChangeText={onChange}
                   onBlur={onBlur}
@@ -359,7 +362,7 @@ export const EditDocumentScreen: React.FC<EditDocumentScreenProps> = ({
                 <TextInput
                   style={[styles.input, errors.tags && styles.inputError]}
                   placeholder="AI, Machine Learning, Công nghiệp 4.0"
-                  placeholderTextColor={COLORS.outline}
+                  placeholderTextColor={colors.textSubtle}
                   value={value}
                   onChangeText={onChange}
                   onBlur={onBlur}
@@ -386,13 +389,13 @@ export const EditDocumentScreen: React.FC<EditDocumentScreenProps> = ({
             accessibilityLabel="Cập nhật thay đổi"
           >
             {isSaving ? (
-              <ActivityIndicator color={COLORS["on-primary"]} size="small" />
+              <ActivityIndicator color={colors.onPrimary} size="small" />
             ) : (
               <>
                 <MaterialCommunityIcons
                   name="content-save"
                   size={20}
-                  color={COLORS["on-primary"]}
+                  color={colors.onPrimary}
                 />
                 <Text style={styles.btnSaveText}>Cập nhật thay đổi</Text>
               </>
@@ -408,13 +411,13 @@ export const EditDocumentScreen: React.FC<EditDocumentScreenProps> = ({
             accessibilityLabel="Xóa tài liệu này"
           >
             {isDeleting ? (
-              <ActivityIndicator color={COLORS.error} size="small" />
+              <ActivityIndicator color={colors.danger} size="small" />
             ) : (
               <>
                 <MaterialCommunityIcons
                   name="delete-outline"
                   size={20}
-                  color={COLORS.error}
+                  color={colors.danger}
                 />
                 <Text style={styles.btnDeleteText}>Xóa tài liệu này</Text>
               </>
@@ -431,10 +434,10 @@ export const EditDocumentScreen: React.FC<EditDocumentScreenProps> = ({
 
 // ── Styles ────────────────────────────────────────────────────────────────────
 
-const styles = StyleSheet.create({
+const createStyles = (colors: AppThemeColors) => StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: COLORS.surface,
+    backgroundColor: colors.background,
   },
 
   // ── Header ──
@@ -443,9 +446,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: SPACING["margin-mobile"],
-    backgroundColor: COLORS.surface,
+    backgroundColor: colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS["outline-variant"],
+    borderBottomColor: colors.border,
   },
   backBtn: {
     width: 40,
@@ -458,7 +461,7 @@ const styles = StyleSheet.create({
     flex: 1,
     ...TYPOGRAPHY["headline-md"],
     fontWeight: "700",
-    color: COLORS["on-surface"],
+    color: colors.text,
     textAlign: "center",
   },
   headerSpacer: {
@@ -479,16 +482,16 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 16,
     padding: 16,
-    backgroundColor: COLORS["surface-container-low"],
+    backgroundColor: colors.surface,
     borderRadius: BORDER_RADIUS.xl,
     borderWidth: 1,
-    borderColor: COLORS["outline-variant"],
+    borderColor: colors.border,
   },
   previewIconBox: {
     width: 48,
     height: 48,
     borderRadius: BORDER_RADIUS.lg,
-    backgroundColor: COLORS["primary-container"],
+    backgroundColor: colors.primary,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -498,11 +501,11 @@ const styles = StyleSheet.create({
   },
   previewName: {
     ...TYPOGRAPHY["label-md"],
-    color: COLORS["on-surface"],
+    color: colors.text,
   },
   previewMeta: {
     ...TYPOGRAPHY["label-sm"],
-    color: COLORS["on-surface-variant"],
+    color: colors.textSubtle,
     marginTop: 2,
   },
 
@@ -515,21 +518,21 @@ const styles = StyleSheet.create({
   },
   label: {
     ...TYPOGRAPHY["label-md"],
-    color: COLORS["on-surface"],
+    color: colors.text,
     marginBottom: 2,
   },
   input: {
     ...TYPOGRAPHY["body-md"],
-    color: COLORS["on-surface"],
-    backgroundColor: COLORS.surface,
+    color: colors.text,
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: COLORS["outline-variant"],
+    borderColor: colors.border,
     borderRadius: BORDER_RADIUS.lg,
     paddingHorizontal: 16,
     paddingVertical: 12,
   },
   inputError: {
-    borderColor: COLORS.error,
+    borderColor: colors.danger,
     borderWidth: 1.5,
   },
   textarea: {
@@ -538,12 +541,12 @@ const styles = StyleSheet.create({
   },
   fieldError: {
     ...TYPOGRAPHY["label-sm"],
-    color: COLORS.error,
+    color: colors.danger,
     marginTop: 2,
   },
   hint: {
     ...TYPOGRAPHY["label-sm"],
-    color: COLORS["on-surface-variant"],
+    color: colors.textSubtle,
     marginTop: 2,
   },
 
@@ -555,36 +558,36 @@ const styles = StyleSheet.create({
   },
   selectText: {
     ...TYPOGRAPHY["body-md"],
-    color: COLORS["on-surface"],
+    color: colors.text,
     flex: 1,
   },
 
   // ── Modal Picker ──
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.35)",
+    backgroundColor: colors.overlay,
     justifyContent: "center",
     alignItems: "center",
     padding: 24,
   },
   modalSheet: {
     width: "100%",
-    backgroundColor: COLORS["surface-container-lowest"],
+    backgroundColor: colors.surface,
     borderRadius: BORDER_RADIUS.xl,
     paddingVertical: 8,
     elevation: 8,
-    shadowColor: "#000",
+    shadowColor: colors.shadow,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.18,
     shadowRadius: 12,
   },
   modalTitle: {
     ...TYPOGRAPHY["label-md"],
-    color: COLORS["on-surface-variant"],
+    color: colors.textSubtle,
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS["outline-variant"],
+    borderBottomColor: colors.border,
   },
   modalOption: {
     flexDirection: "row",
@@ -594,15 +597,15 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
   },
   modalOptionActive: {
-    backgroundColor: COLORS["surface-container-low"],
+    backgroundColor: colors.surfaceMuted,
   },
   modalOptionText: {
     ...TYPOGRAPHY["body-md"],
-    color: COLORS["on-surface"],
+    color: colors.text,
     flex: 1,
   },
   modalOptionTextActive: {
-    color: COLORS.primary,
+    color: colors.primary,
     fontWeight: "600",
   },
 
@@ -616,13 +619,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
-    backgroundColor: COLORS.primary,
+    backgroundColor: colors.primary,
     borderRadius: BORDER_RADIUS.xl,
     paddingVertical: 16,
   },
   btnSaveText: {
     ...TYPOGRAPHY["label-md"],
-    color: COLORS["on-primary"],
+    color: colors.onPrimary,
   },
   btnDelete: {
     flexDirection: "row",
@@ -632,12 +635,12 @@ const styles = StyleSheet.create({
     backgroundColor: "transparent",
     borderRadius: BORDER_RADIUS.xl,
     borderWidth: 1.5,
-    borderColor: COLORS.error,
+    borderColor: colors.danger,
     paddingVertical: 16,
   },
   btnDeleteText: {
     ...TYPOGRAPHY["label-md"],
-    color: COLORS.error,
+    color: colors.danger,
   },
   btnDisabled: {
     opacity: 0.55,

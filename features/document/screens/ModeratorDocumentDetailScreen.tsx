@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
   Alert,
   Image,
@@ -24,6 +24,7 @@ import {
   X,
 } from "lucide-react-native";
 import { useModeratorDocumentDetail } from "../hooks";
+import { useAppTheme, type AppThemeColors } from "@/features/theme";
 
 interface Props {
   documentId: string;
@@ -34,6 +35,8 @@ export const ModeratorDocumentDetailScreen: React.FC<Props> = ({
   documentId,
   onBack,
 }) => {
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const {
     document: doc,
     isLoading,
@@ -107,7 +110,7 @@ export const ModeratorDocumentDetailScreen: React.FC<Props> = ({
   if (isLoading) {
     return (
       <SafeAreaView style={[styles.container, styles.center]}>
-        <ActivityIndicator size="large" color="#3b82f6" />
+        <ActivityIndicator size="large" color={colors.primary} />
         <Text style={styles.loadingText}>Đang tải chi tiết tài liệu...</Text>
       </SafeAreaView>
     );
@@ -143,7 +146,7 @@ export const ModeratorDocumentDetailScreen: React.FC<Props> = ({
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={onBack} style={styles.backButton}>
-          <ChevronLeft size={24} color="#0f172a" />
+          <ChevronLeft size={24} color={colors.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Kiểm tra nội dung</Text>
         <View style={{ width: 44 }} />
@@ -157,7 +160,7 @@ export const ModeratorDocumentDetailScreen: React.FC<Props> = ({
         {/* Document Preview */}
         <View style={styles.previewContainer}>
           <View style={styles.previewCard}>
-            <FileText size={64} color="#3b82f6" strokeWidth={1.5} />
+            <FileText size={64} color={colors.primary} strokeWidth={1.5} />
             <Text style={styles.formatText}>
               {doc.formatLabel} • {doc.sizeLabel}
             </Text>
@@ -166,7 +169,7 @@ export const ModeratorDocumentDetailScreen: React.FC<Props> = ({
                 style={styles.previewButton}
                 onPress={handleViewFile}
               >
-                <Search size={18} color="#fff" />
+                <Search size={18} color={colors.onPrimary} />
                 <Text style={styles.previewButtonText}>Xem chi tiết file</Text>
               </TouchableOpacity>
             )}
@@ -213,7 +216,7 @@ export const ModeratorDocumentDetailScreen: React.FC<Props> = ({
             <View style={styles.metaItem}>
               <Text style={styles.metaLabel}>NGÀY TẢI</Text>
               <View style={styles.metaValueRow}>
-                <Calendar size={14} color="#64748b" />
+                <Calendar size={14} color={colors.icon} />
                 <Text style={styles.metaValueText}>{doc.createdAtLabel}</Text>
               </View>
             </View>
@@ -243,7 +246,7 @@ export const ModeratorDocumentDetailScreen: React.FC<Props> = ({
             onPress={() => setRejectModalVisible(true)}
             disabled={isSubmitting}
           >
-            <XCircle size={20} color="#64748b" />
+            <XCircle size={20} color={colors.icon} />
             <Text style={styles.rejectButtonText}>Từ chối</Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -252,10 +255,10 @@ export const ModeratorDocumentDetailScreen: React.FC<Props> = ({
             disabled={isSubmitting}
           >
             {isSubmitting ? (
-              <ActivityIndicator size="small" color="#fff" />
+              <ActivityIndicator size="small" color={colors.onPrimary} />
             ) : (
               <>
-                <CheckCircle size={20} color="#fff" />
+                <CheckCircle size={20} color={colors.onPrimary} />
                 <Text style={styles.approveButtonText}>Duyệt bài</Text>
               </>
             )}
@@ -270,7 +273,7 @@ export const ModeratorDocumentDetailScreen: React.FC<Props> = ({
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Lý do từ chối</Text>
               <TouchableOpacity onPress={() => setRejectModalVisible(false)}>
-                <X size={20} color="#64748b" />
+                <X size={20} color={colors.icon} />
               </TouchableOpacity>
             </View>
             <TextInput
@@ -279,7 +282,7 @@ export const ModeratorDocumentDetailScreen: React.FC<Props> = ({
               multiline
               value={rejectReason}
               onChangeText={setRejectReason}
-              placeholderTextColor="#94a3b8"
+              placeholderTextColor={colors.textSubtle}
             />
             <View style={styles.modalFooter}>
               <TouchableOpacity
@@ -295,7 +298,7 @@ export const ModeratorDocumentDetailScreen: React.FC<Props> = ({
                 disabled={isSubmitting}
               >
                 {isSubmitting ? (
-                  <ActivityIndicator size="small" color="#fff" />
+                  <ActivityIndicator size="small" color={colors.onPrimary} />
                 ) : (
                   <Text style={styles.modalConfirmText}>Xác nhận</Text>
                 )}
@@ -308,10 +311,10 @@ export const ModeratorDocumentDetailScreen: React.FC<Props> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: AppThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: colors.background,
   },
   center: {
     justifyContent: "center",
@@ -321,30 +324,30 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 12,
     fontSize: 14,
-    color: "#64748b",
+    color: colors.textSubtle,
   },
   errorText: {
     fontSize: 15,
-    color: "#ef4444",
+    color: colors.danger,
     textAlign: "center",
     marginBottom: 16,
   },
   retryButton: {
     paddingHorizontal: 20,
     paddingVertical: 10,
-    backgroundColor: "#3b82f6",
+    backgroundColor: colors.primary,
     borderRadius: 8,
     marginBottom: 12,
   },
   retryText: {
-    color: "white",
+    color: colors.onPrimary,
     fontWeight: "bold",
   },
   backLink: {
     paddingVertical: 8,
   },
   backLinkText: {
-    color: "#64748b",
+    color: colors.textSubtle,
     fontSize: 14,
     textDecorationLine: "underline",
   },
@@ -355,20 +358,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#f1f5f9",
+    borderBottomColor: colors.border,
   },
   backButton: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: "#f8fafc",
+    backgroundColor: colors.surfaceMuted,
     alignItems: "center",
     justifyContent: "center",
   },
   headerTitle: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#0f172a",
+    color: colors.text,
   },
   scroll: {
     flex: 1,
@@ -383,30 +386,30 @@ const styles = StyleSheet.create({
   },
   previewCard: {
     height: 240,
-    backgroundColor: "#f8fafc",
+    backgroundColor: colors.surface,
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: "#f1f5f9",
+    borderColor: colors.border,
     alignItems: "center",
     justifyContent: "center",
     gap: 16,
   },
   formatText: {
     fontSize: 14,
-    color: "#64748b",
+    color: colors.textSubtle,
     fontWeight: "500",
   },
   previewButton: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    backgroundColor: "#0f172a",
+    backgroundColor: colors.primary,
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 12,
   },
   previewButtonText: {
-    color: "#fff",
+    color: colors.onPrimary,
     fontWeight: "bold",
     fontSize: 14,
   },
@@ -420,11 +423,11 @@ const styles = StyleSheet.create({
   categoryTag: {
     paddingHorizontal: 12,
     paddingVertical: 6,
-    backgroundColor: "#eff6ff",
+    backgroundColor: colors.primaryMuted,
     borderRadius: 8,
   },
   categoryTagText: {
-    color: "#3b82f6",
+    color: colors.primary,
     fontSize: 12,
     fontWeight: "700",
   },
@@ -436,21 +439,21 @@ const styles = StyleSheet.create({
   statusTagText: {
     fontSize: 12,
     fontWeight: "700",
-    color: "#334155",
+    color: colors.textMuted,
   },
   pendingTag: {
-    backgroundColor: "#fffbeb",
+    backgroundColor: colors.warningMuted,
   },
   activeTag: {
-    backgroundColor: "#f0fdf4",
+    backgroundColor: colors.successMuted,
   },
   rejectedTag: {
-    backgroundColor: "#fef2f2",
+    backgroundColor: colors.dangerMuted,
   },
   docTitle: {
     fontSize: 24,
     fontWeight: "bold",
-    color: "#0f172a",
+    color: colors.text,
     lineHeight: 32,
   },
   metaGrid: {
@@ -462,15 +465,15 @@ const styles = StyleSheet.create({
   metaItem: {
     width: "48%",
     padding: 16,
-    backgroundColor: "#f8fafc",
+    backgroundColor: colors.surface,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: "#f1f5f9",
+    borderColor: colors.border,
   },
   metaLabel: {
     fontSize: 10,
     fontWeight: "bold",
-    color: "#94a3b8",
+    color: colors.textSubtle,
     letterSpacing: 0.5,
     marginBottom: 8,
   },
@@ -483,18 +486,18 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     borderRadius: 10,
-    backgroundColor: "#cbd5e1",
+    backgroundColor: colors.surfaceSubtle,
     alignItems: "center",
     justifyContent: "center",
   },
   avatarText: {
     fontSize: 10,
     fontWeight: "bold",
-    color: "#fff",
+    color: colors.text,
   },
   metaValueText: {
     fontSize: 13,
-    color: "#334155",
+    color: colors.textMuted,
     fontWeight: "500",
     maxWidth: "80%",
   },
@@ -502,38 +505,38 @@ const styles = StyleSheet.create({
     marginTop: 8,
     paddingTop: 24,
     borderTopWidth: 1,
-    borderTopColor: "#f1f5f9",
+    borderTopColor: colors.border,
   },
   descriptionLabel: {
     fontSize: 10,
     fontWeight: "bold",
-    color: "#94a3b8",
+    color: colors.textSubtle,
     letterSpacing: 0.5,
     marginBottom: 12,
   },
   descriptionText: {
     fontSize: 15,
-    color: "#475569",
+    color: colors.textMuted,
     lineHeight: 24,
   },
   rejectionReasonContainer: {
     marginTop: 8,
     paddingTop: 24,
     borderTopWidth: 1,
-    borderTopColor: "#fef2f2",
+    borderTopColor: colors.dangerMuted,
   },
   rejectionReasonLabel: {
     fontSize: 10,
     fontWeight: "bold",
-    color: "#ef4444",
+    color: colors.danger,
     letterSpacing: 0.5,
     marginBottom: 12,
   },
   rejectionReasonText: {
     fontSize: 15,
-    color: "#ef4444",
+    color: colors.dangerText,
     lineHeight: 24,
-    backgroundColor: "#fef2f2",
+    backgroundColor: colors.dangerMuted,
     padding: 12,
     borderRadius: 8,
   },
@@ -542,8 +545,8 @@ const styles = StyleSheet.create({
     padding: 24,
     gap: 12,
     borderTopWidth: 1,
-    borderTopColor: "#f1f5f9",
-    backgroundColor: "#fff",
+    borderTopColor: colors.border,
+    backgroundColor: colors.surface,
   },
   rejectButton: {
     flex: 1,
@@ -554,11 +557,11 @@ const styles = StyleSheet.create({
     height: 56,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: "#e2e8f0",
+    borderColor: colors.border,
   },
   rejectButtonText: {
     fontWeight: "bold",
-    color: "#64748b",
+    color: colors.textSubtle,
   },
   approveButton: {
     flex: 2,
@@ -568,20 +571,20 @@ const styles = StyleSheet.create({
     gap: 8,
     height: 56,
     borderRadius: 16,
-    backgroundColor: "#0f172a",
+    backgroundColor: colors.primary,
   },
   approveButtonText: {
     fontWeight: "bold",
-    color: "#fff",
+    color: colors.onPrimary,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(15, 23, 42, 0.5)",
+    backgroundColor: colors.overlay,
     justifyContent: "center",
     padding: 24,
   },
   modalContent: {
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     borderRadius: 24,
     padding: 24,
   },
@@ -594,15 +597,15 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 18,
     fontWeight: "bold",
-    color: "#0f172a",
+    color: colors.text,
   },
   reasonInput: {
     height: 120,
-    backgroundColor: "#f8fafc",
+    backgroundColor: colors.surfaceMuted,
     borderRadius: 16,
     padding: 16,
     textAlignVertical: "top",
-    color: "#0f172a",
+    color: colors.text,
     marginBottom: 24,
   },
   modalFooter: {
@@ -615,11 +618,11 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#f1f5f9",
+    backgroundColor: colors.surfaceMuted,
   },
   modalCancelText: {
     fontWeight: 'bold',
-    color: '#64748b',
+    color: colors.textSubtle,
   },
   modalConfirmButton: {
     flex: 2,
@@ -627,10 +630,10 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#ef4444",
+    backgroundColor: colors.danger,
   },
   modalConfirmText: {
     fontWeight: 'bold',
-    color: '#fff',
+    color: colors.onPrimary,
   }
 });
