@@ -60,7 +60,7 @@ export const resetRootRoute = (
     } catch (error) {
       console.error("Failed to reset root route:", error);
     }
-  }, 0);
+  }, 150);
 };
 
 export const isRoleAllowed = (

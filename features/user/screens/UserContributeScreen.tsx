@@ -13,7 +13,6 @@ import {
   Alert,
   FlatList,
   Modal,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Switch,
@@ -23,7 +22,10 @@ import {
   View,
 } from "react-native";
 
+import { ScreenSafeAreaView } from "@/components/screen-safe-area-view";
+import { SCREEN_HEADER_TOP_PADDING } from "@/constants/safeArea";
 import { useUserUploadDocument } from "../hooks/useUserUploadDocument";
+import { useAppTheme, type AppThemeColors } from "@/features/theme";
 import type { BackendSubject } from "../types";
 
 const formatFileSize = (bytes?: number) => {
@@ -40,6 +42,8 @@ const subjectLabel = (subject?: BackendSubject) => {
 
 export const UserContributeScreen = () => {
   const router = useRouter();
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [subjectModalVisible, setSubjectModalVisible] = useState(false);
   const upload = useUserUploadDocument();
   const selectedSubject = useMemo(
@@ -61,7 +65,7 @@ export const UserContributeScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <ScreenSafeAreaView style={styles.container}>
       <ScrollView
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
@@ -69,7 +73,7 @@ export const UserContributeScreen = () => {
       >
         {/* ── Header ── */}
         <View style={styles.header}>
-          <Text style={styles.eyebrow}>ACADEMISHARE</Text>
+          <Text style={styles.eyebrow}>ACADEMICSHARE</Text>
           <Text style={styles.pageTitle}>Đóng góp</Text>
           <Text style={styles.pageSubtitle}>
             Tải tài liệu học tập mới lên thư viện của bạn
@@ -91,7 +95,7 @@ export const UserContributeScreen = () => {
             {upload.pickedFile ? (
               <View style={styles.fileRow}>
                 <View style={styles.fileIconBox}>
-                  <FileText size={24} color="#6366f1" />
+                  <FileText size={24} color={colors.primary} />
                 </View>
                 <View style={styles.fileInfo}>
                   <Text style={styles.fileName} numberOfLines={1}>
@@ -109,13 +113,13 @@ export const UserContributeScreen = () => {
                   }}
                   disabled={upload.isSubmitting}
                 >
-                  <X size={18} color="#94a3b8" />
+                  <X size={18} color={colors.textSubtle} />
                 </TouchableOpacity>
               </View>
             ) : (
               <View style={styles.emptyUpload}>
                 <View style={styles.uploadIconBox}>
-                  <UploadCloud size={28} color="#6366f1" />
+                  <UploadCloud size={28} color={colors.primary} />
                 </View>
                 <Text style={styles.uploadTitle}>Chọn tệp tài liệu</Text>
                 <Text style={styles.uploadHint}>
@@ -139,7 +143,7 @@ export const UserContributeScreen = () => {
                 value={upload.values.title}
                 onChangeText={upload.setTitle}
                 placeholder="Ví dụ: Đề cương Giải tích 1"
-                placeholderTextColor="#94a3b8"
+                placeholderTextColor={colors.textSubtle}
                 editable={!upload.isSubmitting}
                 maxLength={120}
               />
@@ -165,7 +169,7 @@ export const UserContributeScreen = () => {
                     ? "Đang tải môn học..."
                     : subjectLabel(selectedSubject)}
                 </Text>
-                <ChevronDown size={18} color="#94a3b8" />
+                <ChevronDown size={18} color={colors.icon} />
               </TouchableOpacity>
               {upload.subjectsError ? (
                 <View style={styles.retryRow}>
@@ -176,7 +180,7 @@ export const UserContributeScreen = () => {
                     style={styles.retryButton}
                     onPress={upload.loadSubjects}
                   >
-                    <RefreshCw size={14} color="#6366f1" />
+                    <RefreshCw size={14} color={colors.primary} />
                     <Text style={styles.retryText}>Tải lại</Text>
                   </TouchableOpacity>
                 </View>
@@ -191,7 +195,7 @@ export const UserContributeScreen = () => {
                 value={upload.values.description}
                 onChangeText={upload.setDescription}
                 placeholder="Tóm tắt nội dung tài liệu..."
-                placeholderTextColor="#94a3b8"
+                placeholderTextColor={colors.textSubtle}
                 editable={!upload.isSubmitting}
                 multiline
                 maxLength={500}
@@ -213,8 +217,8 @@ export const UserContributeScreen = () => {
                 value={upload.values.isPublic}
                 onValueChange={upload.setIsPublic}
                 disabled={upload.isSubmitting}
-                trackColor={{ false: "#e2e8f0", true: "#a5b4fc" }}
-                thumbColor={upload.values.isPublic ? "#6366f1" : "#f8fafc"}
+                trackColor={{ false: colors.borderStrong, true: colors.primaryMuted }}
+                thumbColor={upload.values.isPublic ? colors.primary : colors.surface}
               />
             </View>
           </View>
@@ -234,7 +238,7 @@ export const UserContributeScreen = () => {
             disabled={upload.isSubmitting}
           >
             {upload.isSubmitting ? (
-              <ActivityIndicator color="#fff" />
+              <ActivityIndicator color={colors.onPrimary} />
             ) : (
               <Text style={styles.submitButtonText}>Tải lên</Text>
             )}
@@ -271,7 +275,7 @@ export const UserContributeScreen = () => {
                   >
                     <Text style={styles.modalOptionText}>Chưa chọn</Text>
                     {!upload.values.subjectId ? (
-                      <Check size={18} color="#6366f1" />
+                      <Check size={18} color={colors.primary} />
                     ) : null}
                   </TouchableOpacity>
                 }
@@ -298,7 +302,7 @@ export const UserContributeScreen = () => {
                         {subjectLabel(item)}
                       </Text>
                       {selected ? (
-                        <Check size={18} color="#6366f1" />
+                        <Check size={18} color={colors.primary} />
                       ) : null}
                     </TouchableOpacity>
                   );
@@ -308,14 +312,14 @@ export const UserContributeScreen = () => {
           </TouchableOpacity>
         </Modal>
       </ScrollView>
-    </SafeAreaView>
+    </ScreenSafeAreaView>
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: AppThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f8fafc",
+    backgroundColor: colors.background,
   },
   scrollContent: {
     paddingBottom: 110,
@@ -323,41 +327,33 @@ const styles = StyleSheet.create({
 
   /* ── Header ── */
   header: {
-    paddingHorizontal: 20,
-    paddingTop: 24,
+    paddingHorizontal: 24,
+    paddingTop: SCREEN_HEADER_TOP_PADDING,
     paddingBottom: 20,
-    backgroundColor: "#ffffff",
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
-    shadowColor: "#0f172a",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.03,
-    shadowRadius: 8,
-    elevation: 2,
   },
   eyebrow: {
     fontSize: 12,
     fontWeight: "700",
-    color: "#6366f1",
+    color: colors.primary,
     letterSpacing: 0.5,
   },
   pageTitle: {
-    fontSize: 26,
+    fontSize: 28,
     fontWeight: "800",
-    color: "#0f172a",
+    color: colors.text,
     letterSpacing: -0.5,
     marginTop: 4,
   },
   pageSubtitle: {
     fontSize: 13,
-    color: "#94a3b8",
+    color: colors.textSubtle,
     lineHeight: 18,
     marginTop: 4,
   },
 
   /* ── Form Wrapper ── */
   formWrapper: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
     paddingTop: 20,
   },
 
@@ -366,21 +362,21 @@ const styles = StyleSheet.create({
     minHeight: 140,
     borderWidth: 2,
     borderStyle: "dashed",
-    borderColor: "#c7d2fe",
+    borderColor: colors.borderStrong,
     borderRadius: 16,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#ffffff",
+    backgroundColor: colors.surface,
     padding: 20,
   },
   uploadBoxSelected: {
     borderStyle: "solid",
-    borderColor: "#6366f1",
-    backgroundColor: "#eef2ff",
+    borderColor: colors.primary,
+    backgroundColor: colors.primaryMuted,
   },
   uploadBoxError: {
-    borderColor: "#fca5a5",
-    backgroundColor: "#fef2f2",
+    borderColor: colors.danger,
+    backgroundColor: colors.dangerMuted,
   },
   emptyUpload: {
     alignItems: "center",
@@ -390,7 +386,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 16,
-    backgroundColor: "#eef2ff",
+    backgroundColor: colors.primaryMuted,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 4,
@@ -398,11 +394,11 @@ const styles = StyleSheet.create({
   uploadTitle: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#0f172a",
+    color: colors.text,
   },
   uploadHint: {
     fontSize: 13,
-    color: "#94a3b8",
+    color: colors.textSubtle,
   },
   fileRow: {
     width: "100%",
@@ -416,7 +412,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#eef2ff",
+    backgroundColor: colors.primaryMuted,
   },
   fileInfo: {
     flex: 1,
@@ -425,12 +421,12 @@ const styles = StyleSheet.create({
   fileName: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#0f172a",
+    color: colors.text,
   },
   fileMeta: {
     marginTop: 3,
     fontSize: 13,
-    color: "#94a3b8",
+    color: colors.textSubtle,
   },
   fileClearBtn: {
     width: 36,
@@ -438,7 +434,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#f8fafc",
+    backgroundColor: colors.surfaceMuted,
   },
 
   /* ── Form ── */
@@ -447,13 +443,13 @@ const styles = StyleSheet.create({
     gap: 14,
   },
   fieldCard: {
-    backgroundColor: "#ffffff",
+    backgroundColor: colors.surface,
     borderRadius: 16,
     padding: 16,
     borderWidth: 1,
-    borderColor: "#f1f5f9",
+    borderColor: colors.border,
     gap: 8,
-    shadowColor: "#0f172a",
+    shadowColor: colors.shadow,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.02,
     shadowRadius: 4,
@@ -462,18 +458,18 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 13,
     fontWeight: "700",
-    color: "#334155",
+    color: colors.textMuted,
   },
   input: {
     minHeight: 44,
     borderWidth: 1,
-    borderColor: "#e2e8f0",
+    borderColor: colors.border,
     borderRadius: 10,
     paddingHorizontal: 14,
     paddingVertical: 10,
     fontSize: 15,
-    color: "#0f172a",
-    backgroundColor: "#f8fafc",
+    color: colors.text,
+    backgroundColor: colors.surfaceMuted,
   },
   textarea: {
     minHeight: 100,
@@ -481,22 +477,22 @@ const styles = StyleSheet.create({
   selectInput: {
     minHeight: 44,
     borderWidth: 1,
-    borderColor: "#e2e8f0",
+    borderColor: colors.border,
     borderRadius: 10,
     paddingHorizontal: 14,
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    backgroundColor: "#f8fafc",
+    backgroundColor: colors.surfaceMuted,
   },
   selectText: {
     flex: 1,
     minWidth: 0,
     fontSize: 15,
-    color: "#0f172a",
+    color: colors.text,
   },
   placeholderText: {
-    color: "#94a3b8",
+    color: colors.textSubtle,
   },
   retryRow: {
     flexDirection: "row",
@@ -513,7 +509,7 @@ const styles = StyleSheet.create({
   retryText: {
     fontSize: 13,
     fontWeight: "700",
-    color: "#6366f1",
+    color: colors.primary,
   },
 
   /* ── Visibility ── */
@@ -522,12 +518,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     gap: 12,
-    backgroundColor: "#ffffff",
+    backgroundColor: colors.surface,
     borderRadius: 16,
     padding: 16,
     borderWidth: 1,
-    borderColor: "#f1f5f9",
-    shadowColor: "#0f172a",
+    borderColor: colors.border,
+    shadowColor: colors.shadow,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.02,
     shadowRadius: 4,
@@ -541,7 +537,7 @@ const styles = StyleSheet.create({
   visibilityHint: {
     fontSize: 12,
     lineHeight: 17,
-    color: "#94a3b8",
+    color: colors.textSubtle,
   },
 
   /* ── Error ── */
@@ -549,13 +545,13 @@ const styles = StyleSheet.create({
     marginTop: 10,
     fontSize: 13,
     lineHeight: 18,
-    color: "#dc2626",
+    color: colors.danger,
   },
   errorTextSmall: {
     flex: 1,
     fontSize: 12,
     lineHeight: 17,
-    color: "#dc2626",
+    color: colors.danger,
   },
 
   /* ── Submit ── */
@@ -565,8 +561,8 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#6366f1",
-    shadowColor: "#6366f1",
+    backgroundColor: colors.primary,
+    shadowColor: colors.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
@@ -578,7 +574,7 @@ const styles = StyleSheet.create({
   submitButtonText: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#fff",
+    color: colors.onPrimary,
   },
 
   /* ── Modal ── */
@@ -586,14 +582,14 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     padding: 24,
-    backgroundColor: "rgba(15, 23, 42, 0.5)",
+    backgroundColor: colors.overlay,
   },
   modalSheet: {
     maxHeight: "72%",
     borderRadius: 20,
     overflow: "hidden",
-    backgroundColor: "#fff",
-    shadowColor: "#0f172a",
+    backgroundColor: colors.surface,
+    shadowColor: colors.shadow,
     shadowOffset: { width: 0, height: 12 },
     shadowOpacity: 0.1,
     shadowRadius: 24,
@@ -603,10 +599,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#f1f5f9",
+    borderBottomColor: colors.border,
     fontSize: 16,
     fontWeight: "700",
-    color: "#0f172a",
+    color: colors.text,
   },
   modalOption: {
     minHeight: 48,
@@ -616,16 +612,16 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   modalOptionActive: {
-    backgroundColor: "#eef2ff",
+    backgroundColor: colors.primaryMuted,
   },
   modalOptionText: {
     flex: 1,
     minWidth: 0,
     fontSize: 14,
-    color: "#0f172a",
+    color: colors.text,
   },
   modalOptionTextActive: {
     fontWeight: "700",
-    color: "#6366f1",
+    color: colors.primary,
   },
 });

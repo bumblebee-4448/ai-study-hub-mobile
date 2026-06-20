@@ -6,18 +6,19 @@ import {
   Globe,
   LogOut,
   Mail,
+  Monitor,
   Moon,
   Pencil,
   RefreshCw,
   ShieldCheck,
+  Sun,
   User,
 } from "lucide-react-native";
-import React, { useCallback } from "react";
+import React, { useCallback, useMemo } from "react";
 import {
   ActivityIndicator,
   Alert,
   Image,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
@@ -25,7 +26,15 @@ import {
   View,
 } from "react-native";
 
+import { ScreenSafeAreaView } from "@/components/screen-safe-area-view";
+import { SCREEN_CONTENT_TOP_PADDING } from "@/constants/safeArea";
 import { useAuthStore } from "@/features/auth";
+import {
+  THEME_PREFERENCE_LABELS,
+  useAppTheme,
+  type AppThemeColors,
+  type ThemePreference,
+} from "@/features/theme";
 import { useProfile } from "../hooks/useProfile";
 
 const ROLE_LABELS: Record<string, string> = {
@@ -40,6 +49,16 @@ const STATUS_LABELS: Record<string, string> = {
   BANNED: "Đã khóa",
   DELETED: "Đã xóa",
 };
+
+const THEME_OPTIONS: Array<{
+  value: ThemePreference;
+  label: string;
+  Icon: typeof Monitor;
+}> = [
+  { value: "system", label: "Hệ thống", Icon: Monitor },
+  { value: "light", label: "Sáng", Icon: Sun },
+  { value: "dark", label: "Tối", Icon: Moon },
+];
 
 const formatDate = (value?: string) => {
   if (!value) {
@@ -59,6 +78,8 @@ export const ProfileScreen = () => {
   const router = useRouter();
   const { profile, isLoading, error, loadProfile, handleLogout } = useProfile();
   const { role } = useAuthStore();
+  const { colors, preference, setThemePreference } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   const handleMenuPress = useCallback(
     (key: string) => {
@@ -89,26 +110,26 @@ export const ProfileScreen = () => {
 
   if (isLoading && !profile) {
     return (
-      <SafeAreaView style={styles.container}>
+      <ScreenSafeAreaView style={styles.container}>
         <View style={styles.stateBox}>
-          <ActivityIndicator size="small" color="#004ac6" />
+          <ActivityIndicator size="small" color={colors.primary} />
           <Text style={styles.stateText}>Đang tải hồ sơ...</Text>
         </View>
-      </SafeAreaView>
+      </ScreenSafeAreaView>
     );
   }
 
   if (error && !profile) {
     return (
-      <SafeAreaView style={styles.container}>
+      <ScreenSafeAreaView style={styles.container}>
         <View style={styles.stateBox}>
           <Text style={styles.stateText}>{error}</Text>
           <TouchableOpacity style={styles.retryButton} onPress={loadProfile}>
-            <RefreshCw size={16} color="#004ac6" />
+            <RefreshCw size={16} color={colors.primary} />
             <Text style={styles.retryText}>Tải lại</Text>
           </TouchableOpacity>
         </View>
-      </SafeAreaView>
+      </ScreenSafeAreaView>
     );
   }
 
@@ -122,14 +143,14 @@ export const ProfileScreen = () => {
     : "Chưa có dữ liệu";
 
   return (
-    <SafeAreaView style={styles.container}>
+    <ScreenSafeAreaView style={styles.container}>
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
-          <Text style={styles.eyebrow}>AcademiShare</Text>
+          <Text style={styles.eyebrow}>AcademicShare</Text>
           <Text style={styles.pageTitle}>Hồ sơ</Text>
           <Text style={styles.pageSubtitle}>
             Quản lý tài khoản và cài đặt cá nhân.
@@ -144,7 +165,7 @@ export const ProfileScreen = () => {
                 style={styles.avatarImage}
               />
             ) : (
-              <User size={30} color="#004ac6" />
+              <User size={30} color={colors.primary} />
             )}
           </View>
 
@@ -170,14 +191,14 @@ export const ProfileScreen = () => {
             onPress={() => handleMenuPress("profile-edit")}
             activeOpacity={0.75}
           >
-            <Pencil size={18} color="#004ac6" />
+            <Pencil size={18} color={colors.primary} />
           </TouchableOpacity>
         </View>
 
         <View style={styles.infoGroup}>
           <View style={styles.infoRow}>
             <View style={styles.infoIcon}>
-              <Mail size={18} color="#475569" />
+              <Mail size={18} color={colors.icon} />
             </View>
             <View style={styles.infoText}>
               <Text style={styles.infoLabel}>Email</Text>
@@ -191,7 +212,7 @@ export const ProfileScreen = () => {
 
           <View style={styles.infoRow}>
             <View style={styles.infoIcon}>
-              <ShieldCheck size={18} color="#475569" />
+              <ShieldCheck size={18} color={colors.icon} />
             </View>
             <View style={styles.infoText}>
               <Text style={styles.infoLabel}>Trạng thái</Text>
@@ -203,7 +224,7 @@ export const ProfileScreen = () => {
 
           <View style={styles.infoRow}>
             <View style={styles.infoIcon}>
-              <CalendarDays size={18} color="#475569" />
+              <CalendarDays size={18} color={colors.icon} />
             </View>
             <View style={styles.infoText}>
               <Text style={styles.infoLabel}>Ngày tham gia</Text>
@@ -221,10 +242,10 @@ export const ProfileScreen = () => {
               activeOpacity={0.75}
             >
               <View style={styles.menuIcon}>
-                <Pencil size={18} color="#004ac6" />
+                <Pencil size={18} color={colors.primary} />
               </View>
               <Text style={styles.menuLabel}>Chỉnh sửa thông tin</Text>
-              <ChevronRight size={18} color="#94a3b8" />
+              <ChevronRight size={18} color={colors.textSubtle} />
             </TouchableOpacity>
 
             <View style={styles.divider} />
@@ -235,10 +256,10 @@ export const ProfileScreen = () => {
               activeOpacity={0.75}
             >
               <View style={styles.menuIcon}>
-                <FileText size={18} color="#004ac6" />
+                <FileText size={18} color={colors.primary} />
               </View>
               <Text style={styles.menuLabel}>Tài liệu của tôi</Text>
-              <ChevronRight size={18} color="#94a3b8" />
+              <ChevronRight size={18} color={colors.textSubtle} />
             </TouchableOpacity>
 
             {role === "moderator" ? (
@@ -250,10 +271,10 @@ export const ProfileScreen = () => {
                   activeOpacity={0.75}
                 >
                   <View style={styles.menuIcon}>
-                    <ShieldCheck size={18} color="#004ac6" />
+                    <ShieldCheck size={18} color={colors.primary} />
                   </View>
                   <Text style={styles.menuLabel}>Duyệt tài liệu</Text>
-                  <ChevronRight size={18} color="#94a3b8" />
+                  <ChevronRight size={18} color={colors.textSubtle} />
                 </TouchableOpacity>
               </>
             ) : null}
@@ -263,19 +284,57 @@ export const ProfileScreen = () => {
         <View style={styles.menuSection}>
           <Text style={styles.sectionTitle}>CÀI ĐẶT</Text>
           <View style={styles.menuGroup}>
-            <View style={styles.menuItem}>
-              <View style={styles.menuIconMuted}>
-                <Moon size={18} color="#64748b" />
+            <View style={styles.themeSetting}>
+              <View style={styles.themeHeader}>
+                <View style={styles.menuIconMuted}>
+                  <Moon size={18} color={colors.icon} />
+                </View>
+                <View style={styles.themeTextRow}>
+                  <Text style={styles.menuLabel}>Giao diện</Text>
+                  <Text style={styles.menuValue}>
+                    {THEME_PREFERENCE_LABELS[preference]}
+                  </Text>
+                </View>
               </View>
-              <Text style={styles.menuLabel}>Giao diện</Text>
-              <Text style={styles.menuValue}>Theo hệ thống</Text>
+
+              <View style={styles.themeSegmented}>
+                {THEME_OPTIONS.map(({ value, label, Icon }) => {
+                  const isSelected = preference === value;
+
+                  return (
+                    <TouchableOpacity
+                      key={value}
+                      style={[
+                        styles.themeOption,
+                        isSelected && styles.themeOptionActive,
+                      ]}
+                      onPress={() => setThemePreference(value)}
+                      activeOpacity={0.82}
+                    >
+                      <Icon
+                        size={14}
+                        color={isSelected ? colors.onPrimary : colors.icon}
+                      />
+                      <Text
+                        style={[
+                          styles.themeOptionText,
+                          isSelected && styles.themeOptionTextActive,
+                        ]}
+                        numberOfLines={1}
+                      >
+                        {label}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
             </View>
 
             <View style={styles.divider} />
 
             <View style={styles.menuItem}>
               <View style={styles.menuIconMuted}>
-                <Globe size={18} color="#64748b" />
+                <Globe size={18} color={colors.icon} />
               </View>
               <Text style={styles.menuLabel}>Ngôn ngữ</Text>
               <Text style={styles.menuValue}>Tiếng Việt</Text>
@@ -288,25 +347,25 @@ export const ProfileScreen = () => {
           onPress={() => handleMenuPress("logout")}
           activeOpacity={0.75}
         >
-          <LogOut size={18} color="#dc2626" />
+          <LogOut size={18} color={colors.danger} />
           <Text style={styles.logoutText}>Đăng xuất</Text>
         </TouchableOpacity>
       </ScrollView>
-    </SafeAreaView>
+    </ScreenSafeAreaView>
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: AppThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: colors.background,
   },
   scroll: {
     flex: 1,
   },
   scrollContent: {
     paddingHorizontal: 24,
-    paddingTop: 28,
+    paddingTop: SCREEN_CONTENT_TOP_PADDING,
     paddingBottom: 110,
   },
   header: {
@@ -316,27 +375,27 @@ const styles = StyleSheet.create({
   eyebrow: {
     fontSize: 13,
     fontWeight: "700",
-    color: "#64748b",
+    color: colors.textSubtle,
   },
   pageTitle: {
     fontSize: 28,
     fontWeight: "800",
-    color: "#0f172a",
+    color: colors.text,
   },
   pageSubtitle: {
     fontSize: 14,
     lineHeight: 20,
-    color: "#64748b",
+    color: colors.textSubtle,
   },
   profileCard: {
     minHeight: 108,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#e2e8f0",
+    borderColor: colors.border,
     padding: 14,
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
   },
   avatarContainer: {
     width: 64,
@@ -344,7 +403,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#eff6ff",
+    backgroundColor: colors.primaryMuted,
     overflow: "hidden",
   },
   avatarImage: {
@@ -360,11 +419,11 @@ const styles = StyleSheet.create({
   userName: {
     fontSize: 17,
     fontWeight: "800",
-    color: "#0f172a",
+    color: colors.text,
   },
   userEmail: {
     fontSize: 13,
-    color: "#64748b",
+    color: colors.textSubtle,
   },
   badgeRow: {
     flexDirection: "row",
@@ -376,23 +435,23 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 8,
     paddingVertical: 4,
-    backgroundColor: "#0f172a",
+    backgroundColor: colors.inverseSurface,
   },
   roleText: {
     fontSize: 10,
     fontWeight: "800",
-    color: "#fff",
+    color: colors.inverseText,
   },
   statusBadge: {
     borderRadius: 8,
     paddingHorizontal: 8,
     paddingVertical: 4,
-    backgroundColor: "#f1f5f9",
+    backgroundColor: colors.surfaceSubtle,
   },
   statusText: {
     fontSize: 10,
     fontWeight: "800",
-    color: "#334155",
+    color: colors.textMuted,
   },
   iconButton: {
     width: 38,
@@ -400,14 +459,14 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#eff6ff",
+    backgroundColor: colors.primaryMuted,
   },
   infoGroup: {
     marginTop: 14,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#e2e8f0",
-    backgroundColor: "#fff",
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
   },
   infoRow: {
     minHeight: 64,
@@ -421,7 +480,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#f8fafc",
+    backgroundColor: colors.surfaceMuted,
     marginRight: 12,
   },
   infoText: {
@@ -430,13 +489,13 @@ const styles = StyleSheet.create({
   },
   infoLabel: {
     fontSize: 12,
-    color: "#64748b",
+    color: colors.textSubtle,
   },
   infoValue: {
     marginTop: 2,
     fontSize: 14,
     fontWeight: "700",
-    color: "#0f172a",
+    color: colors.text,
   },
   menuSection: {
     marginTop: 24,
@@ -445,13 +504,13 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     fontSize: 12,
     fontWeight: "800",
-    color: "#94a3b8",
+    color: colors.textSubtle,
   },
   menuGroup: {
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#e2e8f0",
-    backgroundColor: "#fff",
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
   },
   menuItem: {
     minHeight: 58,
@@ -459,13 +518,61 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
   },
+  themeSetting: {
+    paddingVertical: 12,
+  },
+  themeHeader: {
+    minHeight: 34,
+    paddingHorizontal: 14,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  themeTextRow: {
+    flex: 1,
+    minWidth: 0,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+  themeSegmented: {
+    minHeight: 48,
+    marginHorizontal: 14,
+    marginTop: 12,
+    borderRadius: 8,
+    padding: 4,
+    flexDirection: "row",
+    gap: 4,
+    backgroundColor: colors.surfaceMuted,
+  },
+  themeOption: {
+    flex: 1,
+    minHeight: 40,
+    borderRadius: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+  },
+  themeOptionActive: {
+    backgroundColor: colors.primary,
+  },
+  themeOptionText: {
+    flexShrink: 1,
+    fontSize: 11,
+    fontWeight: "800",
+    color: colors.textMuted,
+  },
+  themeOptionTextActive: {
+    color: colors.onPrimary,
+  },
   menuIcon: {
     width: 34,
     height: 34,
     borderRadius: 8,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#eff6ff",
+    backgroundColor: colors.primaryMuted,
     marginRight: 12,
   },
   menuIconMuted: {
@@ -474,22 +581,22 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#f8fafc",
+    backgroundColor: colors.surfaceMuted,
     marginRight: 12,
   },
   menuLabel: {
     flex: 1,
     fontSize: 15,
     fontWeight: "700",
-    color: "#334155",
+    color: colors.textMuted,
   },
   menuValue: {
     fontSize: 13,
-    color: "#64748b",
+    color: colors.textSubtle,
   },
   divider: {
     height: 1,
-    backgroundColor: "#e2e8f0",
+    backgroundColor: colors.border,
     marginLeft: 60,
   },
   logoutButton: {
@@ -500,14 +607,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 10,
-    backgroundColor: "#fef2f2",
+    backgroundColor: colors.dangerMuted,
     borderWidth: 1,
-    borderColor: "#fecaca",
+    borderColor: colors.danger,
   },
   logoutText: {
     fontSize: 15,
     fontWeight: "800",
-    color: "#dc2626",
+    color: colors.danger,
   },
   stateBox: {
     flex: 1,
@@ -519,7 +626,7 @@ const styles = StyleSheet.create({
   stateText: {
     fontSize: 14,
     textAlign: "center",
-    color: "#64748b",
+    color: colors.textSubtle,
   },
   retryButton: {
     minHeight: 42,
@@ -528,11 +635,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    backgroundColor: "#eff6ff",
+    backgroundColor: colors.primaryMuted,
   },
   retryText: {
     fontSize: 14,
     fontWeight: "800",
-    color: "#004ac6",
+    color: colors.primary,
   },
 });

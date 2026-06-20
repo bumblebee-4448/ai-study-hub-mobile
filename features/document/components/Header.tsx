@@ -25,7 +25,7 @@ export const Header: React.FC<HeaderProps> = ({
   return (
     <View style={styles.container}>
       <View style={styles.headerRow}>
-        <Text style={styles.logo}>AcademiShare</Text>
+        <Text style={styles.logo}>AcademicShare</Text>
         {isLoggedIn ? (
           <Image source={{ uri: avatarUrl || defaultAvatar }} style={styles.avatar} />
         ) : (

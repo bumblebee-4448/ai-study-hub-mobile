@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import {
   ActivityIndicator,
   RefreshControl,
@@ -20,6 +20,7 @@ import {
 import { useLocalSearchParams } from "expo-router";
 import { useModeratorDocuments } from "../hooks";
 import { ModeratorDocumentDetailScreen } from "./ModeratorDocumentDetailScreen";
+import { useAppTheme, type AppThemeColors } from "@/features/theme";
 import type { ModeratorDocumentStatusFilter } from "../types";
 
 const FILTERS = [
@@ -29,6 +30,8 @@ const FILTERS = [
 ] as const;
 
 export const ModeratorReviewScreen = () => {
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const params = useLocalSearchParams<{ status?: string; selectedId?: string }>();
   const initialStatus =
     params.status === "ACTIVE" ||
@@ -74,11 +77,11 @@ export const ModeratorReviewScreen = () => {
   const getStatusIcon = (docStatus: string) => {
     switch (docStatus) {
       case "ACTIVE":
-        return <CheckCircle2 size={16} color="#10b981" />;
+        return <CheckCircle2 size={16} color={colors.success} />;
       case "REJECTED":
-        return <XCircle size={16} color="#ef4444" />;
+        return <XCircle size={16} color={colors.danger} />;
       default:
-        return <Clock size={16} color="#f59e0b" />;
+        return <Clock size={16} color={colors.warning} />;
     }
   };
 
@@ -104,7 +107,7 @@ export const ModeratorReviewScreen = () => {
           </Text>
         </View>
         <TouchableOpacity style={styles.searchButton}>
-          <Search size={22} color="#64748b" />
+          <Search size={22} color={colors.icon} />
         </TouchableOpacity>
       </View>
 
@@ -143,7 +146,12 @@ export const ModeratorReviewScreen = () => {
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={isLoading && page === 1} onRefresh={refresh} />
+          <RefreshControl
+            refreshing={isLoading && page === 1}
+            onRefresh={refresh}
+            colors={[colors.primary]}
+            tintColor={colors.primary}
+          />
         }
       >
         {error && (
@@ -157,7 +165,7 @@ export const ModeratorReviewScreen = () => {
 
         {documents.length === 0 && !isLoading && (
           <View style={styles.emptyState}>
-            <CheckCircle2 size={48} color="#10b981" />
+            <CheckCircle2 size={48} color={colors.success} />
             <Text style={styles.emptyText}>Danh sách trống</Text>
           </View>
         )}
@@ -171,7 +179,7 @@ export const ModeratorReviewScreen = () => {
           >
             <View style={styles.cardTop}>
               <View style={styles.formatBadge}>
-                <FileText size={14} color="#64748b" />
+                <FileText size={14} color={colors.icon} />
                 <Text style={styles.formatText}>
                   {doc.formatLabel} • {doc.sizeLabel}
                 </Text>
@@ -196,7 +204,7 @@ export const ModeratorReviewScreen = () => {
                 <Text style={styles.authorName}>{doc.authorName}</Text>
               </View>
               <View style={styles.uploadedAtRow}>
-                <Clock size={12} color="#94a3b8" />
+                <Clock size={12} color={colors.textSubtle} />
                 <Text style={styles.uploadedAtText}>{doc.createdAtLabel}</Text>
               </View>
             </View>
@@ -209,7 +217,7 @@ export const ModeratorReviewScreen = () => {
                 <Text style={styles.detailLinkText}>
                   {doc.status === "PENDING" ? "Kiểm tra" : "Xem chi tiết"}
                 </Text>
-                <ChevronRight size={16} color="#3b82f6" />
+                <ChevronRight size={16} color={colors.primary} />
               </View>
             </View>
           </TouchableOpacity>
@@ -218,7 +226,7 @@ export const ModeratorReviewScreen = () => {
         {isLoading && page > 1 && (
           <ActivityIndicator
             size="small"
-            color="#3b82f6"
+            color={colors.primary}
             style={{ marginVertical: 16 }}
           />
         )}
@@ -237,10 +245,10 @@ export const ModeratorReviewScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: AppThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: colors.background,
   },
   header: {
     paddingHorizontal: 24,
@@ -252,18 +260,18 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 22,
     fontWeight: "bold",
-    color: "#0f172a",
+    color: colors.text,
   },
   headerSubtitle: {
     fontSize: 13,
-    color: "#94a3b8",
+    color: colors.textSubtle,
     marginTop: 2,
   },
   searchButton: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: "#f8fafc",
+    backgroundColor: colors.surfaceMuted,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -278,21 +286,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 100,
-    backgroundColor: "#f1f5f9",
+    backgroundColor: colors.surfaceMuted,
     borderWidth: 1,
-    borderColor: "#f1f5f9",
+    borderColor: colors.border,
   },
   filterChipActive: {
-    backgroundColor: "#0f172a",
-    borderColor: "#0f172a",
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   filterText: {
     fontSize: 13,
     fontWeight: "600",
-    color: "#64748b",
+    color: colors.textSubtle,
   },
   filterTextActive: {
-    color: "#fff",
+    color: colors.onPrimary,
   },
   list: {
     flex: 1,
@@ -302,13 +310,13 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   card: {
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     borderRadius: 16,
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: "#f1f5f9",
-    shadowColor: "#0f172a",
+    borderColor: colors.border,
+    shadowColor: colors.shadow,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.02,
     shadowRadius: 8,
@@ -324,7 +332,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    backgroundColor: "#f8fafc",
+    backgroundColor: colors.surfaceMuted,
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
@@ -332,12 +340,12 @@ const styles = StyleSheet.create({
   formatText: {
     fontSize: 11,
     fontWeight: "700",
-    color: "#64748b",
+    color: colors.textSubtle,
   },
   docTitle: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#0f172a",
+    color: colors.text,
     lineHeight: 22,
     marginBottom: 16,
   },
@@ -348,7 +356,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     paddingBottom: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#f8fafc",
+    borderBottomColor: colors.border,
   },
   authorRow: {
     flexDirection: "row",
@@ -359,18 +367,18 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: "#e2e8f0",
+    backgroundColor: colors.surfaceSubtle,
     alignItems: "center",
     justifyContent: "center",
   },
   avatarInitial: {
     fontSize: 10,
     fontWeight: "bold",
-    color: "#64748b",
+    color: colors.textSubtle,
   },
   authorName: {
     fontSize: 13,
-    color: "#475569",
+    color: colors.textMuted,
     fontWeight: "500",
   },
   uploadedAtRow: {
@@ -380,7 +388,7 @@ const styles = StyleSheet.create({
   },
   uploadedAtText: {
     fontSize: 12,
-    color: "#94a3b8",
+    color: colors.textSubtle,
   },
   cardActions: {
     flexDirection: "row",
@@ -390,14 +398,14 @@ const styles = StyleSheet.create({
   categoryBadge: {
     paddingHorizontal: 10,
     paddingVertical: 4,
-    backgroundColor: "#f1f5f9",
+    backgroundColor: colors.surfaceMuted,
     borderRadius: 6,
     maxWidth: "70%",
   },
   categoryText: {
     fontSize: 11,
     fontWeight: "600",
-    color: "#64748b",
+    color: colors.textSubtle,
   },
   detailLink: {
     flexDirection: "row",
@@ -407,7 +415,7 @@ const styles = StyleSheet.create({
   detailLinkText: {
     fontSize: 13,
     fontWeight: "bold",
-    color: "#3b82f6",
+    color: colors.primary,
   },
   statusBadge: {
     flexDirection: "row",
@@ -420,31 +428,31 @@ const styles = StyleSheet.create({
   statusBadgeText: {
     fontSize: 11,
     fontWeight: "600",
-    color: "#334155",
+    color: colors.textMuted,
   },
   pendingBadge: {
-    backgroundColor: "#fffbeb",
+    backgroundColor: colors.warningMuted,
   },
   activeBadge: {
-    backgroundColor: "#f0fdf4",
+    backgroundColor: colors.successMuted,
   },
   rejectedBadge: {
-    backgroundColor: "#fef2f2",
+    backgroundColor: colors.dangerMuted,
   },
   loadMoreButton: {
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 14,
-    backgroundColor: "#f8fafc",
+    backgroundColor: colors.surfaceMuted,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#e2e8f0",
+    borderColor: colors.border,
     marginTop: 8,
   },
   loadMoreText: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#3b82f6",
+    color: colors.primary,
   },
   emptyState: {
     alignItems: "center",
@@ -454,7 +462,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 15,
-    color: "#94a3b8",
+    color: colors.textSubtle,
     fontWeight: "500",
   },
   errorContainer: {
@@ -465,17 +473,17 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 14,
-    color: "#ef4444",
+    color: colors.danger,
     textAlign: "center",
   },
   retryButton: {
     paddingHorizontal: 20,
     paddingVertical: 10,
-    backgroundColor: "#3b82f6",
+    backgroundColor: colors.primary,
     borderRadius: 8,
   },
   retryText: {
-    color: "white",
+    color: colors.onPrimary,
     fontWeight: "bold",
   },
 });

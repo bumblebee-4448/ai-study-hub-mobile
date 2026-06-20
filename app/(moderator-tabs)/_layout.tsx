@@ -2,12 +2,15 @@ import { Tabs } from "expo-router";
 import React from "react";
 import { LayoutDashboard, ClipboardList, User } from "lucide-react-native";
 import { RoleGate } from "@/features/auth";
-import { COMMON_TAB_BAR_OPTIONS } from "@/constants/theme";
+import { getCommonTabBarOptions } from "@/constants/theme";
+import { useAppTheme } from "@/features/theme";
 
 export default function ModeratorTabLayout() {
+  const { colors } = useAppTheme();
+
   return (
     <RoleGate allowedRoles={["moderator"]}>
-      <Tabs screenOptions={COMMON_TAB_BAR_OPTIONS}>
+      <Tabs screenOptions={getCommonTabBarOptions(colors)}>
         <Tabs.Screen
           name="index"
           options={{

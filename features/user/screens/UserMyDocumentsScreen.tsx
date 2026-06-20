@@ -13,7 +13,6 @@ import {
   ActivityIndicator,
   FlatList,
   RefreshControl,
-  SafeAreaView,
   StyleSheet,
   Text,
   TextInput,
@@ -21,10 +20,13 @@ import {
   View,
 } from "react-native";
 
+import { ScreenSafeAreaView } from "@/components/screen-safe-area-view";
+import { SCREEN_HEADER_TOP_PADDING } from "@/constants/safeArea";
 import { MyDocStatsCard } from "../components/MyDocStatsCard";
 import type { MyDocStatsCardData } from "../components/MyDocStatsCard";
 import { MyDocumentItem } from "../components/MyDocumentItem";
 import { useMyDocuments } from "../hooks/useUserDocuments";
+import { useAppTheme, type AppThemeColors } from "@/features/theme";
 import type { BackendDocumentStatus, UserDocument } from "../types";
 
 const FILTER_OPTIONS: { key: "ALL" | BackendDocumentStatus; label: string }[] = [
@@ -36,6 +38,8 @@ const FILTER_OPTIONS: { key: "ALL" | BackendDocumentStatus; label: string }[] = 
 
 export const UserMyDocumentsScreen = () => {
   const router = useRouter();
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const mine = useMyDocuments();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState<
@@ -52,33 +56,33 @@ export const UserMyDocumentsScreen = () => {
       {
         label: "Tổng tài liệu",
         value: totalDocs,
-        icon: <FileText size={20} color="#6366f1" />,
-        accentColor: "#6366f1",
-        accentBg: "#eef2ff",
+        icon: <FileText size={20} color={colors.primary} />,
+        accentColor: colors.primary,
+        accentBg: colors.primaryMuted,
       },
       {
         label: "Lượt xem",
         value: "—",
-        icon: <Eye size={20} color="#06b6d4" />,
-        accentColor: "#06b6d4",
-        accentBg: "#ecfeff",
+        icon: <Eye size={20} color={colors.secondary} />,
+        accentColor: colors.secondary,
+        accentBg: colors.surfaceSubtle,
       },
       {
         label: "Lượt tải",
         value: "—",
-        icon: <Download size={20} color="#f59e0b" />,
-        accentColor: "#f59e0b",
-        accentBg: "#fffbeb",
+        icon: <Download size={20} color={colors.warning} />,
+        accentColor: colors.warning,
+        accentBg: colors.warningMuted,
       },
       {
         label: "Đóng góp",
         value: activeDocs,
-        icon: <Trophy size={20} color="#10b981" />,
-        accentColor: "#10b981",
-        accentBg: "#ecfdf5",
+        icon: <Trophy size={20} color={colors.success} />,
+        accentColor: colors.success,
+        accentBg: colors.successMuted,
       },
     ];
-  }, [mine.documents]);
+  }, [colors, mine.documents]);
 
   /* ────────── Filtered + searched documents ────────── */
   const filteredDocuments = useMemo(() => {
@@ -121,7 +125,7 @@ export const UserMyDocumentsScreen = () => {
       {/* Page Header */}
       <View style={styles.pageHeader}>
         <View style={styles.headerLeft}>
-          <Text style={styles.eyebrow}>AcademiShare</Text>
+          <Text style={styles.eyebrow}>AcademicShare</Text>
           <Text style={styles.pageTitle}>Tài liệu của tôi</Text>
           <Text style={styles.pageSubtitle}>
             Quản lý và theo dõi tài liệu bạn đã đóng góp
@@ -143,11 +147,11 @@ export const UserMyDocumentsScreen = () => {
 
       {/* Search Bar */}
       <View style={styles.searchContainer}>
-        <Search size={18} color="#94a3b8" />
+        <Search size={18} color={colors.icon} />
         <TextInput
           style={styles.searchInput}
           placeholder="Tìm kiếm tài liệu..."
-          placeholderTextColor="#94a3b8"
+          placeholderTextColor={colors.textSubtle}
           value={searchQuery}
           onChangeText={setSearchQuery}
           returnKeyType="search"
@@ -201,7 +205,7 @@ export const UserMyDocumentsScreen = () => {
     if (mine.isLoading) {
       return (
         <View style={styles.emptyState}>
-          <ActivityIndicator size="large" color="#6366f1" />
+          <ActivityIndicator size="large" color={colors.primary} />
           <Text style={styles.emptyText}>Đang tải tài liệu...</Text>
         </View>
       );
@@ -235,14 +239,14 @@ export const UserMyDocumentsScreen = () => {
     return (
       <View style={styles.emptyState}>
         <View style={styles.emptyIconContainer}>
-          <BookOpen size={36} color="#6366f1" />
+          <BookOpen size={36} color={colors.primary} />
         </View>
         <Text style={styles.emptyTitle}>Chưa có tài liệu</Text>
         <Text style={styles.emptyText}>
           Bắt đầu đóng góp tài liệu học tập đầu tiên của bạn
         </Text>
         <TouchableOpacity style={styles.emptyUploadBtn} onPress={handleUpload}>
-          <Plus size={18} color="#ffffff" />
+          <Plus size={18} color={colors.onPrimary} />
           <Text style={styles.emptyUploadBtnText}>Tải lên tài liệu</Text>
         </TouchableOpacity>
       </View>
@@ -251,7 +255,7 @@ export const UserMyDocumentsScreen = () => {
 
   /* ────────── Render ────────── */
   return (
-    <SafeAreaView style={styles.container}>
+    <ScreenSafeAreaView style={styles.container}>
       <FlatList
         data={filteredDocuments}
         keyExtractor={(item) => item.id}
@@ -275,20 +279,20 @@ export const UserMyDocumentsScreen = () => {
           <RefreshControl
             refreshing={mine.isLoading}
             onRefresh={mine.refresh}
-            colors={["#6366f1"]}
-            tintColor="#6366f1"
+            colors={[colors.primary]}
+            tintColor={colors.primary}
           />
         }
         ItemSeparatorComponent={() => <View style={styles.separator} />}
       />
-    </SafeAreaView>
+    </ScreenSafeAreaView>
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: AppThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f8fafc",
+    backgroundColor: colors.background,
   },
   listContent: {
     paddingBottom: 100,
@@ -305,17 +309,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "flex-start",
     justifyContent: "space-between",
-    paddingHorizontal: 20,
-    paddingTop: 24,
+    paddingHorizontal: 24,
+    paddingTop: SCREEN_HEADER_TOP_PADDING,
     paddingBottom: 20,
-    backgroundColor: "#ffffff",
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
-    shadowColor: "#0f172a",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.03,
-    shadowRadius: 8,
-    elevation: 2,
   },
   headerLeft: {
     flex: 1,
@@ -324,19 +320,19 @@ const styles = StyleSheet.create({
   eyebrow: {
     fontSize: 12,
     fontWeight: "700",
-    color: "#6366f1",
+    color: colors.primary,
     letterSpacing: 0.5,
     textTransform: "uppercase",
   },
   pageTitle: {
-    fontSize: 26,
+    fontSize: 28,
     fontWeight: "800",
-    color: "#0f172a",
+    color: colors.text,
     letterSpacing: -0.5,
   },
   pageSubtitle: {
     fontSize: 13,
-    color: "#94a3b8",
+    color: colors.textSubtle,
     lineHeight: 18,
     marginTop: 2,
   },
@@ -345,7 +341,7 @@ const styles = StyleSheet.create({
   /* ── Stats Grid ── */
   statsGrid: {
     gap: 10,
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
     paddingTop: 20,
     paddingBottom: 4,
   },
@@ -358,16 +354,16 @@ const styles = StyleSheet.create({
   searchContainer: {
     flexDirection: "row",
     alignItems: "center",
-    marginHorizontal: 20,
+    marginHorizontal: 24,
     marginTop: 16,
     paddingHorizontal: 14,
     height: 44,
-    backgroundColor: "#ffffff",
+    backgroundColor: colors.surface,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#f1f5f9",
+    borderColor: colors.border,
     gap: 10,
-    shadowColor: "#0f172a",
+    shadowColor: colors.shadow,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.02,
     shadowRadius: 4,
@@ -376,14 +372,14 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 14,
-    color: "#0f172a",
+    color: colors.text,
     height: 44,
   },
 
   /* ── Filters ── */
   filterRow: {
     flexDirection: "row",
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
     marginTop: 14,
     gap: 8,
   },
@@ -394,24 +390,24 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: "#ffffff",
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: "#e2e8f0",
+    borderColor: colors.border,
   },
   filterTabActive: {
-    backgroundColor: "#6366f1",
-    borderColor: "#6366f1",
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   filterTabText: {
     fontSize: 13,
     fontWeight: "600",
-    color: "#64748b",
+    color: colors.textSubtle,
   },
   filterTabTextActive: {
-    color: "#ffffff",
+    color: colors.onPrimary,
   },
   filterCount: {
-    backgroundColor: "rgba(255,255,255,0.25)",
+    backgroundColor: "rgba(255, 255, 255, 0.25)",
     paddingHorizontal: 6,
     paddingVertical: 1,
     borderRadius: 8,
@@ -419,24 +415,24 @@ const styles = StyleSheet.create({
   filterCountText: {
     fontSize: 11,
     fontWeight: "700",
-    color: "#ffffff",
+    color: colors.onPrimary,
   },
 
   /* ── Results Header ── */
   resultsHeader: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
     paddingTop: 16,
     paddingBottom: 8,
   },
   resultsCount: {
     fontSize: 13,
     fontWeight: "600",
-    color: "#94a3b8",
+    color: colors.textSubtle,
   },
 
   /* ── Cards ── */
   cardWrapper: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
   },
   separator: {
     height: 10,
@@ -454,7 +450,7 @@ const styles = StyleSheet.create({
     width: 72,
     height: 72,
     borderRadius: 20,
-    backgroundColor: "#eef2ff",
+    backgroundColor: colors.primaryMuted,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 8,
@@ -466,11 +462,11 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 17,
     fontWeight: "700",
-    color: "#0f172a",
+    color: colors.text,
   },
   emptyText: {
     fontSize: 14,
-    color: "#94a3b8",
+    color: colors.textSubtle,
     textAlign: "center",
     lineHeight: 20,
   },
@@ -481,9 +477,9 @@ const styles = StyleSheet.create({
     marginTop: 10,
     paddingHorizontal: 20,
     paddingVertical: 12,
-    backgroundColor: "#6366f1",
+    backgroundColor: colors.primary,
     borderRadius: 12,
-    shadowColor: "#6366f1",
+    shadowColor: colors.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
@@ -492,18 +488,18 @@ const styles = StyleSheet.create({
   emptyUploadBtnText: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#ffffff",
+    color: colors.onPrimary,
   },
   retryBtn: {
     marginTop: 8,
     paddingHorizontal: 20,
     paddingVertical: 10,
-    backgroundColor: "#f1f5f9",
+    backgroundColor: colors.surfaceMuted,
     borderRadius: 10,
   },
   retryBtnText: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#0f172a",
+    color: colors.text,
   },
 });
