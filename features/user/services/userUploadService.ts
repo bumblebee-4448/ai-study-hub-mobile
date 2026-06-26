@@ -1,6 +1,5 @@
 import type { CreateUserDocumentFormValues, PickedUploadFile } from "../types";
 import { buildBackendUploadFields } from "./userBackendUploadMappers";
-import { fetchUserSubjects } from "./userSubjectService";
 
 export const UPLOAD_DOCUMENT_ERROR =
   "Không thể tải tài liệu lên. Vui lòng thử lại sau.";
@@ -52,5 +51,3 @@ export const uploadUserDocument = async ({
     throw new Error(UPLOAD_DOCUMENT_ERROR);
   }
 };
-
-export const fetchUserUploadSubjects = fetchUserSubjects;

@@ -11,8 +11,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatsCard } from "@/features/admin/components/StatsCard";
 import { useRouter } from "expo-router";
-import { useAuthStore } from "@/features/auth/store/authStore";
-import { useProfileStore } from "@/features/profile/store/profileStore";
+import { useProfile } from "@/features/profile";
 import { ChevronRight, Clock, CheckCircle } from "lucide-react-native";
 import { useModeratorDashboard } from "../hooks";
 import { useAppTheme, type AppThemeColors } from "@/features/theme";
@@ -21,7 +20,7 @@ export const ModeratorDashboardScreen = () => {
   const router = useRouter();
   const { colors } = useAppTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
-  const { profile } = useProfileStore();
+  const { profile } = useProfile();
   const { summary, isLoading, error, refresh } = useModeratorDashboard();
 
   if (isLoading) {

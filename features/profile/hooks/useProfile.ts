@@ -1,16 +1,16 @@
-import { useFocusEffect } from "expo-router";
-import { useCallback, useEffect, useRef } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useCallback, useEffect } from "react";
 
 import { mapBackendRole } from "@/features/auth/services/authMappers";
 import { useLogout } from "@/features/auth";
 import { useAuthStore } from "@/features/auth/store/authStore";
+import { profileKeys } from "@/services/api/queryKeys";
+import { getQueryErrorMessage } from "@/services/api/queryState";
 
 import {
   fetchCurrentProfile,
-  getProfileErrorMessage,
   updateCurrentProfile,
 } from "../services/profileService";
-import { useProfileStore } from "../store/profileStore";
 import type { UpdateProfileFormValues, UserProfile } from "../types";
 
 const syncAuthStore = (profile: UserProfile) => {
@@ -47,69 +47,75 @@ const syncAuthStore = (profile: UserProfile) => {
 };
 
 export const useProfile = () => {
-  const {
-    profile,
-    isLoading,
-    error,
-    setLoading,
-    setError,
-    setProfile,
-    clearProfile,
-  } = useProfileStore();
+  const accessToken = useAuthStore((state) => state.accessToken);
+  const queryClient = useQueryClient();
   const logout = useLogout();
-  const loadProfileRef = useRef<() => Promise<UserProfile | null>>(async () =>
-    null
-  );
 
-  const loadProfile = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const nextProfile = await fetchCurrentProfile();
-      setProfile(nextProfile);
-      syncAuthStore(nextProfile);
-      return nextProfile;
-    } catch (loadError) {
-      setError(getProfileErrorMessage(loadError));
-      return null;
-    } finally {
-      setLoading(false);
-    }
-  }, [setError, setLoading, setProfile]);
+  const profileQuery = useQuery({
+    queryKey: profileKeys.detail(),
+    queryFn: fetchCurrentProfile,
+    enabled: Boolean(accessToken),
+    staleTime: 5 * 60 * 1000,
+  });
 
   useEffect(() => {
-    loadProfileRef.current = loadProfile;
-  }, [loadProfile]);
+    if (profileQuery.data) {
+      syncAuthStore(profileQuery.data);
+    }
+  }, [profileQuery.data]);
 
-  useFocusEffect(
-    useCallback(() => {
-      loadProfileRef.current();
-    }, [])
-  );
+  const updateProfileMutation = useMutation({
+    mutationFn: async (values: UpdateProfileFormValues) => {
+      const currentProfile =
+        queryClient.getQueryData<UserProfile>(profileKeys.detail()) ??
+        profileQuery.data;
 
-  const saveProfile = useCallback(
-    async (values: UpdateProfileFormValues) => {
-      if (!profile) {
+      if (!currentProfile) {
         throw new Error("Không tìm thấy hồ sơ hiện tại.");
       }
 
-      const nextProfile = await updateCurrentProfile(profile.id, values);
-      setProfile(nextProfile);
-      syncAuthStore(nextProfile);
-      return nextProfile;
+      return updateCurrentProfile(currentProfile.id, values);
     },
-    [profile, setProfile]
+    onSuccess: (nextProfile) => {
+      queryClient.setQueryData(profileKeys.detail(), nextProfile);
+      syncAuthStore(nextProfile);
+    },
+  });
+
+  const loadProfile = useCallback(async () => {
+    const result = await profileQuery.refetch();
+    return result.data ?? null;
+  }, [profileQuery]);
+
+  const saveProfile = useCallback(
+    async (values: UpdateProfileFormValues) => {
+      return updateProfileMutation.mutateAsync(values);
+    },
+    [updateProfileMutation]
   );
 
   const handleLogout = useCallback(() => {
     logout();
   }, [logout]);
 
+  const clearProfile = useCallback(() => {
+    queryClient.removeQueries({ queryKey: profileKeys.all });
+  }, [queryClient]);
+
+  const setProfile = useCallback(
+    (profile: UserProfile) => {
+      queryClient.setQueryData(profileKeys.detail(), profile);
+      syncAuthStore(profile);
+    },
+    [queryClient]
+  );
+
   return {
-    profile,
-    isLoading,
-    error,
+    profile: profileQuery.data ?? null,
+    isLoading: profileQuery.isLoading,
+    error: profileQuery.isError
+      ? getQueryErrorMessage(profileQuery.error, "Không thể tải hồ sơ.")
+      : null,
     clearProfile,
     loadProfile,
     saveProfile,

@@ -1,97 +1,97 @@
-import { useFocusEffect } from "expo-router";
-import { useCallback, useEffect, useRef, useState } from "react";
-import type { ModeratorDocument } from "../types";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useCallback } from "react";
+
 import {
-  fetchModeratorDocumentDetail,
+  documentKeys,
+  moderatorDocumentKeys,
+} from "@/services/api/queryKeys";
+import { getQueryErrorMessage } from "@/services/api/queryState";
+
+import {
   approveDocument as approveApi,
+  fetchModeratorDocumentDetail,
   rejectDocument as rejectApi,
 } from "../services/moderatorDocumentService";
 
 export const useModeratorDocumentDetail = (documentId: string) => {
-  const [document, setDocument] = useState<ModeratorDocument | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const hasLoadedRef = useRef(false);
+  const queryClient = useQueryClient();
+  const query = useQuery({
+    queryKey: moderatorDocumentKeys.detail(documentId),
+    queryFn: () => fetchModeratorDocumentDetail(documentId),
+    enabled: Boolean(documentId),
+    staleTime: 60 * 1000,
+  });
+
+  const invalidateModeratorDocuments = useCallback(async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: moderatorDocumentKeys.all }),
+      queryClient.invalidateQueries({ queryKey: documentKeys.detail(documentId) }),
+    ]);
+  }, [documentId, queryClient]);
+
+  const approveMutation = useMutation({
+    mutationFn: approveApi,
+    onSuccess: invalidateModeratorDocuments,
+  });
+
+  const rejectMutation = useMutation({
+    mutationFn: ({
+      id,
+      rejectionReason,
+    }: {
+      id: string;
+      rejectionReason: string;
+    }) => rejectApi(id, rejectionReason),
+    onSuccess: invalidateModeratorDocuments,
+  });
 
   const refresh = useCallback(async () => {
-    if (!documentId) return;
-    setIsLoading(true);
-    setError(null);
-    try {
-      const data = await fetchModeratorDocumentDetail(documentId);
-      setDocument(data);
-    } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Không thể tải thông tin chi tiết tài liệu."
-      );
-    } finally {
-      hasLoadedRef.current = true;
-      setIsLoading(false);
-    }
-  }, [documentId]);
+    await query.refetch();
+  }, [query]);
 
   const approve = useCallback(async () => {
-    if (!documentId) return;
-    setIsSubmitting(true);
-    setError(null);
-    try {
-      await approveApi(documentId);
-      await refresh();
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Đã xảy ra lỗi khi duyệt tài liệu."
-      );
-      throw err;
-    } finally {
-      setIsSubmitting(false);
+    if (!documentId) {
+      return;
     }
-  }, [documentId, refresh]);
+
+    await approveMutation.mutateAsync(documentId);
+  }, [approveMutation, documentId]);
 
   const reject = useCallback(
     async (rejectionReason: string) => {
-      if (!documentId) return;
+      if (!documentId) {
+        return;
+      }
+
       if (!rejectionReason.trim()) {
         throw new Error("Lý do từ chối không được để trống.");
       }
-      setIsSubmitting(true);
-      setError(null);
-      try {
-        await rejectApi(documentId, rejectionReason);
-        await refresh();
-      } catch (err) {
-        setError(
-          err instanceof Error
-            ? err.message
-            : "Đã xảy ra lỗi khi từ chối tài liệu."
-        );
-        throw err;
-      } finally {
-        setIsSubmitting(false);
-      }
+
+      await rejectMutation.mutateAsync({
+        id: documentId,
+        rejectionReason,
+      });
     },
-    [documentId, refresh]
+    [documentId, rejectMutation]
   );
 
-  useEffect(() => {
-    refresh();
-  }, [refresh]);
-
-  useFocusEffect(
-    useCallback(() => {
-      if (hasLoadedRef.current) {
-        refresh();
-      }
-    }, [refresh])
-  );
+  const actionError = approveMutation.error ?? rejectMutation.error;
 
   return {
-    document,
-    isLoading,
-    isSubmitting,
-    error,
+    document: query.data ?? null,
+    isLoading: query.isLoading || query.isRefetching,
+    isSubmitting: approveMutation.isPending || rejectMutation.isPending,
+    error: query.isError
+      ? getQueryErrorMessage(
+          query.error,
+          "Không thể tải thông tin chi tiết tài liệu."
+        )
+      : actionError
+        ? getQueryErrorMessage(
+            actionError,
+            "Đã xảy ra lỗi khi cập nhật trạng thái tài liệu."
+          )
+        : null,
     refresh,
     approve,
     reject,

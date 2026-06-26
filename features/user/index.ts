@@ -4,6 +4,8 @@ export * from "./components/UserScreenHeader";
 export * from "./components/MyDocStatsCard";
 export * from "./components/MyDocumentItem";
 export * from "./hooks/useUserDocuments";
+export * from "./hooks/useDeleteUserDocument";
+export * from "./hooks/useUserSubjects";
 export * from "./hooks/useUserUploadDocument";
 export * from "./screens/UserHomeScreen";
 export * from "./screens/UserLibraryScreen";

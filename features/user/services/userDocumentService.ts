@@ -29,3 +29,7 @@ export const fetchLibraryDocuments = (params: DocumentListParams = {}) =>
 
 export const fetchMyDocuments = (params: DocumentListParams = {}) =>
   fetchDocumentList("/documents/me", { page: 1, limit: 20, ...params });
+
+export const deleteUserDocument = async (documentId: string): Promise<void> => {
+  await apiClient.delete(`/documents/${documentId}`, { skipAlert: true });
+};

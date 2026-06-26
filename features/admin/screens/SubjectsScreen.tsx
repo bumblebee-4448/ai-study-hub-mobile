@@ -10,7 +10,7 @@ import {
   Trash2,
   X,
 } from "lucide-react-native";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -27,18 +27,18 @@ import {
 
 import { ScreenSafeAreaView } from "@/components/screen-safe-area-view";
 import { SCREEN_HEADER_TOP_PADDING } from "@/constants/safeArea";
+import { useDebounce } from "@/hooks/useDebounce";
+import { usePagination } from "@/hooks/usePagination";
 import { useAppTheme, type AppThemeColors } from "@/features/theme";
 import {
-  createAdminSubject,
-  deleteAdminSubject,
-  fetchAdminSubjectDetail,
-  fetchAdminSubjects,
-  updateAdminSubject,
-} from "../services/adminApi";
+  useAdminSubjectDetail,
+  useAdminSubjects,
+  useDeleteAdminSubject,
+  useSaveAdminSubject,
+} from "../hooks/useAdminQueries";
 import type {
   AdminSubjectFormValues,
   AdminSubjectItem,
-  AdminSubjectPagination,
 } from "../types";
 
 const emptyDraft: AdminSubjectFormValues = {
@@ -57,53 +57,33 @@ const getErrorMessage = (error: unknown, fallback: string) => {
 export const SubjectsScreen = () => {
   const { colors } = useAppTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
-  const [subjects, setSubjects] = useState<AdminSubjectItem[]>([]);
-  const [pagination, setPagination] = useState<AdminSubjectPagination>({
-    page: 1,
-    limit: 10,
-    total: 0,
-    totalPages: 1,
-  });
   const [query, setQuery] = useState("");
+  const debouncedQuery = useDebounce(query.trim(), 300);
+  const { page, limit, setPage, resetPage } = usePagination(10);
   const [selectedSubject, setSelectedSubject] =
     useState<AdminSubjectItem | null>(null);
   const [editSubject, setEditSubject] = useState<AdminSubjectItem | null>(null);
   const [draft, setDraft] = useState<AdminSubjectFormValues>(emptyDraft);
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isDetailLoading, setIsDetailLoading] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
   const [formErrorMessage, setFormErrorMessage] = useState("");
+  const subjectsQuery = useAdminSubjects({
+    page,
+    limit,
+    search: debouncedQuery || undefined,
+  });
+  const subjectDetailQuery = useAdminSubjectDetail(selectedSubject?.id);
+  const saveSubjectMutation = useSaveAdminSubject();
+  const deleteSubjectMutation = useDeleteAdminSubject();
 
-  const page = pagination.page;
-
-  const loadSubjects = useCallback(async () => {
-    setIsLoading(true);
-    setErrorMessage("");
-
-    try {
-      const response = await fetchAdminSubjects({
-        page,
-        limit: pagination.limit,
-        search: query.trim() || undefined,
-      });
-
-      setSubjects(response.subjects);
-      setPagination(response.pagination);
-    } catch (error) {
-      setErrorMessage(
-        getErrorMessage(error, "Không thể tải danh sách môn học.")
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  }, [page, pagination.limit, query]);
-
-  useEffect(() => {
-    void loadSubjects();
-  }, [loadSubjects]);
+  const subjects = subjectsQuery.subjects;
+  const pagination = subjectsQuery.pagination;
+  const selectedSubjectForModal = subjectDetailQuery.subject ?? selectedSubject;
+  const isLoading = subjectsQuery.isLoading;
+  const isDetailLoading =
+    subjectDetailQuery.isLoading && Boolean(selectedSubject?.id);
+  const isSaving = saveSubjectMutation.isPending;
+  const isDeleting = deleteSubjectMutation.isPending;
+  const errorMessage = subjectsQuery.error || subjectDetailQuery.error;
 
   const visibleRange = useMemo(() => {
     if (pagination.total === 0) {
@@ -132,20 +112,8 @@ export const SubjectsScreen = () => {
     setIsFormOpen(true);
   }, []);
 
-  const openDetail = useCallback(async (subject: AdminSubjectItem) => {
-    setIsDetailLoading(true);
-    setErrorMessage("");
-
-    try {
-      const detail = await fetchAdminSubjectDetail(subject.id);
-      setSelectedSubject(detail);
-    } catch (error) {
-      setErrorMessage(
-        getErrorMessage(error, "Không thể tải chi tiết môn học.")
-      );
-    } finally {
-      setIsDetailLoading(false);
-    }
+  const openDetail = useCallback((subject: AdminSubjectItem) => {
+    setSelectedSubject(subject);
   }, []);
 
   const handleSaveSubject = useCallback(async () => {
@@ -154,23 +122,22 @@ export const SubjectsScreen = () => {
       return;
     }
 
-    setIsSaving(true);
     setFormErrorMessage("");
 
     try {
-      if (editSubject) {
-        await updateAdminSubject(editSubject.id, draft);
-        Alert.alert("Thành công", "Đã cập nhật môn học.");
-      } else {
-        await createAdminSubject(draft);
-        Alert.alert("Thành công", "Đã thêm môn học mới.");
-      }
+      await saveSubjectMutation.mutateAsync({
+        id: editSubject?.id,
+        values: draft,
+      });
+      Alert.alert(
+        "Thành công",
+        editSubject ? "Đã cập nhật môn học." : "Đã thêm môn học mới."
+      );
 
       setIsFormOpen(false);
       setEditSubject(null);
       setDraft(emptyDraft);
-      setPagination((current) => ({ ...current, page: 1 }));
-      await loadSubjects();
+      resetPage();
     } catch (error) {
       setFormErrorMessage(
         getErrorMessage(
@@ -178,10 +145,8 @@ export const SubjectsScreen = () => {
           editSubject ? "Không thể cập nhật môn học." : "Không thể thêm môn học."
         )
       );
-    } finally {
-      setIsSaving(false);
     }
-  }, [draft, editSubject, loadSubjects]);
+  }, [draft, editSubject, resetPage, saveSubjectMutation]);
 
   const handleDeleteSubject = useCallback(
     (subject: AdminSubjectItem) => {
@@ -194,36 +159,31 @@ export const SubjectsScreen = () => {
             text: "Xóa",
             style: "destructive",
             onPress: async () => {
-              setIsDeleting(true);
-
               try {
-                await deleteAdminSubject(subject.id);
+                await deleteSubjectMutation.mutateAsync(subject.id);
                 Alert.alert("Thành công", "Đã xóa môn học.");
                 setSelectedSubject(null);
-                setPagination((current) => ({ ...current, page: 1 }));
-                await loadSubjects();
+                resetPage();
               } catch (error) {
                 Alert.alert(
                   "Lỗi",
                   getErrorMessage(error, "Không thể xóa môn học.")
                 );
-              } finally {
-                setIsDeleting(false);
               }
             },
           },
         ]
       );
     },
-    [loadSubjects]
+    [deleteSubjectMutation, resetPage]
   );
 
-  const goToPage = useCallback((nextPage: number) => {
-    setPagination((current) => ({
-      ...current,
-      page: Math.min(Math.max(nextPage, 1), current.totalPages || 1),
-    }));
-  }, []);
+  const goToPage = useCallback(
+    (nextPage: number) => {
+      setPage(Math.min(Math.max(nextPage, 1), pagination.totalPages || 1));
+    },
+    [pagination.totalPages, setPage]
+  );
 
   return (
     <ScreenSafeAreaView style={styles.container}>
@@ -248,7 +208,7 @@ export const SubjectsScreen = () => {
             autoCapitalize="none"
             onChangeText={(value) => {
               setQuery(value);
-              setPagination((current) => ({ ...current, page: 1 }));
+              resetPage();
             }}
             placeholder="Tìm theo tên hoặc mã môn học..."
             placeholderTextColor={colors.textSubtle}
@@ -282,7 +242,10 @@ export const SubjectsScreen = () => {
           <View style={styles.errorBox}>
             <AlertCircle size={18} color={colors.danger} />
             <Text style={styles.errorText}>{errorMessage}</Text>
-            <TouchableOpacity style={styles.retryButton} onPress={loadSubjects}>
+            <TouchableOpacity
+              style={styles.retryButton}
+              onPress={() => subjectsQuery.refresh()}
+            >
               <RefreshCw size={16} color={colors.primary} />
               <Text style={styles.retryText}>Tải lại</Text>
             </TouchableOpacity>
@@ -339,7 +302,7 @@ export const SubjectsScreen = () => {
         onClose={() => setSelectedSubject(null)}
         onDelete={handleDeleteSubject}
         onEdit={openEdit}
-        subject={selectedSubject}
+        subject={selectedSubjectForModal}
       />
 
       <SubjectFormModal

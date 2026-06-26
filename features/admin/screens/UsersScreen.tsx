@@ -9,7 +9,7 @@ import {
   UserPlus,
   X,
 } from "lucide-react-native";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -37,11 +37,11 @@ import { ScreenSafeAreaView } from "@/components/screen-safe-area-view";
 import { SCREEN_HEADER_TOP_PADDING } from "@/constants/safeArea";
 import { useAppTheme, type AppThemeColors } from "@/features/theme";
 import {
-  banAdminAccount,
-  createAdminAccount,
-  fetchAdminAccountDetail,
-  fetchAdminAccounts,
-} from "../services/adminApi";
+  useAdminAccountDetail,
+  useAdminAccounts,
+  useBanAdminAccount,
+  useCreateAdminAccount,
+} from "../hooks/useAdminQueries";
 import type {
   AdminAccountItem,
   AdminAccountRole,
@@ -96,7 +96,6 @@ const getStatusColors = (status: AdminAccountStatus, colors: AppThemeColors) => 
 export const UsersScreen = () => {
   const { colors } = useAppTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
-  const [users, setUsers] = useState<AdminAccountItem[]>([]);
   const [query, setQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState<"all" | AdminAccountRole>(
     "all"
@@ -110,13 +109,21 @@ export const UsersScreen = () => {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [draft, setDraft] =
     useState<CreateAdminAccountFormValues>(emptyDraft);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isDetailLoading, setIsDetailLoading] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const [isBanning, setIsBanning] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
   const [formErrorMessage, setFormErrorMessage] = useState("");
   const [isFilterExpanded, setIsFilterExpanded] = useState(false);
+  const accountsQuery = useAdminAccounts();
+  const selectedUserDetail = useAdminAccountDetail(selectedUser?.id);
+  const createAccountMutation = useCreateAdminAccount();
+  const banAccountMutation = useBanAdminAccount();
+
+  const users = accountsQuery.users;
+  const selectedUserForModal = selectedUserDetail.user ?? selectedUser;
+  const isLoading = accountsQuery.isLoading;
+  const isDetailLoading =
+    selectedUserDetail.isLoading && Boolean(selectedUser?.id);
+  const isSaving = createAccountMutation.isPending;
+  const isBanning = banAccountMutation.isPending;
+  const errorMessage = accountsQuery.error || selectedUserDetail.error;
 
   const activeRoleLabel = useMemo(() => {
     if (roleFilter === "all") return "";
@@ -149,26 +156,6 @@ export const UsersScreen = () => {
     setStatusFilter("all");
   }, []);
 
-  const loadUsers = useCallback(async () => {
-    setIsLoading(true);
-    setErrorMessage("");
-
-    try {
-      const accounts = await fetchAdminAccounts();
-      setUsers(accounts);
-    } catch (error) {
-      setErrorMessage(
-        getErrorMessage(error, "Không thể tải danh sách người dùng.")
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    void loadUsers();
-  }, [loadUsers]);
-
   const filteredUsers = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
 
@@ -185,20 +172,8 @@ export const UsersScreen = () => {
     });
   }, [query, roleFilter, statusFilter, users]);
 
-  const openDetail = useCallback(async (user: AdminAccountItem) => {
-    setIsDetailLoading(true);
-    setErrorMessage("");
-
-    try {
-      const detail = await fetchAdminAccountDetail(user.id);
-      setSelectedUser(detail);
-    } catch (error) {
-      setErrorMessage(
-        getErrorMessage(error, "Không thể tải chi tiết tài khoản.")
-      );
-    } finally {
-      setIsDetailLoading(false);
-    }
+  const openDetail = useCallback((user: AdminAccountItem) => {
+    setSelectedUser(user);
   }, []);
 
   const handleCreateUser = useCallback(async () => {
@@ -213,21 +188,17 @@ export const UsersScreen = () => {
       return;
     }
 
-    setIsSaving(true);
     setFormErrorMessage("");
 
     try {
-      await createAdminAccount(draft);
+      await createAccountMutation.mutateAsync(draft);
       setIsCreateOpen(false);
       setDraft(emptyDraft);
       Alert.alert("Thành công", "Đã tạo tài khoản kiểm duyệt viên.");
-      await loadUsers();
     } catch (error) {
       setFormErrorMessage(getErrorMessage(error, "Không thể tạo tài khoản."));
-    } finally {
-      setIsSaving(false);
     }
-  }, [draft, loadUsers]);
+  }, [createAccountMutation, draft]);
 
   const handleBanUser = useCallback(
     (user: AdminAccountItem) => {
@@ -240,27 +211,22 @@ export const UsersScreen = () => {
             text: "Khóa",
             style: "destructive",
             onPress: async () => {
-              setIsBanning(true);
-
               try {
-                await banAdminAccount(user.id);
+                await banAccountMutation.mutateAsync(user.id);
                 Alert.alert("Thành công", "Đã khóa tài khoản.");
                 setSelectedUser(null);
-                await loadUsers();
               } catch (error) {
                 Alert.alert(
                   "Lỗi",
                   getErrorMessage(error, "Không thể khóa tài khoản.")
                 );
-              } finally {
-                setIsBanning(false);
               }
             },
           },
         ]
       );
     },
-    [loadUsers]
+    [banAccountMutation]
   );
 
   return (
@@ -415,7 +381,10 @@ export const UsersScreen = () => {
           <View style={styles.errorBox}>
             <AlertCircle size={18} color={colors.danger} />
             <Text style={styles.errorText}>{errorMessage}</Text>
-            <TouchableOpacity style={styles.retryButton} onPress={loadUsers}>
+            <TouchableOpacity
+              style={styles.retryButton}
+              onPress={() => accountsQuery.refresh()}
+            >
               <RefreshCw size={16} color={colors.primary} />
               <Text style={styles.retryText}>Tải lại</Text>
             </TouchableOpacity>
@@ -444,7 +413,7 @@ export const UsersScreen = () => {
         isBanning={isBanning}
         onBan={handleBanUser}
         onClose={() => setSelectedUser(null)}
-        user={selectedUser}
+        user={selectedUserForModal}
       />
 
       <CreateUserModal

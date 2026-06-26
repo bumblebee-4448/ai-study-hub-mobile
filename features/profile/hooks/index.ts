@@ -3,3 +3,4 @@
  */
 
 export { useProfile } from "./useProfile";
+export { useProfileDocuments } from "./useProfileDocuments";

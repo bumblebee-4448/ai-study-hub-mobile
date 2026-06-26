@@ -1,10 +1,15 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { StyleSheet, View, Text, TouchableOpacity, Alert, ScrollView } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, Alert, ScrollView, ActivityIndicator } from 'react-native';
 import { theme } from '@/constants/theme';
-import { User, Shield, Calendar, Ban, CheckCircle, ArrowLeft } from 'lucide-react-native';
+import { User, Shield, Calendar, Ban, ArrowLeft } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
+
+import {
+  useAdminAccountDetail,
+  useBanAdminAccount,
+} from '@/features/admin/hooks/useAdminQueries';
 
 export default function UserDetailModal() {
   const router = useRouter();
@@ -17,37 +22,53 @@ export default function UserDetailModal() {
     joinedDate: string;
   }>();
 
-  const [status, setStatus] = useState(params.status || 'active');
+  // Ưu tiên dùng data thật từ server; fallback sang route params khi đang tải
+  const { user, isLoading } = useAdminAccountDetail(params.id || null);
+  const banMutation = useBanAdminAccount();
 
-  const handleToggleStatus = async () => {
-    const isBlocking = status === 'active';
-    const actionText = isBlocking ? 'khóa' : 'kích hoạt lại';
-    
+  // Resolve các trường hiển thị: dùng server data nếu có, fallback sang params
+  const displayName = user?.name ?? params.fullName ?? 'N/A';
+  const displayEmail = user?.email ?? params.email ?? 'N/A';
+  const displayRole = user?.roleLabel ?? (params.role ?? 'Member').toUpperCase();
+  const displayJoinedDate = user?.createdAtLabel ?? params.joinedDate ?? 'N/A';
+  const serverStatus = user?.status ?? null;
+  const canBan = user?.canBan ?? false;
+  const isBanning = banMutation.isPending;
+
+  const handleBan = () => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
 
     Alert.alert(
-      'Xác nhận hành động',
-      `Bạn có chắc chắn muốn ${actionText} tài khoản của ${params.fullName}?`,
+      'Xác nhận khóa tài khoản',
+      `Tài khoản ${displayName} sẽ chuyển sang trạng thái đã khóa.`,
       [
         { text: 'Hủy', style: 'cancel' },
-        { 
-          text: isBlocking ? 'Khóa' : 'Kích hoạt', 
-          style: isBlocking ? 'destructive' : 'default',
-          onPress: () => {
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-            setStatus(isBlocking ? 'blocked' : 'active');
-            Alert.alert('Thành công', `Đã ${actionText} tài khoản.`);
-          }
-        }
+        {
+          text: 'Khóa',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await banMutation.mutateAsync(params.id);
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+              Alert.alert('Thành công', 'Đã khóa tài khoản.', [
+                { text: 'OK', onPress: () => router.back() },
+              ]);
+            } catch {
+              Alert.alert('Lỗi', 'Không thể khóa tài khoản. Vui lòng thử lại.');
+            }
+          },
+        },
       ]
     );
   };
 
   const getStatusBadgeStyles = () => {
-    switch (status) {
-      case 'active': return { color: theme.colors.success, backgroundColor: theme.colors.successBg, label: 'HOẠT ĐỘNG' };
-      case 'blocked': return { color: theme.colors.danger, backgroundColor: theme.colors.dangerBg, label: 'BỊ KHÓA' };
-      default: return { color: theme.colors.textSecondaryLight, backgroundColor: theme.colors.backgroundLight, label: 'CHỜ DUYỆT' };
+    switch (serverStatus) {
+      case 'ACTIVE': return { color: theme.colors.success, backgroundColor: theme.colors.successBg, label: 'HOẠT ĐỘNG' };
+      case 'BANNED': return { color: theme.colors.danger, backgroundColor: theme.colors.dangerBg, label: 'BỊ KHÓA' };
+      case 'UNVERIFIED': return { color: theme.colors.textSecondaryLight, backgroundColor: theme.colors.backgroundLight, label: 'CHƯA XÁC THỰC' };
+      case 'DELETED': return { color: theme.colors.textSecondaryLight, backgroundColor: theme.colors.backgroundLight, label: 'ĐÃ XÓA' };
+      default: return { color: theme.colors.textSecondaryLight, backgroundColor: theme.colors.backgroundLight, label: 'N/A' };
     }
   };
 
@@ -64,19 +85,29 @@ export default function UserDetailModal() {
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        {/* Loading overlay when fetching server data */}
+        {isLoading ? (
+          <View style={styles.loadingRow}>
+            <ActivityIndicator size="small" color={theme.colors.primary} />
+            <Text style={styles.loadingText}>Đang tải thông tin...</Text>
+          </View>
+        ) : null}
+
         {/* Profile Card */}
         <View style={styles.profileCard}>
           <View style={styles.avatarLarge}>
             <Text style={styles.avatarTextLarge}>
-              {params.fullName ? params.fullName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : 'US'}
+              {displayName ? displayName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() : 'US'}
             </Text>
           </View>
-          <Text style={styles.name}>{params.fullName || 'N/A'}</Text>
-          <Text style={styles.email}>{params.email || 'N/A'}</Text>
-          
-          <View style={[styles.statusBadge, { backgroundColor: badge.backgroundColor }]}>
-            <Text style={[styles.statusText, { color: badge.color }]}>{badge.label}</Text>
-          </View>
+          <Text style={styles.name}>{displayName}</Text>
+          <Text style={styles.email}>{displayEmail}</Text>
+
+          {!isLoading && serverStatus ? (
+            <View style={[styles.statusBadge, { backgroundColor: badge.backgroundColor }]}>
+              <Text style={[styles.statusText, { color: badge.color }]}>{badge.label}</Text>
+            </View>
+          ) : null}
         </View>
 
         {/* Detailed Fields */}
@@ -95,7 +126,7 @@ export default function UserDetailModal() {
             <Shield size={18} color={theme.colors.textSecondaryLight} style={styles.infoIcon} />
             <View>
               <Text style={styles.infoLabel}>Vai trò</Text>
-              <Text style={styles.infoValue}>{(params.role || 'Member').toUpperCase()}</Text>
+              <Text style={styles.infoValue}>{displayRole}</Text>
             </View>
           </View>
 
@@ -103,7 +134,7 @@ export default function UserDetailModal() {
             <Calendar size={18} color={theme.colors.textSecondaryLight} style={styles.infoIcon} />
             <View>
               <Text style={styles.infoLabel}>Ngày tham gia</Text>
-              <Text style={styles.infoValue}>{params.joinedDate || 'N/A'}</Text>
+              <Text style={styles.infoValue}>{displayJoinedDate}</Text>
             </View>
           </View>
         </View>
@@ -127,28 +158,26 @@ export default function UserDetailModal() {
           </View>
         </View>
 
-        {/* Action Controls */}
-        <View style={styles.actionsContainer}>
-          <TouchableOpacity 
-            style={[
-              styles.actionButton, 
-              status === 'active' ? styles.blockButton : styles.activateButton
-            ]} 
-            onPress={handleToggleStatus}
-          >
-            {status === 'active' ? (
-              <>
+        {/* Action Controls — chỉ hiện khi tài khoản có thể bị khóa */}
+        {canBan ? (
+          <View style={styles.actionsContainer}>
+            <TouchableOpacity
+              disabled={isBanning}
+              style={[styles.actionButton, styles.blockButton, isBanning && styles.disabledButton]}
+              onPress={handleBan}
+              activeOpacity={0.75}
+            >
+              {isBanning ? (
+                <ActivityIndicator size="small" color="white" style={styles.actionButtonIcon} />
+              ) : (
                 <Ban size={18} color="white" style={styles.actionButtonIcon} />
-                <Text style={styles.actionButtonText}>Khóa tài khoản</Text>
-              </>
-            ) : (
-              <>
-                <CheckCircle size={18} color="white" style={styles.actionButtonIcon} />
-                <Text style={styles.actionButtonText}>Kích hoạt tài khoản</Text>
-              </>
-            )}
-          </TouchableOpacity>
-        </View>
+              )}
+              <Text style={styles.actionButtonText}>
+                {isBanning ? 'Đang khóa...' : 'Khóa tài khoản'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        ) : null}
       </ScrollView>
     </SafeAreaView>
   );
@@ -303,7 +332,19 @@ const styles = StyleSheet.create({
   blockButton: {
     backgroundColor: theme.colors.danger,
   },
-  activateButton: {
-    backgroundColor: theme.colors.success,
+  disabledButton: {
+    opacity: 0.6,
+  },
+  loadingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 8,
+    marginBottom: 8,
+  },
+  loadingText: {
+    fontSize: 13,
+    color: theme.colors.textSecondaryLight,
   },
 });
