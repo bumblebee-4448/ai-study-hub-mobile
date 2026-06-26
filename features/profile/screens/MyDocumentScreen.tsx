@@ -1,7 +1,9 @@
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useMemo } from "react";
 import {
+  ActivityIndicator,
   FlatList,
+  RefreshControl,
   SafeAreaView,
   ScrollView,
   StyleSheet,
@@ -13,34 +15,7 @@ import {
 import { BORDER_RADIUS, COLORS, SPACING, TYPOGRAPHY } from "@/constants/theme";
 import { DocumentItem } from "../components/DocumentItem";
 import { StatsCard, StatsCardData } from "../components/StatsCard";
-import { MyDocument } from "../types";
-
-const STATS_DATA: StatsCardData[] = [
-  {
-    label: "Tổng tài liệu",
-    value: "0",
-    iconBg: COLORS["primary-fixed"],
-    icon: <MaterialCommunityIcons name="file-document-outline" size={22} color={COLORS.primary} />,
-  },
-  {
-    label: "Lượt xem",
-    value: "0",
-    iconBg: COLORS["secondary-fixed"],
-    icon: <Ionicons name="eye-outline" size={22} color={COLORS.secondary} />,
-  },
-  {
-    label: "Lượt tải",
-    value: "0",
-    iconBg: COLORS["tertiary-fixed"],
-    icon: <Ionicons name="download-outline" size={22} color={COLORS.tertiary} />,
-  },
-  {
-    label: "Đóng góp",
-    value: "N/A",
-    iconBg: COLORS["secondary-container"],
-    icon: <Ionicons name="trophy-outline" size={22} color={COLORS["on-secondary-container"]} />,
-  },
-];
+import { useProfileDocuments } from "../hooks";
 
 interface MyDocumentScreenProps {
   onBack?: () => void;
@@ -53,16 +28,93 @@ export const MyDocumentScreen: React.FC<MyDocumentScreenProps> = ({
   onUpload,
   onEdit,
 }) => {
-  const [documents, setDocuments] = useState<MyDocument[]>([]);
+  const { documents, pagination, isLoading, error, refresh, hideDocument } =
+    useProfileDocuments();
+
+  const statsData = useMemo<StatsCardData[]>(() => {
+    const totalDocuments = pagination.total || documents.length;
+    const approvedDocuments = documents.filter(
+      (document) => document.status === "public"
+    ).length;
+
+    return [
+      {
+        label: "Tổng tài liệu",
+        value: String(totalDocuments),
+        iconBg: COLORS["primary-fixed"],
+        icon: <MaterialCommunityIcons name="file-document-outline" size={22} color={COLORS.primary} />,
+      },
+      {
+        label: "Lượt xem",
+        value: "0",
+        iconBg: COLORS["secondary-fixed"],
+        icon: <Ionicons name="eye-outline" size={22} color={COLORS.secondary} />,
+      },
+      {
+        label: "Lượt tải",
+        value: "0",
+        iconBg: COLORS["tertiary-fixed"],
+        icon: <Ionicons name="download-outline" size={22} color={COLORS.tertiary} />,
+      },
+      {
+        label: "Đóng góp",
+        value: String(approvedDocuments),
+        iconBg: COLORS["secondary-container"],
+        icon: <Ionicons name="trophy-outline" size={22} color={COLORS["on-secondary-container"]} />,
+      },
+    ];
+  }, [documents, pagination.total]);
 
   const handleDelete = useCallback((id: string) => {
-    setDocuments((prev) => prev.filter((d) => d.id !== id));
-  }, []);
+    hideDocument(id);
+  }, [hideDocument]);
 
   const handleEdit = useCallback(
     (id: string) => onEdit?.(id),
     [onEdit]
   );
+
+  const handleRefresh = useCallback(() => {
+    void refresh();
+  }, [refresh]);
+
+  const renderEmptyState = useCallback(() => {
+    if (isLoading) {
+      return (
+        <View style={styles.stateContainer}>
+          <ActivityIndicator size="large" color={COLORS.primary} />
+          <Text style={styles.stateText}>Đang tải tài liệu...</Text>
+        </View>
+      );
+    }
+
+    if (error) {
+      return (
+        <View style={styles.stateContainer}>
+          <Ionicons name="warning-outline" size={32} color={COLORS.error} />
+          <Text style={styles.stateTitle}>Không thể tải tài liệu</Text>
+          <Text style={styles.stateText}>{error}</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={handleRefresh}>
+            <Text style={styles.retryText}>Thử lại</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+
+    return (
+      <View style={styles.stateContainer}>
+        <MaterialCommunityIcons
+          name="file-document-outline"
+          size={36}
+          color={COLORS.primary}
+        />
+        <Text style={styles.stateTitle}>Chưa có tài liệu</Text>
+        <Text style={styles.stateText}>
+          Bắt đầu tải lên tài liệu học tập đầu tiên của bạn
+        </Text>
+      </View>
+    );
+  }, [error, handleRefresh, isLoading]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -93,7 +145,7 @@ export const MyDocumentScreen: React.FC<MyDocumentScreenProps> = ({
         contentContainerStyle={styles.statsRow}
         style={styles.statsScroll}
       >
-        {STATS_DATA.map((stat) => (
+        {statsData.map((stat) => (
           <StatsCard key={stat.label} data={stat} />
         ))}
       </ScrollView>
@@ -101,7 +153,7 @@ export const MyDocumentScreen: React.FC<MyDocumentScreenProps> = ({
       <View style={styles.listHeader}>
         <Text style={styles.listTitle}>Danh sách tài liệu</Text>
         <Text style={styles.listCount}>
-          {documents.length} / 124 tài liệu
+          {documents.length} / {pagination.total || documents.length} tài liệu
         </Text>
       </View>
 
@@ -111,8 +163,17 @@ export const MyDocumentScreen: React.FC<MyDocumentScreenProps> = ({
         renderItem={({ item }) => (
           <DocumentItem item={item} onEdit={handleEdit} onDelete={handleDelete} />
         )}
+        ListEmptyComponent={renderEmptyState}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={isLoading}
+            onRefresh={handleRefresh}
+            colors={[COLORS.primary]}
+            tintColor={COLORS.primary}
+          />
+        }
       />
 
       <View style={styles.bottomBar}>
@@ -189,6 +250,37 @@ const styles = StyleSheet.create({
 
   listContent: {
     paddingBottom: 100,
+    flexGrow: 1,
+  },
+
+  stateContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: SPACING["margin-mobile"],
+    paddingVertical: SPACING["2xl"],
+    gap: SPACING.sm,
+  },
+  stateTitle: {
+    ...TYPOGRAPHY["label-md"],
+    color: COLORS["on-surface"],
+    textAlign: "center",
+  },
+  stateText: {
+    ...TYPOGRAPHY["body-md"],
+    color: COLORS["on-surface-variant"],
+    textAlign: "center",
+  },
+  retryButton: {
+    marginTop: SPACING.base,
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.sm,
+    borderRadius: BORDER_RADIUS.lg,
+    backgroundColor: COLORS.primary,
+  },
+  retryText: {
+    ...TYPOGRAPHY["label-md"],
+    color: COLORS["on-primary"],
   },
 
   bottomBar: {

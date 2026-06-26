@@ -8,9 +8,10 @@ import {
   Search,
   Trophy,
 } from "lucide-react-native";
-import React, { useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
   RefreshControl,
   StyleSheet,
@@ -25,6 +26,7 @@ import { SCREEN_HEADER_TOP_PADDING } from "@/constants/safeArea";
 import { MyDocStatsCard } from "../components/MyDocStatsCard";
 import type { MyDocStatsCardData } from "../components/MyDocStatsCard";
 import { MyDocumentItem } from "../components/MyDocumentItem";
+import { useDeleteUserDocument } from "../hooks/useDeleteUserDocument";
 import { useMyDocuments } from "../hooks/useUserDocuments";
 import { useAppTheme, type AppThemeColors } from "@/features/theme";
 import type { BackendDocumentStatus, UserDocument } from "../types";
@@ -41,6 +43,7 @@ export const UserMyDocumentsScreen = () => {
   const { colors } = useAppTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const mine = useMyDocuments();
+  const { deleteDocument } = useDeleteUserDocument();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState<
     "ALL" | BackendDocumentStatus
@@ -118,6 +121,22 @@ export const UserMyDocumentsScreen = () => {
   const handleUpload = () => {
     router.push("/(student-tabs)/upload" as any);
   };
+
+  const handleDelete = useCallback(
+    async (id: string) => {
+      try {
+        await deleteDocument(id);
+      } catch (error) {
+        Alert.alert(
+          "Lỗi",
+          error instanceof Error
+            ? error.message
+            : "Không thể xóa tài liệu. Vui lòng thử lại."
+        );
+      }
+    },
+    [deleteDocument]
+  );
 
   /* ────────── List Header ────────── */
   const renderListHeader = () => (
@@ -267,9 +286,7 @@ export const UserMyDocumentsScreen = () => {
               document={item}
               onPress={handleDocumentPress}
               onEdit={handleEdit}
-              onDelete={(id) => {
-                // TODO: connect to actual delete API
-              }}
+              onDelete={handleDelete}
             />
           </View>
         )}

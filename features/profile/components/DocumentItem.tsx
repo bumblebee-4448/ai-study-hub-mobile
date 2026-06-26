@@ -16,6 +16,16 @@ const STATUS_CONFIG: Record<DocumentStatus, { label: string; bg: string; color: 
     bg: COLORS["secondary-container"],
     color: COLORS["on-secondary-container"],
   },
+  rejected: {
+    label: "Bị từ chối",
+    bg: COLORS["error-container"],
+    color: COLORS.error,
+  },
+  deleted: {
+    label: "Đã xóa",
+    bg: COLORS["surface-container-highest"],
+    color: COLORS["on-surface-variant"],
+  },
 };
 
 type IoniconName = React.ComponentProps<typeof Ionicons>["name"];
@@ -26,6 +36,7 @@ const FORMAT_ICON: Record<MyDocument["format"], { lib: "mci"; name: MCIName } | 
   docx: { lib: "mci", name: "file-word-box" },
   zip: { lib: "mci", name: "folder-zip" },
   pptx: { lib: "mci", name: "file-powerpoint-box" },
+  file: { lib: "mci", name: "file-document-outline" },
 };
 
 interface DocumentItemProps {

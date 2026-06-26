@@ -1,78 +1,74 @@
-import { useFocusEffect } from "expo-router";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useCallback } from "react";
 
-import type { UserDocument, UserDocumentListResult } from "../types";
+import { getQueryErrorMessage } from "@/services/api/queryState";
+import { userDocumentKeys } from "@/services/api/queryKeys";
+
+import type { UserDocumentListResult } from "../types";
 import {
   fetchLibraryDocuments,
   fetchMyDocuments,
   fetchRecentDocuments,
 } from "../services/userDocumentService";
+import type { DocumentListParams } from "../services/userDocumentQuery";
 
-type DocumentLoader = () => Promise<UserDocumentListResult>;
-
-const getErrorMessage = (error: unknown) => {
-  if (error instanceof Error) {
-    return error.message;
-  }
-
-  return "Không thể tải danh sách tài liệu.";
+const EMPTY_RESULT: UserDocumentListResult = {
+  documents: [],
+  pagination: {
+    page: 1,
+    limit: 0,
+    total: 0,
+    totalPages: 1,
+  },
 };
 
-const useDocumentLoader = (loader: DocumentLoader) => {
-  const [documents, setDocuments] = useState<UserDocument[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const hasLoadedRef = useRef(false);
+const useUserDocumentQuery = ({
+  queryKey,
+  queryFn,
+}: {
+  queryKey: readonly unknown[];
+  queryFn: () => Promise<UserDocumentListResult>;
+}) => {
+  const query = useQuery({
+    queryKey,
+    queryFn,
+    staleTime: 60 * 1000,
+  });
 
   const refresh = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
+    await query.refetch();
+  }, [query]);
 
-    try {
-      const result = await loader();
-      setDocuments(result.documents);
-    } catch (loadError) {
-      setError(getErrorMessage(loadError));
-    } finally {
-      hasLoadedRef.current = true;
-      setIsLoading(false);
-    }
-  }, [loader]);
-
-  useEffect(() => {
-    refresh();
-  }, [refresh]);
-
-  useFocusEffect(
-    useCallback(() => {
-      if (hasLoadedRef.current) {
-        refresh();
-      }
-    }, [refresh])
-  );
+  const result = query.data ?? EMPTY_RESULT;
 
   return {
-    documents,
-    isLoading,
-    error,
+    documents: result.documents,
+    pagination: result.pagination,
+    isLoading: query.isLoading || query.isRefetching,
+    error: query.isError
+      ? getQueryErrorMessage(query.error, "Không thể tải danh sách tài liệu.")
+      : null,
     refresh,
   };
 };
 
-export const useRecentDocuments = (limit = 6) => {
-  const loader = useCallback(() => fetchRecentDocuments(limit), [limit]);
-  return useDocumentLoader(loader);
-};
+export const useRecentDocuments = (limit = 6) =>
+  useUserDocumentQuery({
+    queryKey: userDocumentKeys.recent(limit),
+    queryFn: () => fetchRecentDocuments(limit),
+  });
 
 export const useLibraryDocuments = (subjectId?: string) => {
-  const loader = useCallback(
-    () => fetchLibraryDocuments({ subjectId }),
-    [subjectId]
-  );
-  return useDocumentLoader(loader);
+  const params: DocumentListParams = subjectId ? { subjectId } : {};
+
+  return useUserDocumentQuery({
+    queryKey: userDocumentKeys.library(params),
+    queryFn: () => fetchLibraryDocuments(params),
+  });
 };
 
-export const useMyDocuments = () => {
-  const loader = useCallback(() => fetchMyDocuments(), []);
-  return useDocumentLoader(loader);
-};
+export const useMyDocuments = () =>
+  useUserDocumentQuery({
+    queryKey: userDocumentKeys.mine(),
+    queryFn: () => fetchMyDocuments(),
+  });

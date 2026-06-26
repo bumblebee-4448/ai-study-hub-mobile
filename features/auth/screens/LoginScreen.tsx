@@ -17,10 +17,9 @@ import {
 
 import { BORDER_RADIUS, SPACING, TYPOGRAPHY } from "@/constants/theme";
 import { useAppTheme, type AppThemeColors } from "@/features/theme";
-import { useAuthStore } from "../store/authStore";
-import { useProfileStore } from "@/features/profile/store/profileStore";
+import { useLogin } from "../hooks/useLogin";
 import { LoginSchema, LoginFormType } from "../schemas/authSchema";
-import { getAuthErrorMessage, loginWithEmail } from "../services/authService";
+import { getAuthErrorMessage } from "../services/authService";
 
 interface LoginScreenProps {
   onSignUpPress?: () => void;
@@ -34,9 +33,8 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
   const router = useRouter();
   const { colors } = useAppTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
-  const { setAuth } = useAuthStore();
-  const { setProfile } = useProfileStore();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const loginMutation = useLogin();
+  const isSubmitting = loginMutation.isPending;
   const [passwordVisible, setPasswordVisible] = useState(false);
 
   const { control, handleSubmit, formState: { errors } } = useForm<LoginFormType>({
@@ -49,17 +47,8 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
 
   const onSubmit = useCallback(
     async (data: LoginFormType) => {
-      setIsSubmitting(true);
       try {
-        const result = await loginWithEmail(data);
-
-        setAuth(
-          result.accessToken,
-          result.role,
-          result.user,
-          result.refreshToken
-        );
-        setProfile(result.profile);
+        const result = await loginMutation.mutateAsync(data);
 
         if (onSuccess) {
           onSuccess();
@@ -69,11 +58,9 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
         router.replace(result.homeRoute as any);
       } catch (error) {
         Alert.alert("Đăng nhập thất bại", getAuthErrorMessage(error));
-      } finally {
-        setIsSubmitting(false);
       }
     },
-    [onSuccess, router, setAuth, setProfile]
+    [loginMutation, onSuccess, router]
   );
 
   const handleGoogleLogin = useCallback(() => {

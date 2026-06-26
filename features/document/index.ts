@@ -34,6 +34,8 @@ export {
   useModeratorDocuments,
   useModeratorDashboard,
   useModeratorDocumentDetail,
+  useDocumentDetail,
+  useEditDocument,
 } from "./hooks";
 
 // Store
@@ -46,6 +48,7 @@ export type {
   DocumentDetail,
   DocumentState,
   EditDocumentParams,
+  UpdateDocumentPayload,
   PickedFile,
   QuickPrompt,
   RelatedDocument,

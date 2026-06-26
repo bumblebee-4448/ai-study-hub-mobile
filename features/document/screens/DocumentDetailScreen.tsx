@@ -16,7 +16,7 @@
  */
 
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import {
   Dimensions,
   Image,
@@ -27,9 +27,11 @@ import {
   Text,
   TouchableOpacity,
   View,
+  ActivityIndicator,
 } from "react-native";
 
-import { BORDER_RADIUS, COLORS, SPACING, TYPOGRAPHY } from "@/constants/theme";
+import { BORDER_RADIUS, SPACING, TYPOGRAPHY } from "@/constants/theme";
+import { useAppTheme, type AppThemeColors } from "@/features/theme";
 import { DocumentDetail, RelatedDocument } from "../types";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -88,62 +90,122 @@ function formatCount(n: number): string {
 interface RelatedDocumentCardProps {
   item: RelatedDocument;
   onPress?: (id: string) => void;
+  colors: AppThemeColors;
 }
 
 const RelatedDocumentCard: React.FC<RelatedDocumentCardProps> = ({
   item,
   onPress,
-}) => (
-  <TouchableOpacity
-    style={styles.relatedCard}
-    onPress={() => onPress?.(item.id)}
-    activeOpacity={0.75}
-  >
-    <Image
-      source={{ uri: item.thumbnailUrl }}
-      style={styles.relatedThumb}
-      resizeMode="cover"
-    />
-    <View style={styles.relatedInfo}>
-      <Text style={styles.relatedTitle} numberOfLines={2}>
-        {item.title}
-      </Text>
-      <View style={styles.relatedMeta}>
-        <Text style={styles.relatedAuthor}>{item.author}</Text>
-        <View style={styles.relatedDownloads}>
-          <Ionicons
-            name="download-outline"
-            size={13}
-            color={COLORS["on-surface-variant"]}
-          />
-          <Text style={styles.relatedDownloadText}>
-            {formatCount(item.downloads)}
+  colors,
+}) => {
+  const cardStyle = useMemo(
+    () => ({
+      flexDirection: "row" as const,
+      gap: 12,
+      padding: 12,
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: BORDER_RADIUS.lg,
+    }),
+    [colors]
+  );
+
+  return (
+    <TouchableOpacity
+      style={cardStyle}
+      onPress={() => onPress?.(item.id)}
+      activeOpacity={0.75}
+    >
+      <Image
+        source={{ uri: item.thumbnailUrl }}
+        style={[staticStyles.relatedThumb, { backgroundColor: colors.surfaceSubtle }]}
+        resizeMode="cover"
+      />
+      <View style={staticStyles.relatedInfo}>
+        <Text style={[staticStyles.relatedTitle, { color: colors.text }]} numberOfLines={2}>
+          {item.title}
+        </Text>
+        <View style={staticStyles.relatedMeta}>
+          <Text style={[staticStyles.relatedAuthor, { color: colors.textSubtle }]}>
+            {item.author}
           </Text>
+          <View style={staticStyles.relatedDownloads}>
+            <Ionicons
+              name="download-outline"
+              size={13}
+              color={colors.textSubtle}
+            />
+            <Text style={[staticStyles.relatedDownloadText, { color: colors.textSubtle }]}>
+              {formatCount(item.downloads)}
+            </Text>
+          </View>
         </View>
       </View>
-    </View>
-  </TouchableOpacity>
-);
+    </TouchableOpacity>
+  );
+};
+
+// Static styles for sub-components (no theme dependency)
+const staticStyles = StyleSheet.create({
+  relatedThumb: {
+    width: 64,
+    height: 80,
+    borderRadius: BORDER_RADIUS.sm,
+  },
+  relatedInfo: {
+    flex: 1,
+    justifyContent: "space-between",
+    paddingVertical: 2,
+  },
+  relatedTitle: {
+    ...TYPOGRAPHY["label-md"],
+  },
+  relatedMeta: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  relatedAuthor: {
+    ...TYPOGRAPHY["label-sm"],
+  },
+  relatedDownloads: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  relatedDownloadText: {
+    ...TYPOGRAPHY["label-sm"],
+  },
+});
 
 // ── Main Component ─────────────────────────────────────────────────────────────
 
 interface DocumentDetailScreenProps {
   document?: DocumentDetail;
+  isLoading?: boolean;
+  error?: string | null;
   onBack?: () => void;
   onBookmark?: (documentId: string) => void;
   onMoreOptions?: (documentId: string) => void;
   onDownload?: (documentId: string) => void;
   onRelatedPress?: (documentId: string) => void;
+  onRetry?: () => void;
 }
 
 export const DocumentDetailScreen: React.FC<DocumentDetailScreenProps> = ({
   document: doc = DEFAULT_DOCUMENT,
+  isLoading,
+  error,
   onBack,
   onBookmark,
   onMoreOptions,
   onDownload,
   onRelatedPress,
+  onRetry,
 }) => {
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [isBookmarked, setIsBookmarked] = useState(false);
 
   const handleBookmark = useCallback(() => {
@@ -166,6 +228,29 @@ export const DocumentDetailScreen: React.FC<DocumentDetailScreenProps> = ({
     onDownload?.(doc.id);
   }, [doc.id, onDownload]);
 
+  if (isLoading) {
+    return (
+      <SafeAreaView style={[styles.safeArea, styles.center]}>
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={styles.loadingText}>Đang tải chi tiết tài liệu...</Text>
+      </SafeAreaView>
+    );
+  }
+
+  if (error && (!doc || doc.id === "doc-detail-001")) {
+    return (
+      <SafeAreaView style={[styles.safeArea, styles.center]}>
+        <Text style={styles.errorText}>Lỗi: {error}</Text>
+        <TouchableOpacity style={styles.retryButton} onPress={onRetry}>
+          <Text style={styles.retryText}>Thử lại</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.backLink} onPress={onBack}>
+          <Text style={styles.backLinkText}>Quay lại</Text>
+        </TouchableOpacity>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.safeArea}>
       {/* ── Overlay Header ──────────────────────────────────────────── */}
@@ -179,7 +264,7 @@ export const DocumentDetailScreen: React.FC<DocumentDetailScreenProps> = ({
           <Ionicons
             name="arrow-back"
             size={24}
-            color={COLORS["on-surface"]}
+            color={colors.text}
           />
         </TouchableOpacity>
 
@@ -192,9 +277,7 @@ export const DocumentDetailScreen: React.FC<DocumentDetailScreenProps> = ({
             <Ionicons
               name={isBookmarked ? "bookmark" : "bookmark-outline"}
               size={24}
-              color={
-                isBookmarked ? COLORS.primary : COLORS["on-surface"]
-              }
+              color={isBookmarked ? colors.primary : colors.icon}
             />
           </TouchableOpacity>
           <TouchableOpacity
@@ -205,7 +288,7 @@ export const DocumentDetailScreen: React.FC<DocumentDetailScreenProps> = ({
             <MaterialCommunityIcons
               name="dots-vertical"
               size={24}
-              color={COLORS["on-surface"]}
+              color={colors.icon}
             />
           </TouchableOpacity>
         </View>
@@ -234,9 +317,17 @@ export const DocumentDetailScreen: React.FC<DocumentDetailScreenProps> = ({
               <Text style={styles.title}>{doc.title}</Text>
               <View style={styles.formatBadge}>
                 <MaterialCommunityIcons
-                  name="file-pdf-box"
+                  name={
+                    doc.format?.toUpperCase() === "PDF"
+                      ? "file-pdf-box"
+                      : doc.format?.toUpperCase() === "DOC" || doc.format?.toUpperCase() === "DOCX"
+                      ? "file-word"
+                      : doc.format?.toUpperCase() === "PPT" || doc.format?.toUpperCase() === "PPTX"
+                      ? "file-powerpoint"
+                      : "file-document"
+                  }
                   size={14}
-                  color={COLORS["on-primary-container"]}
+                  color={colors.onPrimary}
                 />
                 <Text style={styles.formatText}>{doc.format}</Text>
               </View>
@@ -258,7 +349,7 @@ export const DocumentDetailScreen: React.FC<DocumentDetailScreenProps> = ({
                 <Ionicons
                   name="calendar-outline"
                   size={16}
-                  color={COLORS["on-surface-variant"]}
+                  color={colors.textSubtle}
                 />
                 <Text style={styles.statText}>{doc.publishedAt}</Text>
               </View>
@@ -268,7 +359,7 @@ export const DocumentDetailScreen: React.FC<DocumentDetailScreenProps> = ({
                 <Ionicons
                   name="eye-outline"
                   size={16}
-                  color={COLORS["on-surface-variant"]}
+                  color={colors.textSubtle}
                 />
                 <Text style={styles.statText}>
                   {formatCount(doc.views)} lượt xem
@@ -280,7 +371,7 @@ export const DocumentDetailScreen: React.FC<DocumentDetailScreenProps> = ({
                 <Ionicons
                   name="download-outline"
                   size={16}
-                  color={COLORS["on-surface-variant"]}
+                  color={colors.textSubtle}
                 />
                 <Text style={styles.statText}>
                   {formatCount(doc.downloads)} lượt tải
@@ -317,6 +408,7 @@ export const DocumentDetailScreen: React.FC<DocumentDetailScreenProps> = ({
                     key={related.id}
                     item={related}
                     onPress={onRelatedPress}
+                    colors={colors}
                   />
                 ))}
               </View>
@@ -340,7 +432,7 @@ export const DocumentDetailScreen: React.FC<DocumentDetailScreenProps> = ({
           <Ionicons
             name="share-outline"
             size={22}
-            color={COLORS["on-surface"]}
+            color={colors.icon}
           />
         </TouchableOpacity>
 
@@ -351,7 +443,7 @@ export const DocumentDetailScreen: React.FC<DocumentDetailScreenProps> = ({
           activeOpacity={0.8}
           accessibilityLabel={`Tải về ${doc.fileSize}`}
         >
-          <Ionicons name="download-outline" size={20} color={COLORS["on-primary"]} />
+          <Ionicons name="download-outline" size={20} color={colors.onPrimary} />
           <Text style={styles.btnDownloadText}>
             Tải về ({doc.fileSize})
           </Text>
@@ -363,237 +455,260 @@ export const DocumentDetailScreen: React.FC<DocumentDetailScreenProps> = ({
 
 // ── Styles ────────────────────────────────────────────────────────────────────
 
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: COLORS.surface,
-  },
+const createStyles = (colors: AppThemeColors) =>
+  StyleSheet.create({
+    safeArea: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
 
-  // ── Header ──
-  header: {
-    height: 56,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: SPACING["margin-mobile"],
-    backgroundColor: COLORS.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS["outline-variant"],
-    zIndex: 10,
-  },
-  headerRight: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  },
-  iconBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: "center",
-    justifyContent: "center",
-  },
+    // ── Header ──
+    header: {
+      height: 56,
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      paddingHorizontal: SPACING["margin-mobile"],
+      backgroundColor: colors.surface,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+      zIndex: 10,
+    },
+    headerRight: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
+    },
+    iconBtn: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      alignItems: "center",
+      justifyContent: "center",
+    },
 
-  // ── Scroll ──
-  scroll: { flex: 1 },
-  scrollContent: { paddingBottom: 0 },
+    // ── Scroll ──
+    scroll: { flex: 1 },
+    scrollContent: { paddingBottom: 0 },
 
-  // ── Thumbnail ──
-  thumbnailWrapper: {
-    width: SCREEN_WIDTH,
-    height: THUMBNAIL_HEIGHT,
-    backgroundColor: COLORS["surface-container-highest"],
-  },
-  thumbnail: {
-    width: "100%",
-    height: "100%",
-  },
+    // ── Thumbnail ──
+    thumbnailWrapper: {
+      width: SCREEN_WIDTH,
+      height: THUMBNAIL_HEIGHT,
+      backgroundColor: colors.surfaceSubtle,
+    },
+    thumbnail: {
+      width: "100%",
+      height: "100%",
+    },
 
-  // ── Body ──
-  body: {
-    paddingHorizontal: SPACING["margin-mobile"],
-    paddingTop: SPACING.lg,
-  },
+    // ── Body ──
+    body: {
+      paddingHorizontal: SPACING["margin-mobile"],
+      paddingTop: SPACING.lg,
+    },
 
-  // ── Meta Header ──
-  metaHeader: {
-    gap: SPACING.md,
-    marginBottom: SPACING.lg,
-  },
-  titleRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 12,
-  },
-  title: {
-    flex: 1,
-    ...TYPOGRAPHY["headline-lg-mobile"],
-    color: COLORS["on-surface"],
-  },
-  formatBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    backgroundColor: COLORS["primary-container"],
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 999,
-    marginTop: 4,
-  },
-  formatText: {
-    ...TYPOGRAPHY["label-sm"],
-    color: COLORS["on-primary-container"],
-  },
-  statsRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 12,
-    rowGap: 10,
-  },
-  statItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-  authorAvatar: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: COLORS["outline-variant"],
-    backgroundColor: COLORS["surface-variant"],
-  },
-  authorName: {
-    ...TYPOGRAPHY["label-md"],
-    color: COLORS["on-surface-variant"],
-  },
-  statText: {
-    ...TYPOGRAPHY["body-md"],
-    color: COLORS["on-surface-variant"],
-  },
+    // ── Meta Header ──
+    metaHeader: {
+      gap: SPACING.md,
+      marginBottom: SPACING.lg,
+    },
+    titleRow: {
+      flexDirection: "row",
+      alignItems: "flex-start",
+      gap: 12,
+    },
+    title: {
+      flex: 1,
+      ...TYPOGRAPHY["headline-lg-mobile"],
+      color: colors.text,
+    },
+    formatBadge: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
+      backgroundColor: colors.primary,
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: 999,
+      marginTop: 4,
+    },
+    formatText: {
+      ...TYPOGRAPHY["label-sm"],
+      color: colors.onPrimary,
+    },
+    statsRow: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: 12,
+      rowGap: 10,
+    },
+    statItem: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 6,
+    },
+    authorAvatar: {
+      width: 28,
+      height: 28,
+      borderRadius: 14,
+      borderWidth: 1,
+      borderColor: colors.border,
+      backgroundColor: colors.surfaceSubtle,
+    },
+    authorName: {
+      ...TYPOGRAPHY["label-md"],
+      color: colors.textSubtle,
+    },
+    statText: {
+      ...TYPOGRAPHY["body-md"],
+      color: colors.textSubtle,
+    },
 
-  // ── Divider ──
-  divider: {
-    height: 1,
-    backgroundColor: COLORS["outline-variant"],
-    marginBottom: SPACING.lg,
-  },
+    // ── Divider ──
+    divider: {
+      height: 1,
+      backgroundColor: colors.border,
+      marginBottom: SPACING.lg,
+    },
 
-  // ── Sections ──
-  section: {
-    marginBottom: SPACING.xl,
-    gap: SPACING.md,
-  },
-  sectionTitle: {
-    ...TYPOGRAPHY["headline-md"],
-    color: COLORS["on-surface"],
-  },
-  description: {
-    ...TYPOGRAPHY["body-md"],
-    color: COLORS["on-surface-variant"],
-    lineHeight: 26,
-  },
+    // ── Sections ──
+    section: {
+      marginBottom: SPACING.xl,
+      gap: SPACING.md,
+    },
+    sectionTitle: {
+      ...TYPOGRAPHY["headline-md"],
+      color: colors.text,
+    },
+    description: {
+      ...TYPOGRAPHY["body-md"],
+      color: colors.textMuted,
+      lineHeight: 26,
+    },
 
-  // ── Tags ──
-  tagsRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-    marginTop: 4,
-  },
-  tagChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: COLORS["outline-variant"],
-    backgroundColor: COLORS["surface-container-low"],
-  },
-  tagText: {
-    ...TYPOGRAPHY["label-sm"],
-    color: COLORS["on-surface-variant"],
-  },
+    // ── Tags ──
+    tagsRow: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: 8,
+      marginTop: 4,
+    },
+    tagChip: {
+      paddingHorizontal: 12,
+      paddingVertical: 4,
+      borderRadius: 999,
+      borderWidth: 1,
+      borderColor: colors.border,
+      backgroundColor: colors.surfaceSubtle,
+    },
+    tagText: {
+      ...TYPOGRAPHY["label-sm"],
+      color: colors.textMuted,
+    },
 
-  // ── Related Documents ──
-  relatedList: {
-    gap: 12,
-  },
-  relatedCard: {
-    flexDirection: "row",
-    gap: 12,
-    padding: 12,
-    backgroundColor: COLORS.surface,
-    borderWidth: 1,
-    borderColor: COLORS["outline-variant"],
-    borderRadius: BORDER_RADIUS.lg,
-  },
-  relatedThumb: {
-    width: 64,
-    height: 80,
-    borderRadius: BORDER_RADIUS.sm,
-    backgroundColor: COLORS["surface-container-highest"],
-  },
-  relatedInfo: {
-    flex: 1,
-    justifyContent: "space-between",
-    paddingVertical: 2,
-  },
-  relatedTitle: {
-    ...TYPOGRAPHY["label-md"],
-    color: COLORS["on-surface"],
-  },
-  relatedMeta: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  relatedAuthor: {
-    ...TYPOGRAPHY["label-sm"],
-    color: COLORS["on-surface-variant"],
-  },
-  relatedDownloads: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  },
-  relatedDownloadText: {
-    ...TYPOGRAPHY["label-sm"],
-    color: COLORS["on-surface-variant"],
-  },
+    // ── Related Documents ──
+    relatedList: {
+      gap: 12,
+    },
+    relatedThumb: {
+      width: 64,
+      height: 80,
+      borderRadius: BORDER_RADIUS.sm,
+    },
+    relatedInfo: {
+      flex: 1,
+      justifyContent: "space-between",
+      paddingVertical: 2,
+    },
+    relatedTitle: {
+      ...TYPOGRAPHY["label-md"],
+    },
+    relatedMeta: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+    },
+    relatedAuthor: {
+      ...TYPOGRAPHY["label-sm"],
+    },
+    relatedDownloads: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
+    },
+    relatedDownloadText: {
+      ...TYPOGRAPHY["label-sm"],
+    },
 
-  // ── Bottom Bar ──
-  bottomBar: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    paddingHorizontal: SPACING["margin-mobile"],
-    paddingVertical: SPACING.md,
-    backgroundColor: COLORS.surface,
-    borderTopWidth: 1,
-    borderTopColor: COLORS["outline-variant"],
-  },
-  btnShare: {
-    width: 48,
-    height: 48,
-    borderRadius: BORDER_RADIUS.lg,
-    borderWidth: 1,
-    borderColor: COLORS["outline-variant"],
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "transparent",
-  },
-  btnDownload: {
-    flex: 1,
-    height: 48,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    backgroundColor: COLORS.primary,
-    borderRadius: BORDER_RADIUS.lg,
-  },
-  btnDownloadText: {
-    ...TYPOGRAPHY["label-md"],
-    color: COLORS["on-primary"],
-  },
-});
+    // ── Bottom Bar ──
+    bottomBar: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 12,
+      paddingHorizontal: SPACING["margin-mobile"],
+      paddingVertical: SPACING.md,
+      backgroundColor: colors.surface,
+      borderTopWidth: 1,
+      borderTopColor: colors.border,
+    },
+    btnShare: {
+      width: 48,
+      height: 48,
+      borderRadius: BORDER_RADIUS.lg,
+      borderWidth: 1,
+      borderColor: colors.border,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: colors.surface,
+    },
+    btnDownload: {
+      flex: 1,
+      height: 48,
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 8,
+      backgroundColor: colors.primary,
+      borderRadius: BORDER_RADIUS.lg,
+    },
+    btnDownloadText: {
+      ...TYPOGRAPHY["label-md"],
+      color: colors.onPrimary,
+    },
+    center: {
+      justifyContent: "center",
+      alignItems: "center",
+      padding: 24,
+    },
+    loadingText: {
+      marginTop: 12,
+      fontSize: 14,
+      color: colors.textSubtle,
+    },
+    errorText: {
+      fontSize: 15,
+      color: colors.danger,
+      textAlign: "center",
+      marginBottom: 16,
+    },
+    retryButton: {
+      paddingHorizontal: 20,
+      paddingVertical: 10,
+      backgroundColor: colors.primary,
+      borderRadius: 8,
+      marginBottom: 12,
+    },
+    retryText: {
+      color: colors.onPrimary,
+      fontWeight: "bold",
+    },
+    backLink: {
+      paddingVertical: 8,
+    },
+    backLinkText: {
+      color: colors.textSubtle,
+      fontSize: 14,
+      textDecorationLine: "underline",
+    },
+  });

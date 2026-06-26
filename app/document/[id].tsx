@@ -1,12 +1,17 @@
-import { DocumentDetailScreen } from "@/features/document";
+import { DocumentDetailScreen, useDocumentDetail } from "@/features/document";
 import { useRouter, useLocalSearchParams } from "expo-router";
 
 export default function DocumentDetailRoute() {
   const router = useRouter();
-  useLocalSearchParams<{ id: string }>();
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const { document, isLoading, error, refresh } = useDocumentDetail(id || "");
 
   return (
     <DocumentDetailScreen
+      document={document || undefined}
+      isLoading={isLoading}
+      error={error}
+      onRetry={refresh}
       onBack={() => router.back()}
       onBookmark={(docId) => {
         // Placeholder for bookmark logic
