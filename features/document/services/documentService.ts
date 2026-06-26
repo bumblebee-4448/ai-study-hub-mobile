@@ -1,5 +1,5 @@
 import { apiClient } from "@/services/api/axiosClient";
-import type { DocumentDetail, RelatedDocument } from "../types";
+import type { DocumentDetail, RelatedDocument, UpdateDocumentPayload } from "../types";
 import {
   mapBackendDocumentToDetail,
   mapBackendDocumentToRelated,
@@ -46,4 +46,20 @@ export const fetchDocumentDetail = async (id: string): Promise<DocumentDetail> =
   }
 
   return detail;
+};
+
+export const updateDocument = async (
+  id: string,
+  payload: UpdateDocumentPayload
+): Promise<DocumentDetail> => {
+  const response = await apiClient.patch<unknown, any>(
+    `/documents/${id}`,
+    payload
+  );
+
+  return mapBackendDocumentToDetail(response);
+};
+
+export const deleteDocument = async (id: string): Promise<void> => {
+  await apiClient.delete(`/documents/${id}`);
 };

@@ -16,7 +16,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import React, { useMemo, useState, useCallback } from "react";
+import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
   ActivityIndicator,
@@ -35,7 +35,7 @@ import {
 import { SPACING, TYPOGRAPHY, BORDER_RADIUS } from "@/constants/theme";
 import { useAppTheme, type AppThemeColors } from "@/features/theme";
 import { EditDocumentFormSchema, EditDocumentFormType } from "../schemas/documentSchema";
-import { EditDocumentParams } from "../types";
+import { EditDocumentParams, UploadCategory } from "../types";
 
 // ── Categories ────────────────────────────────────────────────────────────────
 
@@ -60,15 +60,27 @@ function formatFileSize(bytes?: number): string {
 
 interface EditDocumentScreenProps {
   initialData?: EditDocumentParams;
+  categories?: UploadCategory[];
+  isLoading?: boolean;
+  error?: string | null;
+  onRetry?: () => void;
+  isSaving?: boolean;
+  isDeleting?: boolean;
   onBack?: () => void;
-  onSave?: (data: EditDocumentFormType & { documentId: string }) => void;
-  onDelete?: (documentId: string) => void;
+  onSave?: (data: EditDocumentFormType & { documentId: string }) => Promise<void> | void;
+  onDelete?: (documentId: string) => Promise<void> | void;
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export const EditDocumentScreen: React.FC<EditDocumentScreenProps> = ({
   initialData,
+  categories = CATEGORIES,
+  isLoading = false,
+  error,
+  onRetry,
+  isSaving = false,
+  isDeleting = false,
   onBack,
   onSave,
   onDelete,
@@ -76,24 +88,27 @@ export const EditDocumentScreen: React.FC<EditDocumentScreenProps> = ({
   const { colors } = useAppTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const [categoryModalVisible, setCategoryModalVisible] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
 
   // Default demo data so the screen renders meaningfully in isolation
-  const defaults: EditDocumentParams = initialData ?? {
-    documentId: "doc-demo-001",
-    title: "Báo cáo Nghiên cứu Trí tuệ Nhân tạo Toàn diện 2024",
-    category: "ai",
-    description:
-      "Tài liệu tổng hợp các xu hướng mới nhất về Học máy và ứng dụng của AI trong công nghiệp. Bao gồm phân tích dữ liệu từ 500 doanh nghiệp hàng đầu.",
-    tags: "AI, Machine Learning, Công nghiệp 4.0",
-    fileName: "Baocao_NghienCuu_AI_v2.pdf",
-    fileSize: 4_404_428, // 4.2 MB
-  };
+  const defaults: EditDocumentParams = useMemo(
+    () =>
+      initialData ?? {
+        documentId: "doc-demo-001",
+        title: "Báo cáo Nghiên cứu Trí tuệ Nhân tạo Toàn diện 2024",
+        category: "ai",
+        description:
+          "Tài liệu tổng hợp các xu hướng mới nhất về Học máy và ứng dụng của AI trong công nghiệp. Bao gồm phân tích dữ liệu từ 500 doanh nghiệp hàng đầu.",
+        tags: "AI, Machine Learning, Công nghiệp 4.0",
+        fileName: "Baocao_NghienCuu_AI_v2.pdf",
+        fileSize: 4_404_428, // 4.2 MB
+      },
+    [initialData]
+  );
 
   const {
     control,
     handleSubmit,
+    reset,
     formState: { errors },
   } = useForm<EditDocumentFormType>({
     resolver: zodResolver(EditDocumentFormSchema),
@@ -105,22 +120,31 @@ export const EditDocumentScreen: React.FC<EditDocumentScreenProps> = ({
     },
   });
 
+  useEffect(() => {
+    reset({
+      title: defaults.title,
+      category: defaults.category,
+      description: defaults.description ?? "",
+      tags: defaults.tags ?? "",
+    });
+  }, [defaults, reset]);
+
   // ── Handlers ────────────────────────────────────────────────────────────────
 
   const onSubmit = useCallback(
     async (data: EditDocumentFormType) => {
-      setIsSaving(true);
       try {
-        // TODO: replace with real API call
-        await new Promise<void>((resolve) => setTimeout(resolve, 1200));
-        onSave?.({ ...data, documentId: defaults.documentId });
+        await onSave?.({ ...data, documentId: defaults.documentId });
         Alert.alert("Thành công", "Tài liệu đã được cập nhật!", [
           { text: "OK", onPress: onBack },
         ]);
-      } catch {
-        Alert.alert("Lỗi", "Không thể cập nhật. Vui lòng thử lại.");
-      } finally {
-        setIsSaving(false);
+      } catch (submitError) {
+        Alert.alert(
+          "Lỗi",
+          submitError instanceof Error
+            ? submitError.message
+            : "Không thể cập nhật. Vui lòng thử lại."
+        );
       }
     },
     [defaults.documentId, onBack, onSave]
@@ -136,18 +160,18 @@ export const EditDocumentScreen: React.FC<EditDocumentScreenProps> = ({
           text: "Xóa",
           style: "destructive",
           onPress: async () => {
-            setIsDeleting(true);
             try {
-              // TODO: replace with real API call
-              await new Promise<void>((resolve) => setTimeout(resolve, 800));
-              onDelete?.(defaults.documentId);
+              await onDelete?.(defaults.documentId);
               Alert.alert("Đã xóa", "Tài liệu đã được xóa thành công.", [
                 { text: "OK", onPress: onBack },
               ]);
-            } catch {
-              Alert.alert("Lỗi", "Không thể xóa. Vui lòng thử lại.");
-            } finally {
-              setIsDeleting(false);
+            } catch (deleteError) {
+              Alert.alert(
+                "Lỗi",
+                deleteError instanceof Error
+                  ? deleteError.message
+                  : "Không thể xóa. Vui lòng thử lại."
+              );
             }
           },
         },
@@ -156,6 +180,33 @@ export const EditDocumentScreen: React.FC<EditDocumentScreenProps> = ({
   }, [defaults.documentId, onBack, onDelete]);
 
   const busy = isSaving || isDeleting;
+
+  if (isLoading) {
+    return (
+      <SafeAreaView style={[styles.safeArea, styles.centerState]}>
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={styles.stateText}>Đang tải thông tin tài liệu...</Text>
+      </SafeAreaView>
+    );
+  }
+
+  if (error && !initialData) {
+    return (
+      <SafeAreaView style={[styles.safeArea, styles.centerState]}>
+        <Ionicons name="warning-outline" size={32} color={colors.danger} />
+        <Text style={styles.stateTitle}>Không thể tải tài liệu</Text>
+        <Text style={styles.stateText}>{error}</Text>
+        {onRetry ? (
+          <TouchableOpacity style={styles.retryButton} onPress={onRetry}>
+            <Text style={styles.retryText}>Thử lại</Text>
+          </TouchableOpacity>
+        ) : null}
+        <TouchableOpacity style={styles.backLink} onPress={onBack}>
+          <Text style={styles.backLinkText}>Quay lại</Text>
+        </TouchableOpacity>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -257,7 +308,8 @@ export const EditDocumentScreen: React.FC<EditDocumentScreenProps> = ({
                       ]}
                     >
                       {value
-                        ? CATEGORIES.find((c) => c.value === value)?.label
+                        ? categories.find((c) => c.value === value)?.label ??
+                          "Chọn danh mục"
                         : "Chọn danh mục"}
                     </Text>
                     <Ionicons
@@ -282,7 +334,7 @@ export const EditDocumentScreen: React.FC<EditDocumentScreenProps> = ({
                       <View style={styles.modalSheet}>
                         <Text style={styles.modalTitle}>Chọn danh mục</Text>
                         <FlatList
-                          data={CATEGORIES}
+                          data={categories}
                           keyExtractor={(item) => item.value}
                           renderItem={({ item }) => (
                             <TouchableOpacity
@@ -438,6 +490,41 @@ const createStyles = (colors: AppThemeColors) => StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: colors.background,
+  },
+  centerState: {
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 24,
+    gap: 10,
+  },
+  stateTitle: {
+    ...TYPOGRAPHY["label-md"],
+    color: colors.text,
+    textAlign: "center",
+  },
+  stateText: {
+    ...TYPOGRAPHY["body-md"],
+    color: colors.textSubtle,
+    textAlign: "center",
+  },
+  retryButton: {
+    marginTop: 8,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: BORDER_RADIUS.lg,
+    backgroundColor: colors.primary,
+  },
+  retryText: {
+    ...TYPOGRAPHY["label-md"],
+    color: colors.onPrimary,
+  },
+  backLink: {
+    paddingVertical: 8,
+  },
+  backLinkText: {
+    ...TYPOGRAPHY["label-sm"],
+    color: colors.textSubtle,
+    textDecorationLine: "underline",
   },
 
   // ── Header ──

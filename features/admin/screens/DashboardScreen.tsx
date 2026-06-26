@@ -1,6 +1,6 @@
 import { useRouter } from "expo-router";
 import { RefreshCw, UserCircle } from "lucide-react-native";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useMemo } from "react";
 import {
   ActivityIndicator,
   ScrollView,
@@ -12,22 +12,9 @@ import {
 
 import { ScreenSafeAreaView } from "@/components/screen-safe-area-view";
 import { SCREEN_HEADER_TOP_PADDING } from "@/constants/safeArea";
-import {
-  fetchAdminAccounts,
-  fetchAdminDashboardStats,
-} from "../services/adminApi";
-import { mapAdminDashboardStats } from "../services/adminMappers";
-import type { AdminAccountItem, AdminDashboardStats } from "../types";
 import { StatsCard } from "../components/StatsCard";
 import { useAppTheme, type AppThemeColors } from "@/features/theme";
-
-const getErrorMessage = (error: unknown, fallback: string) => {
-  if (error instanceof Error && error.message) {
-    return error.message;
-  }
-
-  return fallback;
-};
+import { useAdminDashboard } from "../hooks/useAdminQueries";
 
 const ratio = (value: number, total: number) => {
   if (total <= 0) {
@@ -41,37 +28,7 @@ export const DashboardScreen = () => {
   const router = useRouter();
   const { colors } = useAppTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
-  const [stats, setStats] = useState<AdminDashboardStats>(() =>
-    mapAdminDashboardStats(null)
-  );
-  const [recentUsers, setRecentUsers] = useState<AdminAccountItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState("");
-
-  const loadDashboard = useCallback(async () => {
-    setIsLoading(true);
-    setErrorMessage("");
-
-    try {
-      const [dashboardStats, accounts] = await Promise.all([
-        fetchAdminDashboardStats(),
-        fetchAdminAccounts(),
-      ]);
-
-      setStats(dashboardStats);
-      setRecentUsers(accounts.slice(0, 4));
-    } catch (error) {
-      setErrorMessage(
-        getErrorMessage(error, "Không thể tải dữ liệu trang chủ.")
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    void loadDashboard();
-  }, [loadDashboard]);
+  const { stats, recentUsers, isLoading, error, refresh } = useAdminDashboard();
 
   const cards = useMemo(
     () => [
@@ -133,12 +90,12 @@ export const DashboardScreen = () => {
           </View>
         ) : null}
 
-        {!isLoading && errorMessage ? (
+        {!isLoading && error ? (
           <View style={styles.errorBox}>
-            <Text style={styles.errorText}>{errorMessage}</Text>
+            <Text style={styles.errorText}>{error}</Text>
             <TouchableOpacity
               style={styles.retryButton}
-              onPress={loadDashboard}
+              onPress={() => refresh()}
               activeOpacity={0.75}
             >
               <RefreshCw size={16} color={colors.primary} />
@@ -147,7 +104,7 @@ export const DashboardScreen = () => {
           </View>
         ) : null}
 
-        {!isLoading && !errorMessage ? (
+        {!isLoading && !error ? (
           <>
             <View style={styles.statsGrid}>
               {cards.map((card) => (

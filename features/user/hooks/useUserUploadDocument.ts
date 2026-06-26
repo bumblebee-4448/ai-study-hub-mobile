@@ -1,19 +1,16 @@
 import * as DocumentPicker from "expo-document-picker";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useCallback, useState } from "react";
 
-import type {
-  BackendSubject,
-  CreateUserDocumentFormValues,
-  PickedUploadFile,
-} from "../types";
-import {
-  fetchUserUploadSubjects,
-  uploadUserDocument,
-} from "../services/userUploadService";
+import { userDocumentKeys } from "@/services/api/queryKeys";
+
+import type { CreateUserDocumentFormValues, PickedUploadFile } from "../types";
+import { uploadUserDocument } from "../services/userUploadService";
 import {
   ALLOWED_UPLOAD_MIME_TYPES,
   validatePickedUploadFile,
 } from "../services/userUploadValidation";
+import { useUserSubjects } from "./useUserSubjects";
 
 const initialValues: CreateUserDocumentFormValues = {
   title: "",
@@ -31,36 +28,20 @@ const getErrorMessage = (error: unknown, fallback: string) => {
 };
 
 export const useUserUploadDocument = () => {
+  const queryClient = useQueryClient();
+  const subjectsQuery = useUserSubjects();
   const [values, setValues] =
     useState<CreateUserDocumentFormValues>(initialValues);
   const [pickedFile, setPickedFile] = useState<PickedUploadFile | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
-  const [subjects, setSubjects] = useState<BackendSubject[]>([]);
-  const [isLoadingSubjects, setIsLoadingSubjects] = useState(true);
-  const [subjectsError, setSubjectsError] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const submittingRef = useRef(false);
 
-  const loadSubjects = useCallback(async () => {
-    setIsLoadingSubjects(true);
-    setSubjectsError(null);
-
-    try {
-      const result = await fetchUserUploadSubjects();
-      setSubjects(result.subjects);
-    } catch (error) {
-      setSubjectsError(
-        getErrorMessage(error, "Không thể tải danh sách môn học.")
-      );
-    } finally {
-      setIsLoadingSubjects(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadSubjects();
-  }, [loadSubjects]);
+  const uploadMutation = useMutation({
+    mutationFn: uploadUserDocument,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: userDocumentKeys.all });
+    },
+  });
 
   const setTitle = useCallback((title: string) => {
     setValues((current) => ({ ...current, title }));
@@ -127,7 +108,7 @@ export const useUserUploadDocument = () => {
   }, []);
 
   const submitUpload = useCallback(async () => {
-    if (submittingRef.current) {
+    if (uploadMutation.isPending) {
       return false;
     }
 
@@ -141,12 +122,10 @@ export const useUserUploadDocument = () => {
       return false;
     }
 
-    submittingRef.current = true;
-    setIsSubmitting(true);
     setSubmitError(null);
 
     try {
-      await uploadUserDocument({
+      await uploadMutation.mutateAsync({
         file: pickedFile,
         values,
       });
@@ -155,20 +134,17 @@ export const useUserUploadDocument = () => {
     } catch (error) {
       setSubmitError(getErrorMessage(error, "Đã xảy ra lỗi. Vui lòng thử lại."));
       return false;
-    } finally {
-      submittingRef.current = false;
-      setIsSubmitting(false);
     }
-  }, [pickedFile, resetForm, values]);
+  }, [pickedFile, resetForm, uploadMutation, values]);
 
   return {
     values,
     pickedFile,
     fileError,
-    subjects,
-    subjectsError,
-    isLoadingSubjects,
-    isSubmitting,
+    subjects: subjectsQuery.subjects,
+    subjectsError: subjectsQuery.error,
+    isLoadingSubjects: subjectsQuery.isLoading,
+    isSubmitting: uploadMutation.isPending,
     submitError,
     setTitle,
     setDescription,
@@ -176,7 +152,7 @@ export const useUserUploadDocument = () => {
     setIsPublic,
     pickFile,
     clearFile,
-    loadSubjects,
+    loadSubjects: subjectsQuery.refresh,
     submitUpload,
   };
 };

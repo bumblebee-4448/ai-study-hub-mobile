@@ -32,16 +32,6 @@ export interface UpdateProfilePayload {
   avatarUrl?: string;
 }
 
-export interface ProfileState {
-  profile: UserProfile | null;
-  isLoading: boolean;
-  error: string | null;
-  setLoading: (isLoading: boolean) => void;
-  setError: (error: string | null) => void;
-  setProfile: (profile: UserProfile) => void;
-  clearProfile: () => void;
-}
-
 export type ProfileMenuItem =
   | "my-documents"
   | "saved"
@@ -49,7 +39,7 @@ export type ProfileMenuItem =
   | "settings"
   | "logout";
 
-export type DocumentStatus = "public" | "pending";
+export type DocumentStatus = "public" | "pending" | "rejected" | "deleted";
 
 export interface MyDocument {
   id: string;
@@ -58,5 +48,5 @@ export interface MyDocument {
   size: string;
   uploadedAt: string;
   status: DocumentStatus;
-  format: "pdf" | "docx" | "zip" | "pptx";
+  format: "pdf" | "docx" | "zip" | "pptx" | "file";
 }

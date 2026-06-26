@@ -9,8 +9,11 @@
  */
 
 import * as DocumentPicker from "expo-document-picker";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useState } from "react";
 import { PickedFile, UploadStatus } from "../types";
+import { userDocumentKeys } from "@/services/api/queryKeys";
+import { uploadUserDocument } from "@/features/user/services/userUploadService";
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
@@ -42,9 +45,34 @@ interface UseUploadDocumentReturn {
 }
 
 export const useUploadDocument = (): UseUploadDocumentReturn => {
+  const queryClient = useQueryClient();
   const [pickedFile, setPickedFile] = useState<PickedFile | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
-  const [uploadStatus, setUploadStatus] = useState<UploadStatus>("idle");
+
+  const uploadMutation = useMutation({
+    mutationFn: (payload: { file: PickedFile; title: string; description?: string }) =>
+      uploadUserDocument({
+        file: payload.file,
+        values: {
+          title: payload.title,
+          description: payload.description ?? "",
+          subjectId: "",
+          isPublic: false,
+        },
+      }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: userDocumentKeys.all });
+    },
+  });
+
+  // Derive uploadStatus từ mutation state thay vì local state riêng
+  const uploadStatus: UploadStatus = uploadMutation.isPending
+    ? "uploading"
+    : uploadMutation.isSuccess
+    ? "success"
+    : uploadMutation.isError
+    ? "error"
+    : "idle";
 
   /** Validate MIME / extension & size */
   const validate = useCallback((asset: DocumentPicker.DocumentPickerAsset): string | null => {
@@ -118,17 +146,19 @@ export const useUploadDocument = (): UseUploadDocumentReturn => {
         return;
       }
 
-      setUploadStatus("uploading");
+      if (uploadMutation.isPending) return;
 
       try {
-        // TODO: replace with real API call via axiosClient
-        await new Promise<void>((resolve) => setTimeout(resolve, 1500));
-        setUploadStatus("success");
+        await uploadMutation.mutateAsync({
+          file: pickedFile,
+          title: formData.title,
+          description: formData.description,
+        });
       } catch {
-        setUploadStatus("error");
+        // uploadStatus sẽ tự chuyển thành "error" qua mutation state
       }
     },
-    [pickedFile]
+    [pickedFile, uploadMutation]
   );
 
   return {

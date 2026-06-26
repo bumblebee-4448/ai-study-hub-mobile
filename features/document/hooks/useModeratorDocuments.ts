@@ -1,102 +1,79 @@
-import { useFocusEffect } from "expo-router";
-import { useCallback, useEffect, useRef, useState } from "react";
-import type {
-  ModeratorDocument,
-  ModeratorDocumentStatusFilter,
-  ModeratorDashboardSummary,
-} from "../types";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import { useCallback, useMemo, useState } from "react";
+
+import { moderatorDocumentKeys } from "@/services/api/queryKeys";
+import { getQueryErrorMessage } from "@/services/api/queryState";
+
+import type { ModeratorDocumentStatusFilter } from "../types";
 import {
   fetchModeratorDocuments,
   fetchModeratorDashboardSummary,
 } from "../services/moderatorDocumentService";
 
+const PAGE_SIZE = 10;
+
 export const useModeratorDocuments = (
   initialStatus: ModeratorDocumentStatusFilter = "PENDING"
 ) => {
-  const [status, setStatus] = useState<ModeratorDocumentStatusFilter>(initialStatus);
-  const [documents, setDocuments] = useState<ModeratorDocument[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [page, setPage] = useState(1);
-  const [total, setTotal] = useState(0);
-  const [totalPages, setTotalPages] = useState(1);
-  const hasLoadedRef = useRef(false);
+  const [status, setStatus] =
+    useState<ModeratorDocumentStatusFilter>(initialStatus);
 
-  const fetchDocs = useCallback(
-    async (
-      targetPage: number,
-      targetStatus: ModeratorDocumentStatusFilter,
-      refreshList = false
-    ) => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const result = await fetchModeratorDocuments({
-          page: targetPage,
-          limit: 10,
-          status: targetStatus,
-        });
-        if (refreshList || targetPage === 1) {
-          setDocuments(result.documents);
-        } else {
-          setDocuments((prev) => [...prev, ...result.documents]);
-        }
-        setPage(result.pagination.page);
-        setTotal(result.pagination.total);
-        setTotalPages(result.pagination.totalPages);
-      } catch (err) {
-        setError(
-          err instanceof Error
-            ? err.message
-            : "Đã xảy ra lỗi khi tải danh sách tài liệu."
-        );
-      } finally {
-        hasLoadedRef.current = true;
-        setIsLoading(false);
-      }
+  const query = useInfiniteQuery({
+    queryKey: moderatorDocumentKeys.list({ status, limit: PAGE_SIZE }),
+    initialPageParam: 1,
+    queryFn: ({ pageParam }) =>
+      fetchModeratorDocuments({
+        page: pageParam,
+        limit: PAGE_SIZE,
+        status,
+      }),
+    getNextPageParam: (lastPage) => {
+      const { page, totalPages } = lastPage.pagination;
+      return page < totalPages ? page + 1 : undefined;
     },
-    []
+    staleTime: 60 * 1000,
+  });
+
+  const documents = useMemo(
+    () => query.data?.pages.flatMap((page) => page.documents) ?? [],
+    [query.data]
   );
 
-  const refresh = useCallback(() => {
-    fetchDocs(1, status, true);
-  }, [fetchDocs, status]);
+  const lastPage = query.data?.pages.at(-1);
+  const pagination = lastPage?.pagination ?? {
+    page: 1,
+    limit: PAGE_SIZE,
+    total: 0,
+    totalPages: 1,
+  };
+
+  const refresh = useCallback(async () => {
+    await query.refetch();
+  }, [query]);
 
   const loadMore = useCallback(() => {
-    if (page < totalPages && !isLoading) {
-      fetchDocs(page + 1, status, false);
+    if (query.hasNextPage && !query.isFetchingNextPage) {
+      void query.fetchNextPage();
     }
-  }, [fetchDocs, page, totalPages, isLoading, status]);
+  }, [query]);
 
-  const changeStatus = useCallback(
-    (newStatus: ModeratorDocumentStatusFilter) => {
-      setStatus(newStatus);
-      setDocuments([]);
-      fetchDocs(1, newStatus, true);
-    },
-    [fetchDocs]
-  );
-
-  useEffect(() => {
-    fetchDocs(1, status, true);
-  }, [status, fetchDocs]);
-
-  useFocusEffect(
-    useCallback(() => {
-      if (hasLoadedRef.current) {
-        fetchDocs(1, status, true);
-      }
-    }, [fetchDocs, status])
-  );
+  const changeStatus = useCallback((newStatus: ModeratorDocumentStatusFilter) => {
+    setStatus(newStatus);
+  }, []);
 
   return {
     status,
     documents,
-    isLoading,
-    error,
-    page,
-    total,
-    totalPages,
+    isLoading: query.isLoading || query.isRefetching || query.isFetchingNextPage,
+    error: query.isError
+      ? getQueryErrorMessage(
+          query.error,
+          "Đã xảy ra lỗi khi tải danh sách tài liệu."
+        )
+      : null,
+    page: pagination.page,
+    total: pagination.total,
+    totalPages: pagination.totalPages,
     refresh,
     loadMore,
     changeStatus,
@@ -104,45 +81,25 @@ export const useModeratorDocuments = (
 };
 
 export const useModeratorDashboard = () => {
-  const [summary, setSummary] = useState<ModeratorDashboardSummary | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const hasLoadedRef = useRef(false);
+  const query = useQuery({
+    queryKey: moderatorDocumentKeys.dashboard(),
+    queryFn: fetchModeratorDashboardSummary,
+    staleTime: 60 * 1000,
+  });
 
   const refresh = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const data = await fetchModeratorDashboardSummary();
-      setSummary(data);
-    } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Không thể tải thông tin bảng điều khiển."
-      );
-    } finally {
-      hasLoadedRef.current = true;
-      setIsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    refresh();
-  }, [refresh]);
-
-  useFocusEffect(
-    useCallback(() => {
-      if (hasLoadedRef.current) {
-        refresh();
-      }
-    }, [refresh])
-  );
+    await query.refetch();
+  }, [query]);
 
   return {
-    summary,
-    isLoading,
-    error,
+    summary: query.data ?? null,
+    isLoading: query.isLoading || query.isRefetching,
+    error: query.isError
+      ? getQueryErrorMessage(
+          query.error,
+          "Không thể tải thông tin bảng điều khiển."
+        )
+      : null,
     refresh,
   };
 };

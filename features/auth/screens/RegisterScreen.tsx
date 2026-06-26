@@ -17,8 +17,6 @@ import {
 
 import { BORDER_RADIUS, SPACING, TYPOGRAPHY } from "@/constants/theme";
 import { useAppTheme, type AppThemeColors } from "@/features/theme";
-import { useAuthStore } from "../store/authStore";
-import { useProfileStore } from "@/features/profile/store/profileStore";
 import { RegisterSchema, RegisterFormType } from "../schemas/authSchema";
 
 interface RegisterScreenProps {
@@ -35,9 +33,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({
   const router = useRouter();
   const { colors } = useAppTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
-  const { setAuth } = useAuthStore();
-  const { setProfile } = useProfileStore();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const isSubmitting = false;
   const [passwordVisible, setPasswordVisible] = useState(false);
 
   const { control, handleSubmit, formState: { errors } } = useForm<RegisterFormType>({

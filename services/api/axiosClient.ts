@@ -2,7 +2,7 @@ import axios from "axios";
 import { Alert } from "react-native";
 import { router } from "expo-router";
 import { useAuthStore } from "@/features/auth/store/authStore";
-import { useProfileStore } from "@/features/profile/store/profileStore";
+import { queryClient } from "./queryClient";
 
 declare module "axios" {
   export interface AxiosRequestConfig {
@@ -100,7 +100,7 @@ apiClient.interceptors.response.use(
         
         // Log out on refresh failure
         useAuthStore.getState().logout();
-        useProfileStore.getState().clearProfile();
+        queryClient.clear();
         
         if (!originalRequest.skipAlert) {
           Alert.alert("Phiên đăng nhập hết hạn", "Vui lòng đăng nhập lại.");

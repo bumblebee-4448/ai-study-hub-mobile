@@ -4,11 +4,12 @@ import {
   RefreshCw,
   Search,
 } from "lucide-react-native";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
   RefreshControl,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -20,7 +21,7 @@ import { ScreenSafeAreaView } from "@/components/screen-safe-area-view";
 import { SCREEN_HEADER_TOP_PADDING } from "@/constants/safeArea";
 import { MyDocumentItem } from "../components/MyDocumentItem";
 import { useLibraryDocuments } from "../hooks/useUserDocuments";
-import { fetchUserSubjects } from "../services/userSubjectService";
+import { useUserSubjects } from "../hooks/useUserSubjects";
 import { useAppTheme, type AppThemeColors } from "@/features/theme";
 import type { BackendSubject, UserDocument } from "../types";
 
@@ -33,29 +34,10 @@ export const UserLibraryScreen = () => {
   const router = useRouter();
   const { colors } = useAppTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
-  const [subjects, setSubjects] = useState<BackendSubject[]>([]);
   const [selectedSubjectId, setSelectedSubjectId] = useState("");
-  const [isLoadingSubjects, setIsLoadingSubjects] = useState(true);
-  const [subjectsError, setSubjectsError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const subjectsQuery = useUserSubjects();
   const library = useLibraryDocuments(selectedSubjectId);
-
-  const loadSubjects = useCallback(async () => {
-    setIsLoadingSubjects(true);
-    setSubjectsError(null);
-    try {
-      const result = await fetchUserSubjects();
-      setSubjects(result?.subjects || []);
-    } catch {
-      setSubjectsError("Không thể tải danh sách môn học.");
-    } finally {
-      setIsLoadingSubjects(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadSubjects();
-  }, [loadSubjects]);
 
   /* ────────── Filtered documents ────────── */
   const filteredDocuments = useMemo(() => {
@@ -70,8 +52,11 @@ export const UserLibraryScreen = () => {
   }, [library.documents, searchQuery]);
 
   const selectedSubject = useMemo(
-    () => (subjects || []).find((s) => s && s.id === selectedSubjectId),
-    [selectedSubjectId, subjects]
+    () =>
+      (subjectsQuery.subjects || []).find(
+        (s) => s && s.id === selectedSubjectId
+      ),
+    [selectedSubjectId, subjectsQuery.subjects]
   );
 
   const handleDocumentPress = (id: string) => {
@@ -105,24 +90,29 @@ export const UserLibraryScreen = () => {
 
       {/* Subject Filters */}
       <View style={styles.filterSection}>
-        {isLoadingSubjects ? (
+        {subjectsQuery.isLoading ? (
           <View style={styles.filterLoadingRow}>
             <ActivityIndicator size="small" color={colors.primary} />
             <Text style={styles.filterLoadingText}>Đang tải môn học...</Text>
           </View>
-        ) : subjectsError ? (
+        ) : subjectsQuery.error ? (
           <View style={styles.filterErrorRow}>
-            <Text style={styles.filterErrorText}>{subjectsError}</Text>
+            <Text style={styles.filterErrorText}>{subjectsQuery.error}</Text>
             <TouchableOpacity
               style={styles.filterRetryBtn}
-              onPress={loadSubjects}
+              onPress={subjectsQuery.refresh}
             >
               <RefreshCw size={14} color={colors.primary} />
               <Text style={styles.filterRetryText}>Tải lại</Text>
             </TouchableOpacity>
           </View>
         ) : (
-          <View style={styles.filterRow}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.filterScrollContent}
+            style={styles.filterScroll}
+          >
             <TouchableOpacity
               style={[
                 styles.filterTab,
@@ -141,7 +131,7 @@ export const UserLibraryScreen = () => {
               </Text>
             </TouchableOpacity>
 
-            {(subjects || []).map((subject) => {
+            {(subjectsQuery.subjects || []).map((subject) => {
               if (!subject || !subject.id) return null;
               const isActive = subject.id === selectedSubjectId;
               return (
@@ -166,7 +156,7 @@ export const UserLibraryScreen = () => {
                 </TouchableOpacity>
               );
             })}
-          </View>
+          </ScrollView>
         )}
       </View>
 
@@ -331,13 +321,16 @@ const createStyles = (colors: AppThemeColors) => StyleSheet.create({
 
   /* ── Filters ── */
   filterSection: {
-    paddingHorizontal: 24,
     marginTop: 14,
   },
-  filterRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
+  filterScroll: {
+    // cho phép scroll ngang, không cắt
+  },
+  filterScrollContent: {
+    paddingHorizontal: 24,
     gap: 8,
+    flexDirection: "row",
+    alignItems: "center",
   },
   filterTab: {
     paddingHorizontal: 14,

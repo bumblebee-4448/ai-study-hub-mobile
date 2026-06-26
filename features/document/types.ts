@@ -55,10 +55,14 @@ export interface RelatedDocument {
 export interface DocumentDetail {
   id: string;
   title: string;
+  subjectId?: string;
+  isPublic?: boolean;
   /** File format badge, e.g. "PDF" */
   format: string;
   /** File size display string, e.g. "2.4 MB" */
   fileSize: string;
+  sizeInBytes?: number;
+  fileName?: string;
   thumbnailUrl: string;
   author: string;
   authorAvatarUrl: string;
@@ -68,6 +72,7 @@ export interface DocumentDetail {
   downloads: number;
   /** Long-form description shown below the divider */
   description: string;
+  rawDescription?: string;
   /** Tag labels shown as chips */
   tags: string[];
   /** Shown in the "Tài liệu liên quan" section */
@@ -90,6 +95,13 @@ export interface EditDocumentParams {
   fileName?: string;
   /** File size in bytes */
   fileSize?: number;
+}
+
+export interface UpdateDocumentPayload {
+  title?: string;
+  description?: string;
+  subjectId?: string;
+  isPublic?: boolean;
 }
 
 export interface DocumentState {

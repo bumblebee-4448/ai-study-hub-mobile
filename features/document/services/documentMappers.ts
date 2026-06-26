@@ -54,8 +54,12 @@ export const mapBackendDocumentToDetail = (
   return {
     id: doc.id,
     title: doc.title,
+    subjectId: doc.subject?.id,
+    isPublic: doc.isPublic,
     format: format,
     fileSize: sizeLabel || "Không rõ dung lượng",
+    sizeInBytes: doc.sizeInBytes,
+    fileName: `${doc.title}.${format.toLowerCase()}`,
     thumbnailUrl: getThumbnailUrl(doc.fileUrl, doc.format),
     author: doc.author?.name || "Không rõ tác giả",
     authorAvatarUrl: doc.author?.avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100",
@@ -63,6 +67,7 @@ export const mapBackendDocumentToDetail = (
     views: 0,
     downloads: 0,
     description: doc.description || "Không có mô tả cho tài liệu này.",
+    rawDescription: doc.description ?? "",
     tags: doc.subject?.name ? [doc.subject.name] : [],
     relatedDocuments: [],
   };
