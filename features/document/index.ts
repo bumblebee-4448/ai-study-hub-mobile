@@ -34,6 +34,7 @@ export {
   useModeratorDocuments,
   useModeratorDashboard,
   useModeratorDocumentDetail,
+  useDocumentDetail,
 } from "./hooks";
 
 // Store

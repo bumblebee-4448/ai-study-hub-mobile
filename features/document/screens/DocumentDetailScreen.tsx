@@ -27,6 +27,7 @@ import {
   Text,
   TouchableOpacity,
   View,
+  ActivityIndicator,
 } from "react-native";
 
 import { BORDER_RADIUS, COLORS, SPACING, TYPOGRAPHY } from "@/constants/theme";
@@ -129,20 +130,26 @@ const RelatedDocumentCard: React.FC<RelatedDocumentCardProps> = ({
 
 interface DocumentDetailScreenProps {
   document?: DocumentDetail;
+  isLoading?: boolean;
+  error?: string | null;
   onBack?: () => void;
   onBookmark?: (documentId: string) => void;
   onMoreOptions?: (documentId: string) => void;
   onDownload?: (documentId: string) => void;
   onRelatedPress?: (documentId: string) => void;
+  onRetry?: () => void;
 }
 
 export const DocumentDetailScreen: React.FC<DocumentDetailScreenProps> = ({
   document: doc = DEFAULT_DOCUMENT,
+  isLoading,
+  error,
   onBack,
   onBookmark,
   onMoreOptions,
   onDownload,
   onRelatedPress,
+  onRetry,
 }) => {
   const [isBookmarked, setIsBookmarked] = useState(false);
 
@@ -165,6 +172,29 @@ export const DocumentDetailScreen: React.FC<DocumentDetailScreenProps> = ({
   const handleDownload = useCallback(() => {
     onDownload?.(doc.id);
   }, [doc.id, onDownload]);
+
+  if (isLoading) {
+    return (
+      <SafeAreaView style={[styles.safeArea, styles.center]}>
+        <ActivityIndicator size="large" color={COLORS.primary} />
+        <Text style={styles.loadingText}>Đang tải chi tiết tài liệu...</Text>
+      </SafeAreaView>
+    );
+  }
+
+  if (error && (!doc || doc.id === "doc-detail-001")) {
+    return (
+      <SafeAreaView style={[styles.safeArea, styles.center]}>
+        <Text style={styles.errorText}>Lỗi: {error}</Text>
+        <TouchableOpacity style={styles.retryButton} onPress={onRetry}>
+          <Text style={styles.retryText}>Thử lại</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.backLink} onPress={onBack}>
+          <Text style={styles.backLinkText}>Quay lại</Text>
+        </TouchableOpacity>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -234,7 +264,15 @@ export const DocumentDetailScreen: React.FC<DocumentDetailScreenProps> = ({
               <Text style={styles.title}>{doc.title}</Text>
               <View style={styles.formatBadge}>
                 <MaterialCommunityIcons
-                  name="file-pdf-box"
+                  name={
+                    doc.format?.toUpperCase() === "PDF"
+                      ? "file-pdf-box"
+                      : doc.format?.toUpperCase() === "DOC" || doc.format?.toUpperCase() === "DOCX"
+                      ? "file-word"
+                      : doc.format?.toUpperCase() === "PPT" || doc.format?.toUpperCase() === "PPTX"
+                      ? "file-powerpoint"
+                      : "file-document"
+                  }
                   size={14}
                   color={COLORS["on-primary-container"]}
                 />
@@ -595,5 +633,40 @@ const styles = StyleSheet.create({
   btnDownloadText: {
     ...TYPOGRAPHY["label-md"],
     color: COLORS["on-primary"],
+  },
+  center: {
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 24,
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 14,
+    color: COLORS["on-surface-variant"],
+  },
+  errorText: {
+    fontSize: 15,
+    color: COLORS.error,
+    textAlign: "center",
+    marginBottom: 16,
+  },
+  retryButton: {
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    backgroundColor: COLORS.primary,
+    borderRadius: 8,
+    marginBottom: 12,
+  },
+  retryText: {
+    color: COLORS["on-primary"],
+    fontWeight: "bold",
+  },
+  backLink: {
+    paddingVertical: 8,
+  },
+  backLinkText: {
+    color: COLORS["on-surface-variant"],
+    fontSize: 14,
+    textDecorationLine: "underline",
   },
 });
