@@ -20,6 +20,10 @@ export const useDocumentChat = (documentId: string) => {
   });
 
   useEffect(() => {
+    setActiveSessionId(null);
+  }, [documentId]);
+
+  useEffect(() => {
     if (activeSessionId || !sessionsQuery.data) return;
     setActiveSessionId(sessionsQuery.data[0]?.id ?? null);
   }, [activeSessionId, sessionsQuery.data]);

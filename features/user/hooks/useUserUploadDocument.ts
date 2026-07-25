@@ -2,7 +2,7 @@ import * as DocumentPicker from "expo-document-picker";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useState } from "react";
 
-import { userDocumentKeys } from "@/services/api/queryKeys";
+import { chatKeys, userDocumentKeys } from "@/services/api/queryKeys";
 
 import type { CreateUserDocumentFormValues, PickedUploadFile } from "../types";
 import { uploadUserDocument } from "../services/userUploadService";
@@ -40,6 +40,9 @@ export const useUserUploadDocument = () => {
     mutationFn: uploadUserDocument,
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: userDocumentKeys.all });
+      await queryClient.invalidateQueries({
+        queryKey: chatKeys.readyDocuments(),
+      });
     },
   });
 
@@ -65,7 +68,7 @@ export const useUserUploadDocument = () => {
 
     try {
       const result = await DocumentPicker.getDocumentAsync({
-        type: [...ALLOWED_UPLOAD_MIME_TYPES, "*/*"],
+        type: "*/*",
         multiple: false,
         copyToCacheDirectory: true,
       });
@@ -132,7 +135,9 @@ export const useUserUploadDocument = () => {
       resetForm();
       return true;
     } catch (error) {
-      setSubmitError(getErrorMessage(error, "Đã xảy ra lỗi. Vui lòng thử lại."));
+      setSubmitError(
+        getErrorMessage(error, "Đã xảy ra lỗi. Vui lòng thử lại."),
+      );
       return false;
     }
   }, [pickedFile, resetForm, uploadMutation, values]);

@@ -13,6 +13,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useState } from "react";
 import { PickedFile, UploadStatus } from "../types";
 import { userDocumentKeys } from "@/services/api/queryKeys";
+import { chatKeys } from "@/services/api/queryKeys";
 import { uploadUserDocument } from "@/features/user/services/userUploadService";
 
 // ── Constants ────────────────────────────────────────────────────────────────
@@ -50,7 +51,11 @@ export const useUploadDocument = (): UseUploadDocumentReturn => {
   const [fileError, setFileError] = useState<string | null>(null);
 
   const uploadMutation = useMutation({
-    mutationFn: (payload: { file: PickedFile; title: string; description?: string }) =>
+    mutationFn: (payload: {
+      file: PickedFile;
+      title: string;
+      description?: string;
+    }) =>
       uploadUserDocument({
         file: payload.file,
         values: {
@@ -62,6 +67,9 @@ export const useUploadDocument = (): UseUploadDocumentReturn => {
       }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: userDocumentKeys.all });
+      await queryClient.invalidateQueries({
+        queryKey: chatKeys.readyDocuments(),
+      });
     },
   });
 
@@ -69,43 +77,42 @@ export const useUploadDocument = (): UseUploadDocumentReturn => {
   const uploadStatus: UploadStatus = uploadMutation.isPending
     ? "uploading"
     : uploadMutation.isSuccess
-    ? "success"
-    : uploadMutation.isError
-    ? "error"
-    : "idle";
+      ? "success"
+      : uploadMutation.isError
+        ? "error"
+        : "idle";
 
   /** Validate MIME / extension & size */
-  const validate = useCallback((asset: DocumentPicker.DocumentPickerAsset): string | null => {
-    const mime = asset.mimeType ?? "";
-    const name = asset.name ?? "";
-    const ext = "." + name.split(".").pop()?.toLowerCase();
+  const validate = useCallback(
+    (asset: DocumentPicker.DocumentPickerAsset): string | null => {
+      const mime = asset.mimeType ?? "";
+      const name = asset.name ?? "";
+      const ext = "." + name.split(".").pop()?.toLowerCase();
 
-    const isMimeOk = ALLOWED_MIMES.includes(mime);
-    const isExtOk = ALLOWED_EXTENSIONS.includes(ext);
+      const isMimeOk = ALLOWED_MIMES.includes(mime);
+      const isExtOk = ALLOWED_EXTENSIONS.includes(ext);
 
-    if (!isMimeOk && !isExtOk) {
-      return "Chỉ hỗ trợ PDF, DOCX, PPTX. Vui lòng chọn lại.";
-    }
+      if (!isMimeOk && !isExtOk) {
+        return "Chỉ hỗ trợ PDF, DOCX, PPTX. Vui lòng chọn lại.";
+      }
 
-    const size = asset.size ?? 0;
-    if (size > MAX_SIZE_BYTES) {
-      const mb = (size / 1024 / 1024).toFixed(1);
-      return `Tệp ${mb} MB vượt quá giới hạn 50 MB.`;
-    }
+      const size = asset.size ?? 0;
+      if (size > MAX_SIZE_BYTES) {
+        const mb = (size / 1024 / 1024).toFixed(1);
+        return `Tệp ${mb} MB vượt quá giới hạn 50 MB.`;
+      }
 
-    return null;
-  }, []);
+      return null;
+    },
+    [],
+  );
 
   const pickFile = useCallback(async () => {
     setFileError(null);
     try {
       const result = await DocumentPicker.getDocumentAsync({
-        type: [
-          ...ALLOWED_MIMES,
-          // Android fallback — let the system filter; we re-validate after
-          "*/*",
-        ],
-        copyToCacheDirectory: false,
+        type: "*/*",
+        copyToCacheDirectory: true,
         multiple: false,
       });
 
@@ -158,7 +165,7 @@ export const useUploadDocument = (): UseUploadDocumentReturn => {
         // uploadStatus sẽ tự chuyển thành "error" qua mutation state
       }
     },
-    [pickedFile, uploadMutation]
+    [pickedFile, uploadMutation],
   );
 
   return {
