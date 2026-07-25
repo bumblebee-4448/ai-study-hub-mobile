@@ -5,7 +5,7 @@ export {
   ChatSourcePicker,
   FloatingAIChatBubble,
 } from "./components";
-export { AIChatScreen } from "./screens";
+export { AIChatScreen } from "./screens/AIChatScreen";
 export {
   useChatReadyDocuments,
   useDocumentChat,
