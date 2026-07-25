@@ -140,7 +140,8 @@ export const ChatSourcePicker: React.FC<ChatSourcePickerProps> = ({
             Chưa có tài liệu sẵn sàng
           </Text>
           <Text style={[styles.emptyText, { color: colors.textSubtle }]}>
-            Tài liệu cần được xử lý xong trước khi bạn có thể hỏi đáp với AI.
+            Tài liệu public cần được moderator duyệt và xử lý xong trước khi bạn
+            có thể hỏi đáp với AI.
           </Text>
         </View>
       }

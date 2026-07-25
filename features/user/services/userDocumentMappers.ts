@@ -69,6 +69,7 @@ export const mapBackendDocumentToUserDocument = (
   sizeLabel: formatDocumentSize(document.sizeInBytes),
   createdAtLabel: formatDate(document.createdAt),
   rejectionReason: document.rejectionReason ?? null,
+  rejectionFlags: document.rejectionFlags ?? [],
 });
 
 export const mapBackendDocumentList = (

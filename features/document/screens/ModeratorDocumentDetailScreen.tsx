@@ -22,9 +22,18 @@ import {
   XCircle,
   Search,
   X,
+  Sparkles,
+  AlertTriangle,
 } from "lucide-react-native";
 import { useModeratorDocumentDetail } from "../hooks";
+import type { DocumentWarningFlag } from "../types";
 import { useAppTheme, type AppThemeColors } from "@/features/theme";
+
+const AI_FLAG_LABELS: Record<DocumentWarningFlag, string> = {
+  SPAM: "Spam/quảng cáo",
+  TOXIC: "Nội dung độc hại",
+  ACADEMIC_INTEGRITY_RISK: "Rủi ro liêm chính học thuật",
+};
 
 interface Props {
   documentId: string;
@@ -45,6 +54,10 @@ export const ModeratorDocumentDetailScreen: React.FC<Props> = ({
     refresh,
     approve,
     reject,
+    analysis,
+    analyze,
+    isAnalyzing,
+    analyzeError,
   } = useModeratorDocumentDetail(documentId);
 
   const [rejectModalVisible, setRejectModalVisible] = useState(false);
@@ -87,6 +100,14 @@ export const ModeratorDocumentDetailScreen: React.FC<Props> = ({
       onBack();
     } catch (err) {
       Alert.alert("Lỗi", err instanceof Error ? err.message : "Đã xảy ra lỗi.");
+    }
+  };
+
+  const handleAnalyze = async () => {
+    try {
+      await analyze();
+    } catch {
+      // The hook exposes a localized error inside the AI card.
     }
   };
 
@@ -226,6 +247,103 @@ export const ModeratorDocumentDetailScreen: React.FC<Props> = ({
             <View style={styles.descriptionContainer}>
               <Text style={styles.descriptionLabel}>MÔ TẢ NỘI DUNG</Text>
               <Text style={styles.descriptionText}>{doc.description}</Text>
+            </View>
+          ) : null}
+
+          {doc.canReview ? (
+            <View style={styles.aiCard}>
+              <View style={styles.aiHeader}>
+                <View style={styles.aiHeaderTitleRow}>
+                  <View style={styles.aiIconContainer}>
+                    <Sparkles size={18} color={colors.primary} />
+                  </View>
+                  <View style={styles.aiHeaderTextBlock}>
+                    <Text style={styles.aiTitle}>AI Moderator</Text>
+                    <Text style={styles.aiSubtitle}>
+                      Phân tích nội dung trước khi duyệt
+                    </Text>
+                  </View>
+                </View>
+                {analysis ? (
+                  <Text style={styles.aiCompletedLabel}>Đã phân tích</Text>
+                ) : null}
+              </View>
+
+              {!analysis && !isAnalyzing ? (
+                <TouchableOpacity
+                  style={styles.aiAnalyzeButton}
+                  onPress={handleAnalyze}
+                  disabled={isAnalyzing}
+                >
+                  <Sparkles size={17} color={colors.onPrimary} />
+                  <Text style={styles.aiAnalyzeButtonText}>Phân tích bằng AI</Text>
+                </TouchableOpacity>
+              ) : null}
+
+              {isAnalyzing ? (
+                <View style={styles.aiLoadingRow}>
+                  <ActivityIndicator size="small" color={colors.primary} />
+                  <Text style={styles.aiLoadingText}>AI đang phân tích tài liệu...</Text>
+                </View>
+              ) : null}
+
+              {analyzeError ? (
+                <View style={styles.aiErrorBox}>
+                  <AlertTriangle size={17} color={colors.danger} />
+                  <View style={styles.aiErrorContent}>
+                    <Text style={styles.aiErrorText}>{analyzeError}</Text>
+                    <TouchableOpacity onPress={handleAnalyze}>
+                      <Text style={styles.aiRetryText}>Thử lại</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              ) : null}
+
+              {analysis ? (
+                <View style={styles.aiResultContainer}>
+                  <View
+                    style={[
+                      styles.aiRecommendation,
+                      analysis.moderationSuggestion === "REJECT"
+                        ? styles.aiRecommendationReject
+                        : styles.aiRecommendationApprove,
+                    ]}
+                  >
+                    <Text style={styles.aiRecommendationLabel}>ĐỀ XUẤT CỦA AI</Text>
+                    <Text style={styles.aiRecommendationText}>
+                      {analysis.moderationSuggestion === "REJECT"
+                        ? "Nên từ chối"
+                        : "Nên duyệt"}
+                    </Text>
+                  </View>
+
+                  <View style={styles.aiResultSection}>
+                    <Text style={styles.aiSectionLabel}>TÓM TẮT NỘI DUNG</Text>
+                    <Text style={styles.aiBodyText}>{analysis.summary}</Text>
+                  </View>
+
+                  <View style={styles.aiResultSection}>
+                    <Text style={styles.aiSectionLabel}>CỜ CẢNH BÁO</Text>
+                    {analysis.flags.length > 0 ? (
+                      <View style={styles.aiFlagsRow}>
+                        {analysis.flags.map((flag) => (
+                          <View key={flag} style={styles.aiFlagChip}>
+                            <AlertTriangle size={13} color={colors.warningText} />
+                            <Text style={styles.aiFlagText}>{AI_FLAG_LABELS[flag]}</Text>
+                          </View>
+                        ))}
+                      </View>
+                    ) : (
+                      <Text style={styles.aiBodyText}>Không phát hiện cờ cảnh báo.</Text>
+                    )}
+                  </View>
+
+                  <View style={styles.aiResultSection}>
+                    <Text style={styles.aiSectionLabel}>LÝ DO ĐỀ XUẤT</Text>
+                    <Text style={styles.aiBodyText}>{analysis.moderationReason}</Text>
+                  </View>
+                </View>
+              ) : null}
             </View>
           ) : null}
 
@@ -518,6 +636,161 @@ const createStyles = (colors: AppThemeColors) => StyleSheet.create({
     fontSize: 15,
     color: colors.textMuted,
     lineHeight: 24,
+  },
+  aiCard: {
+    marginTop: 8,
+    padding: 16,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: colors.primaryMuted,
+    backgroundColor: colors.surface,
+    gap: 16,
+  },
+  aiHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+  aiHeaderTitleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    flex: 1,
+  },
+  aiIconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.primaryMuted,
+  },
+  aiHeaderTextBlock: {
+    flex: 1,
+  },
+  aiTitle: {
+    fontSize: 15,
+    fontWeight: "800",
+    color: colors.text,
+  },
+  aiSubtitle: {
+    marginTop: 3,
+    fontSize: 12,
+    color: colors.textSubtle,
+  },
+  aiCompletedLabel: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: colors.successText,
+  },
+  aiAnalyzeButton: {
+    minHeight: 46,
+    borderRadius: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    backgroundColor: colors.primary,
+  },
+  aiAnalyzeButtonText: {
+    color: colors.onPrimary,
+    fontSize: 14,
+    fontWeight: "800",
+  },
+  aiLoadingRow: {
+    minHeight: 46,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+  },
+  aiLoadingText: {
+    fontSize: 13,
+    color: colors.textMuted,
+  },
+  aiErrorBox: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 10,
+    padding: 12,
+    borderRadius: 12,
+    backgroundColor: colors.dangerMuted,
+  },
+  aiErrorContent: {
+    flex: 1,
+    gap: 6,
+  },
+  aiErrorText: {
+    fontSize: 13,
+    lineHeight: 19,
+    color: colors.dangerText,
+  },
+  aiRetryText: {
+    fontSize: 13,
+    fontWeight: "800",
+    color: colors.danger,
+  },
+  aiResultContainer: {
+    gap: 16,
+  },
+  aiRecommendation: {
+    padding: 12,
+    borderRadius: 12,
+    borderLeftWidth: 3,
+  },
+  aiRecommendationApprove: {
+    backgroundColor: colors.successMuted,
+    borderLeftColor: colors.success,
+  },
+  aiRecommendationReject: {
+    backgroundColor: colors.dangerMuted,
+    borderLeftColor: colors.danger,
+  },
+  aiRecommendationLabel: {
+    fontSize: 10,
+    fontWeight: "800",
+    letterSpacing: 0.5,
+    color: colors.textSubtle,
+  },
+  aiRecommendationText: {
+    marginTop: 4,
+    fontSize: 16,
+    fontWeight: "800",
+    color: colors.text,
+  },
+  aiResultSection: {
+    gap: 8,
+  },
+  aiSectionLabel: {
+    fontSize: 10,
+    fontWeight: "800",
+    letterSpacing: 0.5,
+    color: colors.textSubtle,
+  },
+  aiBodyText: {
+    fontSize: 13,
+    lineHeight: 20,
+    color: colors.textMuted,
+  },
+  aiFlagsRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  aiFlagChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    paddingHorizontal: 9,
+    paddingVertical: 6,
+    borderRadius: 8,
+    backgroundColor: colors.warningMuted,
+  },
+  aiFlagText: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: colors.warningText,
   },
   rejectionReasonContainer: {
     marginTop: 8,

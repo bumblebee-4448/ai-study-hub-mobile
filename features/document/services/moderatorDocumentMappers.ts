@@ -81,6 +81,7 @@ export const mapBackendDocumentToModeratorDocument = (
   createdAtLabel: formatModeratorDate(document.createdAt),
   updatedAtLabel: document.updatedAt ? formatModeratorDate(document.updatedAt) : "",
   rejectionReason: document.rejectionReason ?? null,
+  rejectionFlags: document.rejectionFlags ?? [],
   canReview: document.status === "PENDING",
 });
 

@@ -175,7 +175,7 @@ export const AIChatScreen: React.FC<AIChatScreenProps> = ({ onBack }) => {
               Chọn tài liệu để bắt đầu hỏi đáp
             </Text>
             <Text style={[styles.pageSubtitle, { color: colors.textSubtle }]}>
-              AI sẽ chỉ trả lời dựa trên tài liệu bạn chọn.
+              Chỉ tài liệu public đã được duyệt mới có thể dùng để hỏi đáp.
             </Text>
           </View>
           <ChatSourcePicker

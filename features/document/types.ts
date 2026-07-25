@@ -124,6 +124,20 @@ export interface UploadFormData {
 
 export type BackendDocumentStatus = "PENDING" | "ACTIVE" | "REJECTED" | "DELETED";
 
+export type DocumentWarningFlag =
+  | "SPAM"
+  | "TOXIC"
+  | "ACADEMIC_INTEGRITY_RISK";
+
+export type ModeratorRecommendation = "APPROVE" | "REJECT";
+
+export interface ModeratorAnalysis {
+  summary: string;
+  flags: DocumentWarningFlag[];
+  moderationSuggestion: ModeratorRecommendation;
+  moderationReason: string;
+}
+
 export type ModeratorDocumentStatusFilter = Extract<
   BackendDocumentStatus,
   "PENDING" | "ACTIVE" | "REJECTED"
@@ -154,6 +168,7 @@ export interface BackendModeratorDocument {
   updatedAt?: string | null;
   reviewedAt?: string | null;
   rejectionReason?: string | null;
+  rejectionFlags?: DocumentWarningFlag[] | null;
   format?: string | null;
   sizeInBytes?: number | null;
   author?: BackendModeratorDocumentAuthor | null;
@@ -186,6 +201,7 @@ export interface ModeratorDocument {
   createdAtLabel: string;
   updatedAtLabel: string;
   rejectionReason: string | null;
+  rejectionFlags: DocumentWarningFlag[];
   canReview: boolean;
 }
 

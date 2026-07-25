@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 
 import {
   documentKeys,
@@ -9,12 +9,15 @@ import { getQueryErrorMessage } from "@/services/api/queryState";
 
 import {
   approveDocument as approveApi,
+  analyzeModeratorDocument as analyzeApi,
   fetchModeratorDocumentDetail,
   rejectDocument as rejectApi,
 } from "../services/moderatorDocumentService";
+import type { ModeratorAnalysis } from "../types";
 
 export const useModeratorDocumentDetail = (documentId: string) => {
   const queryClient = useQueryClient();
+  const [analysis, setAnalysis] = useState<ModeratorAnalysis | null>(null);
   const query = useQuery({
     queryKey: moderatorDocumentKeys.detail(documentId),
     queryFn: () => fetchModeratorDocumentDetail(documentId),
@@ -43,6 +46,11 @@ export const useModeratorDocumentDetail = (documentId: string) => {
       rejectionReason: string;
     }) => rejectApi(id, rejectionReason),
     onSuccess: invalidateModeratorDocuments,
+  });
+
+  const analyzeMutation = useMutation({
+    mutationFn: analyzeApi,
+    onSuccess: setAnalysis,
   });
 
   const refresh = useCallback(async () => {
@@ -75,12 +83,28 @@ export const useModeratorDocumentDetail = (documentId: string) => {
     [documentId, rejectMutation]
   );
 
+  const analyze = useCallback(async () => {
+    if (!documentId) {
+      return null;
+    }
+
+    return analyzeMutation.mutateAsync(documentId);
+  }, [analyzeMutation, documentId]);
+
   const actionError = approveMutation.error ?? rejectMutation.error;
 
   return {
     document: query.data ?? null,
     isLoading: query.isLoading || query.isRefetching,
     isSubmitting: approveMutation.isPending || rejectMutation.isPending,
+    isAnalyzing: analyzeMutation.isPending,
+    analysis,
+    analyzeError: analyzeMutation.error
+      ? getQueryErrorMessage(
+          analyzeMutation.error,
+          "Không thể phân tích tài liệu bằng AI lúc này."
+        )
+      : null,
     error: query.isError
       ? getQueryErrorMessage(
           query.error,
@@ -95,5 +119,6 @@ export const useModeratorDocumentDetail = (documentId: string) => {
     refresh,
     approve,
     reject,
+    analyze,
   };
 };

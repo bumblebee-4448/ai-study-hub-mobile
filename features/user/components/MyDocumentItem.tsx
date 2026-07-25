@@ -13,7 +13,14 @@ import {
 } from "lucide-react-native";
 
 import { useAppTheme, type AppThemeColors } from "@/features/theme";
+import type { DocumentWarningFlag } from "@/features/document/types";
 import type { UserDocument, BackendDocumentStatus } from "../types";
+
+const AI_FLAG_LABELS: Record<DocumentWarningFlag, string> = {
+  SPAM: "Spam/quảng cáo",
+  TOXIC: "Nội dung độc hại",
+  ACADEMIC_INTEGRITY_RISK: "Rủi ro liêm chính học thuật",
+};
 
 const getStatusConfig = (colors: AppThemeColors): Record<
   BackendDocumentStatus,
@@ -185,6 +192,31 @@ export const MyDocumentItem: React.FC<MyDocumentItemProps> = ({
           </Text>
         </View>
       ) : null}
+
+      {document.status === "REJECTED" && document.rejectionFlags.length > 0 ? (
+        <View
+          style={[
+            styles.rejectionFlagsBox,
+            {
+              backgroundColor: colors.warningMuted,
+              borderLeftColor: colors.warning,
+            },
+          ]}
+        >
+          <Text style={[styles.rejectionFlagsLabel, { color: colors.warningText }]}>
+            AI phát hiện:
+          </Text>
+          <View style={styles.rejectionFlagsRow}>
+            {document.rejectionFlags.map((flag) => (
+              <View key={flag} style={styles.rejectionFlagChip}>
+                <Text style={[styles.rejectionFlagText, { color: colors.warningText }]}>
+                  {AI_FLAG_LABELS[flag]}
+                </Text>
+              </View>
+            ))}
+          </View>
+        </View>
+      ) : null}
     </TouchableOpacity>
   );
 };
@@ -292,5 +324,32 @@ const styles = StyleSheet.create({
   rejectionText: {
     fontSize: 12,
     lineHeight: 17,
+  },
+  rejectionFlagsBox: {
+    marginTop: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderLeftWidth: 3,
+    gap: 8,
+  },
+  rejectionFlagsLabel: {
+    fontSize: 12,
+    fontWeight: "800",
+  },
+  rejectionFlagsRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 6,
+  },
+  rejectionFlagChip: {
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+    borderRadius: 7,
+    backgroundColor: "rgba(255,255,255,0.45)",
+  },
+  rejectionFlagText: {
+    fontSize: 11,
+    fontWeight: "700",
   },
 });

@@ -1,3 +1,5 @@
+import type { DocumentWarningFlag } from "@/features/document/types";
+
 export type BackendDocumentStatus = "PENDING" | "ACTIVE" | "REJECTED" | "DELETED";
 
 export interface BackendDocumentAuthor {
@@ -21,6 +23,7 @@ export interface BackendDocument {
   createdAt: string;
   updatedAt?: string;
   rejectionReason?: string | null;
+  rejectionFlags?: DocumentWarningFlag[] | null;
   format?: string | null;
   sizeInBytes?: number | null;
   author?: BackendDocumentAuthor | null;
@@ -39,6 +42,7 @@ export interface UserDocument {
   sizeLabel: string;
   createdAtLabel: string;
   rejectionReason?: string | null;
+  rejectionFlags: DocumentWarningFlag[];
 }
 
 export interface UserDocumentPagination {

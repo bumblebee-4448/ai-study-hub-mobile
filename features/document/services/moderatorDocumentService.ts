@@ -6,6 +6,7 @@ import type {
   ModeratorDocument,
   ModeratorDashboardSummary,
   BackendModeratorDocument,
+  ModeratorAnalysis,
 } from "../types";
 import {
   mapBackendModeratorDocumentList,
@@ -29,6 +30,16 @@ export const fetchModeratorDocumentDetail = async (
     `/documents/${id}`
   );
   return mapBackendDocumentToModeratorDocument(response);
+};
+
+export const analyzeModeratorDocument = async (
+  id: string
+): Promise<ModeratorAnalysis> => {
+  return apiClient.post<unknown, ModeratorAnalysis>(
+    `/documents/${id}/moderator-analysis`,
+    undefined,
+    { skipAlert: true }
+  );
 };
 
 export const approveDocument = async (id: string): Promise<void> => {
