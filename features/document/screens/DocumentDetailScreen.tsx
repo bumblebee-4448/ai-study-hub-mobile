@@ -16,7 +16,7 @@
  */
 
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Dimensions,
   Image,
@@ -39,6 +39,8 @@ import { DocumentDetail, RelatedDocument } from "../types";
 const SCREEN_WIDTH = Dimensions.get("window").width;
 // Thumbnail: full width, 3:4 aspect ratio
 const THUMBNAIL_HEIGHT = (SCREEN_WIDTH * 4) / 3;
+const FALLBACK_THUMBNAIL_URL =
+  "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=800";
 
 // ── Demo / default data ────────────────────────────────────────────────────────
 
@@ -108,7 +110,7 @@ const RelatedDocumentCard: React.FC<RelatedDocumentCardProps> = ({
       borderColor: colors.border,
       borderRadius: BORDER_RADIUS.lg,
     }),
-    [colors]
+    [colors],
   );
 
   return (
@@ -119,15 +121,23 @@ const RelatedDocumentCard: React.FC<RelatedDocumentCardProps> = ({
     >
       <Image
         source={{ uri: item.thumbnailUrl }}
-        style={[staticStyles.relatedThumb, { backgroundColor: colors.surfaceSubtle }]}
+        style={[
+          staticStyles.relatedThumb,
+          { backgroundColor: colors.surfaceSubtle },
+        ]}
         resizeMode="cover"
       />
       <View style={staticStyles.relatedInfo}>
-        <Text style={[staticStyles.relatedTitle, { color: colors.text }]} numberOfLines={2}>
+        <Text
+          style={[staticStyles.relatedTitle, { color: colors.text }]}
+          numberOfLines={2}
+        >
           {item.title}
         </Text>
         <View style={staticStyles.relatedMeta}>
-          <Text style={[staticStyles.relatedAuthor, { color: colors.textSubtle }]}>
+          <Text
+            style={[staticStyles.relatedAuthor, { color: colors.textSubtle }]}
+          >
             {item.author}
           </Text>
           <View style={staticStyles.relatedDownloads}>
@@ -136,7 +146,12 @@ const RelatedDocumentCard: React.FC<RelatedDocumentCardProps> = ({
               size={13}
               color={colors.textSubtle}
             />
-            <Text style={[staticStyles.relatedDownloadText, { color: colors.textSubtle }]}>
+            <Text
+              style={[
+                staticStyles.relatedDownloadText,
+                { color: colors.textSubtle },
+              ]}
+            >
               {formatCount(item.downloads)}
             </Text>
           </View>
@@ -207,6 +222,11 @@ export const DocumentDetailScreen: React.FC<DocumentDetailScreenProps> = ({
   const { colors } = useAppTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const [isBookmarked, setIsBookmarked] = useState(false);
+  const [thumbnailError, setThumbnailError] = useState(false);
+
+  useEffect(() => {
+    setThumbnailError(false);
+  }, [doc.thumbnailUrl]);
 
   const handleBookmark = useCallback(() => {
     setIsBookmarked((prev) => !prev);
@@ -261,11 +281,7 @@ export const DocumentDetailScreen: React.FC<DocumentDetailScreenProps> = ({
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           accessibilityLabel="Quay lại"
         >
-          <Ionicons
-            name="arrow-back"
-            size={24}
-            color={colors.text}
-          />
+          <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
 
         <View style={styles.headerRight}>
@@ -303,9 +319,12 @@ export const DocumentDetailScreen: React.FC<DocumentDetailScreenProps> = ({
         {/* Thumbnail */}
         <View style={styles.thumbnailWrapper}>
           <Image
-            source={{ uri: doc.thumbnailUrl }}
+            source={{
+              uri: thumbnailError ? FALLBACK_THUMBNAIL_URL : doc.thumbnailUrl,
+            }}
             style={styles.thumbnail}
             resizeMode="cover"
+            onError={() => setThumbnailError(true)}
           />
         </View>
 
@@ -320,11 +339,13 @@ export const DocumentDetailScreen: React.FC<DocumentDetailScreenProps> = ({
                   name={
                     doc.format?.toUpperCase() === "PDF"
                       ? "file-pdf-box"
-                      : doc.format?.toUpperCase() === "DOC" || doc.format?.toUpperCase() === "DOCX"
-                      ? "file-word"
-                      : doc.format?.toUpperCase() === "PPT" || doc.format?.toUpperCase() === "PPTX"
-                      ? "file-powerpoint"
-                      : "file-document"
+                      : doc.format?.toUpperCase() === "DOC" ||
+                          doc.format?.toUpperCase() === "DOCX"
+                        ? "file-word"
+                        : doc.format?.toUpperCase() === "PPT" ||
+                            doc.format?.toUpperCase() === "PPTX"
+                          ? "file-powerpoint"
+                          : "file-document"
                   }
                   size={14}
                   color={colors.onPrimary}
@@ -429,11 +450,7 @@ export const DocumentDetailScreen: React.FC<DocumentDetailScreenProps> = ({
           activeOpacity={0.8}
           accessibilityLabel="Chia sẻ tài liệu"
         >
-          <Ionicons
-            name="share-outline"
-            size={22}
-            color={colors.icon}
-          />
+          <Ionicons name="share-outline" size={22} color={colors.icon} />
         </TouchableOpacity>
 
         {/* Download */}
@@ -443,10 +460,12 @@ export const DocumentDetailScreen: React.FC<DocumentDetailScreenProps> = ({
           activeOpacity={0.8}
           accessibilityLabel={`Tải về ${doc.fileSize}`}
         >
-          <Ionicons name="download-outline" size={20} color={colors.onPrimary} />
-          <Text style={styles.btnDownloadText}>
-            Tải về ({doc.fileSize})
-          </Text>
+          <Ionicons
+            name="download-outline"
+            size={20}
+            color={colors.onPrimary}
+          />
+          <Text style={styles.btnDownloadText}>Tải về ({doc.fileSize})</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>

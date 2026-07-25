@@ -26,6 +26,10 @@ test("maps a backend ready document to the source-picker model", () => {
   );
 });
 
+test("does not create a selectable source from an invalid document payload", () => {
+  assert.equal(mapChatReadyDocument(null), null);
+});
+
 test("maps assistant citations without discarding page metadata", () => {
   const message = mapChatMessage({
     id: "message-1",

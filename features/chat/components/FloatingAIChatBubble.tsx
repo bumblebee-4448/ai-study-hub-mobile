@@ -22,7 +22,12 @@ export const FloatingAIChatBubble: React.FC<FloatingAIChatBubbleProps> = ({
 }) => {
   const { colors } = useAppTheme();
   const insets = useSafeAreaInsets();
-  const tabBarHeight = useBottomTabBarHeight();
+  let tabBarHeight = 60;
+  try {
+    tabBarHeight = useBottomTabBarHeight();
+  } catch {
+    tabBarHeight = 60;
+  }
   const [showPrompt, setShowPrompt] = useState(true);
 
   useEffect(() => {
@@ -109,12 +114,13 @@ const styles = StyleSheet.create({
     elevation: 100,
   },
   promptCard: {
-    maxWidth: 286,
+    width: 250,
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
     borderWidth: 1,
     borderRadius: BORDER_RADIUS.lg,
-    paddingLeft: SPACING.md,
+    paddingLeft: SPACING.sm,
     paddingRight: SPACING.sm,
     paddingVertical: SPACING.sm,
     shadowOffset: { width: 0, height: 4 },
@@ -127,10 +133,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     flex: 1,
     gap: SPACING.sm,
+    marginRight: 4,
   },
   promptText: {
-    ...TYPOGRAPHY["label-md"],
-    flexShrink: 1,
+    ...TYPOGRAPHY["label-sm"],
+    flex: 1,
+    flexWrap: "wrap",
+    fontSize: 12,
+    lineHeight: 16,
   },
   dismissButton: {
     padding: SPACING.sm,

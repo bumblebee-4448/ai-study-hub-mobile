@@ -94,7 +94,7 @@ export default function RootLayout() {
                 name="document/[id]/edit"
                 options={{ headerShown: false }}
               />
-              <Stack.Screen name="ai-coach" options={{ headerShown: false }} />
+              <Stack.Screen name="ai-coach/index" options={{ headerShown: false }} />
               <Stack.Screen
                 name="moderator-review"
                 options={{ headerBackTitle: " ", title: "Review Tài liệu" }}

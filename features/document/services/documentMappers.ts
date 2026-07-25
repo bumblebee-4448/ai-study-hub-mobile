@@ -5,25 +5,32 @@ import { formatDocumentSize } from "@/features/user/services/userDocumentMappers
  * Dynamically resolves thumbnail URL.
  * If Cloudinary PDF, converts extension to .jpg and adds crop/thumbnail options.
  */
-export const getThumbnailUrl = (fileUrl: string | undefined | null, format?: string | null): string => {
+export const getThumbnailUrl = (
+  fileUrl: string | undefined | null,
+  format?: string | null,
+): string => {
   if (!fileUrl) {
     return "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=400";
   }
 
   const cleanFormat = (format || "").toLowerCase();
-  
-  if (fileUrl.includes("cloudinary.com")) {
-    if (cleanFormat === "pdf" || fileUrl.toLowerCase().endsWith(".pdf")) {
-      const parts = fileUrl.split("/upload/");
-      if (parts.length === 2) {
-        const pathWithJpg = parts[1].replace(/\.pdf$/i, ".jpg");
-        return `${parts[0]}/upload/w_400,h_533,c_fill,pg_1/${pathWithJpg}`;
-      }
+
+  if (
+    fileUrl.includes("cloudinary.com") &&
+    fileUrl.includes("/image/upload/") &&
+    (cleanFormat === "pdf" || fileUrl.toLowerCase().endsWith(".pdf"))
+  ) {
+    const parts = fileUrl.split("/upload/");
+    if (parts.length === 2) {
+      const pathWithJpg = parts[1].replace(/\.pdf$/i, ".jpg");
+      return `${parts[0]}/upload/w_400,h_533,c_fill,pg_1/${pathWithJpg}`;
     }
   }
 
   const isImage = ["jpg", "jpeg", "png", "webp", "gif"].includes(cleanFormat);
-  return isImage ? fileUrl : "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=400";
+  return isImage
+    ? fileUrl
+    : "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=400";
 };
 
 const formatDetailDate = (value?: string | null) => {
@@ -45,9 +52,7 @@ const formatDetailDate = (value?: string | null) => {
   }).format(date);
 };
 
-export const mapBackendDocumentToDetail = (
-  doc: any
-): DocumentDetail => {
+export const mapBackendDocumentToDetail = (doc: any): DocumentDetail => {
   const format = doc.format?.toUpperCase() || "PDF";
   const sizeLabel = formatDocumentSize(doc.sizeInBytes);
 
@@ -62,7 +67,9 @@ export const mapBackendDocumentToDetail = (
     fileName: `${doc.title}.${format.toLowerCase()}`,
     thumbnailUrl: getThumbnailUrl(doc.fileUrl, doc.format),
     author: doc.author?.name || "Không rõ tác giả",
-    authorAvatarUrl: doc.author?.avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100",
+    authorAvatarUrl:
+      doc.author?.avatarUrl ||
+      "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100",
     publishedAt: formatDetailDate(doc.createdAt),
     views: 0,
     downloads: 0,

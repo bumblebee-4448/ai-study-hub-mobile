@@ -64,17 +64,25 @@ const mapChatCitation = (citation: BackendChatCitation): ChatCitation => ({
 });
 
 export const mapChatReadyDocument = (
-  document: BackendChatReadyDocument,
-): ChatReadyDocument => ({
-  id: document.id,
-  title: document.title,
-  format: (document.format ?? "FILE").replace(/^\./, "").toUpperCase(),
-  sizeInBytes: document.sizeInBytes ?? 0,
-  sizeLabel: formatBytes(document.sizeInBytes ?? 0),
-  createdAt: document.createdAt,
-  subjectName: document.subject?.name ?? "Không phân loại",
-  isChatReady: true,
-});
+  document: unknown,
+): ChatReadyDocument | null => {
+  if (!document || typeof document !== "object") {
+    return null;
+  }
+
+  const readyDocument = document as BackendChatReadyDocument;
+
+  return {
+    id: readyDocument.id ?? "",
+    title: readyDocument.title ?? "Tài liệu",
+    format: (readyDocument.format ?? "FILE").replace(/^\./, "").toUpperCase(),
+    sizeInBytes: readyDocument.sizeInBytes ?? 0,
+    sizeLabel: formatBytes(readyDocument.sizeInBytes ?? 0),
+    createdAt: readyDocument.createdAt ?? "",
+    subjectName: readyDocument.subject?.name ?? "Không phân loại",
+    isChatReady: true,
+  };
+};
 
 export const mapChatSession = (session: BackendChatSession): ChatSession => ({
   id: session.id,

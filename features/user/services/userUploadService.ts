@@ -42,6 +42,9 @@ export const uploadUserDocument = async ({
       "/documents/upload",
       buildBackendUploadFormData(file, values),
       {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
         skipAlert: true,
         timeout: 60000,
       },
