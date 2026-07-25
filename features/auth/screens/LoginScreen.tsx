@@ -57,6 +57,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
 
         router.replace(result.homeRoute as any);
       } catch (error) {
+        console.error("[Login Error Details]:", error);
         Alert.alert("Đăng nhập thất bại", getAuthErrorMessage(error));
       }
     },

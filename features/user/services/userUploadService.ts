@@ -11,7 +11,7 @@ const getApiClient = async () => {
 
 const buildBackendUploadFormData = (
   file: PickedUploadFile,
-  values: CreateUserDocumentFormValues
+  values: CreateUserDocumentFormValues,
 ) => {
   const formData = new FormData();
 
@@ -42,10 +42,9 @@ export const uploadUserDocument = async ({
       "/documents/upload",
       buildBackendUploadFormData(file, values),
       {
-        headers: { "Content-Type": "multipart/form-data" },
         skipAlert: true,
         timeout: 60000,
-      }
+      },
     );
   } catch {
     throw new Error(UPLOAD_DOCUMENT_ERROR);

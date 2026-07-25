@@ -25,6 +25,11 @@ apiClient.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+
+  if (typeof FormData !== "undefined" && config.data instanceof FormData) {
+    config.headers.delete("Content-Type");
+  }
+
   return config;
 });
 
@@ -46,7 +51,9 @@ const processQueue = (error: unknown, token: string | null) => {
 // Response Interceptor: Handle Refresh Token & Normalization
 apiClient.interceptors.response.use(
   (response) => {
-    return response.data?.data !== undefined ? response.data.data : response.data;
+    return response.data?.data !== undefined
+      ? response.data.data
+      : response.data;
   },
   async (error) => {
     const originalRequest = error.config;
@@ -79,8 +86,12 @@ apiClient.interceptors.response.use(
           refreshToken,
         });
 
-        const newAccessToken = res.data?.data?.accessToken ?? res.data?.accessToken;
-        const newRefreshToken = res.data?.data?.refreshToken ?? res.data?.refreshToken ?? refreshToken;
+        const newAccessToken =
+          res.data?.data?.accessToken ?? res.data?.accessToken;
+        const newRefreshToken =
+          res.data?.data?.refreshToken ??
+          res.data?.refreshToken ??
+          refreshToken;
 
         // Save new credentials to the store
         const authState = useAuthStore.getState();
@@ -88,7 +99,7 @@ apiClient.interceptors.response.use(
           newAccessToken,
           authState.role!,
           authState.user || undefined,
-          newRefreshToken
+          newRefreshToken,
         );
 
         processQueue(null, newAccessToken);
@@ -97,15 +108,15 @@ apiClient.interceptors.response.use(
         return apiClient(originalRequest);
       } catch (refreshError) {
         processQueue(refreshError, null);
-        
+
         // Log out on refresh failure
         useAuthStore.getState().logout();
         queryClient.clear();
-        
+
         if (!originalRequest.skipAlert) {
           Alert.alert("Phiên đăng nhập hết hạn", "Vui lòng đăng nhập lại.");
         }
-        
+
         router.replace("/login");
         return Promise.reject(refreshError);
       } finally {
@@ -114,6 +125,12 @@ apiClient.interceptors.response.use(
     }
 
     // Common error handling
+    console.error(
+      `[API Error] ${originalRequest?.method?.toUpperCase() || ""} ${originalRequest?.url || ""}:`,
+      error.message,
+      error.response?.data || "",
+    );
+
     if (axios.isCancel(error)) {
       return Promise.reject(error);
     }
@@ -128,9 +145,13 @@ apiClient.interceptors.response.use(
       data?.errors?.originalMessage ||
       data?.errors?.detail ||
       data?.errors?.rootCauseDetail ||
-      (data?.message !== "An unexpected error occurred" ? data?.message : null) || 
-      data?.Message || 
-      (error.code === "ECONNABORTED" ? "Kết nối quá hạn, vui lòng thử lại" : error.message) || 
+      (data?.message !== "An unexpected error occurred"
+        ? data?.message
+        : null) ||
+      data?.Message ||
+      (error.code === "ECONNABORTED"
+        ? "Kết nối quá hạn, vui lòng thử lại"
+        : error.message) ||
       "Đã có lỗi xảy ra";
 
     if (!isAuthRelated) {
@@ -138,5 +159,5 @@ apiClient.interceptors.response.use(
     }
 
     return Promise.reject(error);
-  }
+  },
 );
