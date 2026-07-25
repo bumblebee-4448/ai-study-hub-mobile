@@ -1,0 +1,735 @@
+/**
+ * Document Feature — EditDocumentScreen
+ *
+ * Màn hình chỉnh sửa tài liệu đã tải lên.
+ *
+ * UI layout (theo HTML mẫu):
+ *  - Sticky header: nút back + tiêu đề "Chỉnh sửa tài liệu"
+ *  - File preview card: icon description + tên file + dung lượng
+ *  - Form: Tiêu đề, Danh mục (modal picker), Mô tả (textarea 4 dòng), Tags
+ *  - Nút "Cập nhật thay đổi" (filled primary)
+ *  - Nút "Xóa tài liệu này" (outlined error)
+ *
+ * Nhận dữ liệu ban đầu qua prop `initialData: EditDocumentParams`.
+ * Khi dùng với Expo Router, truyền từ router.push({ params }).
+ */
+
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import React, { useEffect, useMemo, useState, useCallback } from "react";
+import { Controller, useForm } from "react-hook-form";
+import {
+  ActivityIndicator,
+  Alert,
+  FlatList,
+  Modal,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+
+import { SPACING, TYPOGRAPHY, BORDER_RADIUS } from "@/constants/theme";
+import { useAppTheme, type AppThemeColors } from "@/features/theme";
+import { EditDocumentFormSchema, EditDocumentFormType } from "../schemas/documentSchema";
+import { EditDocumentParams, UploadCategory } from "../types";
+
+// ── Categories ────────────────────────────────────────────────────────────────
+
+const CATEGORIES: { value: string; label: string }[] = [
+  { value: "khmt", label: "Khoa học Máy tính" },
+  { value: "ai", label: "Trí tuệ Nhân tạo" },
+  { value: "kt", label: "Kinh tế học" },
+  { value: "hh", label: "Hóa học" },
+  { value: "toan", label: "Toán học ứng dụng" },
+  { value: "vl", label: "Vật lý đại cương" },
+];
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function formatFileSize(bytes?: number): string {
+  if (!bytes) return "";
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+  return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+}
+
+// ── Props ─────────────────────────────────────────────────────────────────────
+
+interface EditDocumentScreenProps {
+  initialData?: EditDocumentParams;
+  categories?: UploadCategory[];
+  isLoading?: boolean;
+  error?: string | null;
+  onRetry?: () => void;
+  isSaving?: boolean;
+  isDeleting?: boolean;
+  onBack?: () => void;
+  onSave?: (data: EditDocumentFormType & { documentId: string }) => Promise<void> | void;
+  onDelete?: (documentId: string) => Promise<void> | void;
+}
+
+// ── Component ─────────────────────────────────────────────────────────────────
+
+export const EditDocumentScreen: React.FC<EditDocumentScreenProps> = ({
+  initialData,
+  categories = CATEGORIES,
+  isLoading = false,
+  error,
+  onRetry,
+  isSaving = false,
+  isDeleting = false,
+  onBack,
+  onSave,
+  onDelete,
+}) => {
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+  const [categoryModalVisible, setCategoryModalVisible] = useState(false);
+
+  // Default demo data so the screen renders meaningfully in isolation
+  const defaults: EditDocumentParams = useMemo(
+    () =>
+      initialData ?? {
+        documentId: "doc-demo-001",
+        title: "Báo cáo Nghiên cứu Trí tuệ Nhân tạo Toàn diện 2024",
+        category: "ai",
+        description:
+          "Tài liệu tổng hợp các xu hướng mới nhất về Học máy và ứng dụng của AI trong công nghiệp. Bao gồm phân tích dữ liệu từ 500 doanh nghiệp hàng đầu.",
+        tags: "AI, Machine Learning, Công nghiệp 4.0",
+        fileName: "Baocao_NghienCuu_AI_v2.pdf",
+        fileSize: 4_404_428, // 4.2 MB
+      },
+    [initialData]
+  );
+
+  const {
+    control,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<EditDocumentFormType>({
+    resolver: zodResolver(EditDocumentFormSchema),
+    defaultValues: {
+      title: defaults.title,
+      category: defaults.category,
+      description: defaults.description ?? "",
+      tags: defaults.tags ?? "",
+    },
+  });
+
+  useEffect(() => {
+    reset({
+      title: defaults.title,
+      category: defaults.category,
+      description: defaults.description ?? "",
+      tags: defaults.tags ?? "",
+    });
+  }, [defaults, reset]);
+
+  // ── Handlers ────────────────────────────────────────────────────────────────
+
+  const onSubmit = useCallback(
+    async (data: EditDocumentFormType) => {
+      try {
+        await onSave?.({ ...data, documentId: defaults.documentId });
+        Alert.alert("Thành công", "Tài liệu đã được cập nhật!", [
+          { text: "OK", onPress: onBack },
+        ]);
+      } catch (submitError) {
+        Alert.alert(
+          "Lỗi",
+          submitError instanceof Error
+            ? submitError.message
+            : "Không thể cập nhật. Vui lòng thử lại."
+        );
+      }
+    },
+    [defaults.documentId, onBack, onSave]
+  );
+
+  const handleDelete = useCallback(() => {
+    Alert.alert(
+      "Xác nhận xóa",
+      "Bạn có chắc muốn xóa tài liệu này không? Hành động này không thể hoàn tác.",
+      [
+        { text: "Hủy", style: "cancel" },
+        {
+          text: "Xóa",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await onDelete?.(defaults.documentId);
+              Alert.alert("Đã xóa", "Tài liệu đã được xóa thành công.", [
+                { text: "OK", onPress: onBack },
+              ]);
+            } catch (deleteError) {
+              Alert.alert(
+                "Lỗi",
+                deleteError instanceof Error
+                  ? deleteError.message
+                  : "Không thể xóa. Vui lòng thử lại."
+              );
+            }
+          },
+        },
+      ]
+    );
+  }, [defaults.documentId, onBack, onDelete]);
+
+  const busy = isSaving || isDeleting;
+
+  if (isLoading) {
+    return (
+      <SafeAreaView style={[styles.safeArea, styles.centerState]}>
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={styles.stateText}>Đang tải thông tin tài liệu...</Text>
+      </SafeAreaView>
+    );
+  }
+
+  if (error && !initialData) {
+    return (
+      <SafeAreaView style={[styles.safeArea, styles.centerState]}>
+        <Ionicons name="warning-outline" size={32} color={colors.danger} />
+        <Text style={styles.stateTitle}>Không thể tải tài liệu</Text>
+        <Text style={styles.stateText}>{error}</Text>
+        {onRetry ? (
+          <TouchableOpacity style={styles.retryButton} onPress={onRetry}>
+            <Text style={styles.retryText}>Thử lại</Text>
+          </TouchableOpacity>
+        ) : null}
+        <TouchableOpacity style={styles.backLink} onPress={onBack}>
+          <Text style={styles.backLinkText}>Quay lại</Text>
+        </TouchableOpacity>
+      </SafeAreaView>
+    );
+  }
+
+  return (
+    <SafeAreaView style={styles.safeArea}>
+      {/* ── Sticky Header ──────────────────────────────────────────────── */}
+      <View style={styles.header}>
+        <TouchableOpacity
+          style={styles.backBtn}
+          onPress={onBack}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          accessibilityLabel="Quay lại"
+        >
+          <Ionicons name="arrow-back" size={24} color={colors.icon} />
+        </TouchableOpacity>
+
+        <Text style={styles.headerTitle} numberOfLines={1}>
+          Chỉnh sửa tài liệu
+        </Text>
+
+        {/* Spacer to center-align title */}
+        <View style={styles.headerSpacer} />
+      </View>
+
+      {/* ── Scrollable body ────────────────────────────────────────────── */}
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        {/* ── File Preview Card ──────────────────────────────────────── */}
+        <View style={styles.previewCard}>
+          <View style={styles.previewIconBox}>
+            <MaterialCommunityIcons
+              name="file-document"
+              size={28}
+              color={colors.onPrimary}
+            />
+          </View>
+          <View style={styles.previewInfo}>
+            <Text style={styles.previewName} numberOfLines={1}>
+              {defaults.fileName ?? "Tài liệu chưa đặt tên"}
+            </Text>
+            <Text style={styles.previewMeta}>
+              {formatFileSize(defaults.fileSize)}
+              {defaults.fileSize ? " • " : ""}
+              Tải lên 2 ngày trước
+            </Text>
+          </View>
+        </View>
+
+        {/* ── Form ────────────────────────────────────────────────────── */}
+        <View style={styles.form}>
+          {/* Field: Tiêu đề */}
+          <View style={styles.fieldBlock}>
+            <Text style={styles.label}>Tiêu đề tài liệu</Text>
+            <Controller
+              control={control}
+              name="title"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <TextInput
+                  style={[styles.input, errors.title && styles.inputError]}
+                  placeholder="Nhập tiêu đề..."
+                  placeholderTextColor={colors.textSubtle}
+                  value={value}
+                  onChangeText={onChange}
+                  onBlur={onBlur}
+                  returnKeyType="next"
+                  maxLength={120}
+                />
+              )}
+            />
+            {errors.title ? (
+              <Text style={styles.fieldError}>{errors.title.message}</Text>
+            ) : null}
+          </View>
+
+          {/* Field: Danh mục */}
+          <View style={styles.fieldBlock}>
+            <Text style={styles.label}>Danh mục</Text>
+            <Controller
+              control={control}
+              name="category"
+              render={({ field: { onChange, value } }) => (
+                <>
+                  <TouchableOpacity
+                    style={[
+                      styles.input,
+                      styles.selectRow,
+                      errors.category && styles.inputError,
+                    ]}
+                    onPress={() => setCategoryModalVisible(true)}
+                    activeOpacity={0.8}
+                    accessibilityLabel="Chọn danh mục"
+                  >
+                    <Text
+                      style={[
+                        styles.selectText,
+                        !value && { color: colors.textSubtle },
+                      ]}
+                    >
+                      {value
+                        ? categories.find((c) => c.value === value)?.label ??
+                          "Chọn danh mục"
+                        : "Chọn danh mục"}
+                    </Text>
+                    <Ionicons
+                      name="chevron-down"
+                      size={18}
+                      color={colors.icon}
+                    />
+                  </TouchableOpacity>
+
+                  {/* Modal Picker */}
+                  <Modal
+                    visible={categoryModalVisible}
+                    transparent
+                    animationType="fade"
+                    onRequestClose={() => setCategoryModalVisible(false)}
+                  >
+                    <TouchableOpacity
+                      style={styles.modalOverlay}
+                      activeOpacity={1}
+                      onPress={() => setCategoryModalVisible(false)}
+                    >
+                      <View style={styles.modalSheet}>
+                        <Text style={styles.modalTitle}>Chọn danh mục</Text>
+                        <FlatList
+                          data={categories}
+                          keyExtractor={(item) => item.value}
+                          renderItem={({ item }) => (
+                            <TouchableOpacity
+                              style={[
+                                styles.modalOption,
+                                item.value === value &&
+                                  styles.modalOptionActive,
+                              ]}
+                              onPress={() => {
+                                onChange(item.value);
+                                setCategoryModalVisible(false);
+                              }}
+                            >
+                              <Text
+                                style={[
+                                  styles.modalOptionText,
+                                  item.value === value &&
+                                    styles.modalOptionTextActive,
+                                ]}
+                              >
+                                {item.label}
+                              </Text>
+                              {item.value === value && (
+                                <Ionicons
+                                  name="checkmark"
+                                  size={18}
+                                  color={colors.primary}
+                                />
+                              )}
+                            </TouchableOpacity>
+                          )}
+                        />
+                      </View>
+                    </TouchableOpacity>
+                  </Modal>
+                </>
+              )}
+            />
+            {errors.category ? (
+              <Text style={styles.fieldError}>{errors.category.message}</Text>
+            ) : null}
+          </View>
+
+          {/* Field: Mô tả */}
+          <View style={styles.fieldBlock}>
+            <Text style={styles.label}>Mô tả tóm tắt</Text>
+            <Controller
+              control={control}
+              name="description"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <TextInput
+                  style={[styles.input, styles.textarea]}
+                  placeholder="Tóm tắt ngắn gọn nội dung..."
+                  placeholderTextColor={colors.textSubtle}
+                  value={value}
+                  onChangeText={onChange}
+                  onBlur={onBlur}
+                  multiline
+                  numberOfLines={4}
+                  textAlignVertical="top"
+                  maxLength={500}
+                />
+              )}
+            />
+            {errors.description ? (
+              <Text style={styles.fieldError}>{errors.description.message}</Text>
+            ) : null}
+          </View>
+
+          {/* Field: Tags */}
+          <View style={styles.fieldBlock}>
+            <Text style={styles.label}>Thẻ (Tags)</Text>
+            <Controller
+              control={control}
+              name="tags"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <TextInput
+                  style={[styles.input, errors.tags && styles.inputError]}
+                  placeholder="AI, Machine Learning, Công nghiệp 4.0"
+                  placeholderTextColor={colors.textSubtle}
+                  value={value}
+                  onChangeText={onChange}
+                  onBlur={onBlur}
+                  returnKeyType="done"
+                  maxLength={200}
+                />
+              )}
+            />
+            {errors.tags ? (
+              <Text style={styles.fieldError}>{errors.tags.message}</Text>
+            ) : null}
+            <Text style={styles.hint}>Phân cách các thẻ bằng dấu phẩy.</Text>
+          </View>
+        </View>
+
+        {/* ── Action Buttons ───────────────────────────────────────────── */}
+        <View style={styles.actions}>
+          {/* Primary — Update */}
+          <TouchableOpacity
+            style={[styles.btnSave, busy && styles.btnDisabled]}
+            onPress={handleSubmit(onSubmit)}
+            activeOpacity={0.8}
+            disabled={busy}
+            accessibilityLabel="Cập nhật thay đổi"
+          >
+            {isSaving ? (
+              <ActivityIndicator color={colors.onPrimary} size="small" />
+            ) : (
+              <>
+                <MaterialCommunityIcons
+                  name="content-save"
+                  size={20}
+                  color={colors.onPrimary}
+                />
+                <Text style={styles.btnSaveText}>Cập nhật thay đổi</Text>
+              </>
+            )}
+          </TouchableOpacity>
+
+          {/* Destructive — Delete */}
+          <TouchableOpacity
+            style={[styles.btnDelete, busy && styles.btnDisabled]}
+            onPress={handleDelete}
+            activeOpacity={0.8}
+            disabled={busy}
+            accessibilityLabel="Xóa tài liệu này"
+          >
+            {isDeleting ? (
+              <ActivityIndicator color={colors.danger} size="small" />
+            ) : (
+              <>
+                <MaterialCommunityIcons
+                  name="delete-outline"
+                  size={20}
+                  color={colors.danger}
+                />
+                <Text style={styles.btnDeleteText}>Xóa tài liệu này</Text>
+              </>
+            )}
+          </TouchableOpacity>
+        </View>
+
+        {/* Bottom padding for tab bar */}
+        <View style={{ height: 32 }} />
+      </ScrollView>
+    </SafeAreaView>
+  );
+};
+
+// ── Styles ────────────────────────────────────────────────────────────────────
+
+const createStyles = (colors: AppThemeColors) => StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  centerState: {
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 24,
+    gap: 10,
+  },
+  stateTitle: {
+    ...TYPOGRAPHY["label-md"],
+    color: colors.text,
+    textAlign: "center",
+  },
+  stateText: {
+    ...TYPOGRAPHY["body-md"],
+    color: colors.textSubtle,
+    textAlign: "center",
+  },
+  retryButton: {
+    marginTop: 8,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: BORDER_RADIUS.lg,
+    backgroundColor: colors.primary,
+  },
+  retryText: {
+    ...TYPOGRAPHY["label-md"],
+    color: colors.onPrimary,
+  },
+  backLink: {
+    paddingVertical: 8,
+  },
+  backLinkText: {
+    ...TYPOGRAPHY["label-sm"],
+    color: colors.textSubtle,
+    textDecorationLine: "underline",
+  },
+
+  // ── Header ──
+  header: {
+    height: 64,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: SPACING["margin-mobile"],
+    backgroundColor: colors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  backBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  headerTitle: {
+    flex: 1,
+    ...TYPOGRAPHY["headline-md"],
+    fontWeight: "700",
+    color: colors.text,
+    textAlign: "center",
+  },
+  headerSpacer: {
+    width: 40,
+  },
+
+  // ── Scroll ──
+  scroll: { flex: 1 },
+  scrollContent: {
+    paddingHorizontal: SPACING["margin-mobile"],
+    paddingTop: SPACING.lg,
+    gap: SPACING.lg,
+  },
+
+  // ── File Preview Card ──
+  previewCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 16,
+    padding: 16,
+    backgroundColor: colors.surface,
+    borderRadius: BORDER_RADIUS.xl,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  previewIconBox: {
+    width: 48,
+    height: 48,
+    borderRadius: BORDER_RADIUS.lg,
+    backgroundColor: colors.primary,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  previewInfo: {
+    flex: 1,
+    minWidth: 0,
+  },
+  previewName: {
+    ...TYPOGRAPHY["label-md"],
+    color: colors.text,
+  },
+  previewMeta: {
+    ...TYPOGRAPHY["label-sm"],
+    color: colors.textSubtle,
+    marginTop: 2,
+  },
+
+  // ── Form ──
+  form: {
+    gap: SPACING.lg,
+  },
+  fieldBlock: {
+    gap: SPACING.sm / 2,
+  },
+  label: {
+    ...TYPOGRAPHY["label-md"],
+    color: colors.text,
+    marginBottom: 2,
+  },
+  input: {
+    ...TYPOGRAPHY["body-md"],
+    color: colors.text,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: BORDER_RADIUS.lg,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  inputError: {
+    borderColor: colors.danger,
+    borderWidth: 1.5,
+  },
+  textarea: {
+    height: 100,
+    paddingTop: 12,
+  },
+  fieldError: {
+    ...TYPOGRAPHY["label-sm"],
+    color: colors.danger,
+    marginTop: 2,
+  },
+  hint: {
+    ...TYPOGRAPHY["label-sm"],
+    color: colors.textSubtle,
+    marginTop: 2,
+  },
+
+  // ── Category selector ──
+  selectRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  selectText: {
+    ...TYPOGRAPHY["body-md"],
+    color: colors.text,
+    flex: 1,
+  },
+
+  // ── Modal Picker ──
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: colors.overlay,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 24,
+  },
+  modalSheet: {
+    width: "100%",
+    backgroundColor: colors.surface,
+    borderRadius: BORDER_RADIUS.xl,
+    paddingVertical: 8,
+    elevation: 8,
+    shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.18,
+    shadowRadius: 12,
+  },
+  modalTitle: {
+    ...TYPOGRAPHY["label-md"],
+    color: colors.textSubtle,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  modalOption: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+  },
+  modalOptionActive: {
+    backgroundColor: colors.surfaceMuted,
+  },
+  modalOptionText: {
+    ...TYPOGRAPHY["body-md"],
+    color: colors.text,
+    flex: 1,
+  },
+  modalOptionTextActive: {
+    color: colors.primary,
+    fontWeight: "600",
+  },
+
+  // ── Action Buttons ──
+  actions: {
+    gap: 12,
+    marginTop: 8,
+  },
+  btnSave: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    backgroundColor: colors.primary,
+    borderRadius: BORDER_RADIUS.xl,
+    paddingVertical: 16,
+  },
+  btnSaveText: {
+    ...TYPOGRAPHY["label-md"],
+    color: colors.onPrimary,
+  },
+  btnDelete: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    backgroundColor: "transparent",
+    borderRadius: BORDER_RADIUS.xl,
+    borderWidth: 1.5,
+    borderColor: colors.danger,
+    paddingVertical: 16,
+  },
+  btnDeleteText: {
+    ...TYPOGRAPHY["label-md"],
+    color: colors.danger,
+  },
+  btnDisabled: {
+    opacity: 0.55,
+  },
+});
