@@ -1,4 +1,7 @@
-import type { FetchAdminAccountsParams, FetchAdminSubjectsParams } from "@/features/admin/types";
+import type {
+  FetchAdminAccountsParams,
+  FetchAdminSubjectsParams,
+} from "@/features/admin/types";
 import type { ModeratorDocumentListParams } from "@/features/document/services/moderatorDocumentQuery";
 import type { DocumentListParams } from "@/features/user/services/userDocumentQuery";
 
@@ -14,7 +17,8 @@ export const userSubjectKeys = {
 
 export const userDocumentKeys = {
   all: ["user-documents"] as const,
-  recent: (limit: number) => [...userDocumentKeys.all, "recent", { limit }] as const,
+  recent: (limit: number) =>
+    [...userDocumentKeys.all, "recent", { limit }] as const,
   library: (params: DocumentListParams = {}) =>
     [...userDocumentKeys.all, "library", params] as const,
   mine: (params: DocumentListParams = {}) =>
@@ -24,6 +28,15 @@ export const userDocumentKeys = {
 export const documentKeys = {
   all: ["documents"] as const,
   detail: (id: string) => [...documentKeys.all, "detail", id] as const,
+};
+
+export const chatKeys = {
+  all: ["chat"] as const,
+  readyDocuments: () => [...chatKeys.all, "ready-documents"] as const,
+  sessions: (documentId: string) =>
+    [...chatKeys.all, "sessions", documentId] as const,
+  messages: (sessionId: string) =>
+    [...chatKeys.all, "messages", sessionId] as const,
 };
 
 export const moderatorDocumentKeys = {
